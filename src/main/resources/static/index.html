@@ -1,0 +1,32 @@
+<html>
+<head>
+</head>
+<body>
+<h1>user management</h1>
+<form action="/getUser" method="post">
+    <input type="text" name="Forename" placeholder="Forename"/>
+    <input type="text" placeholder="Surname"/>
+    <br>
+    <input type="text" name = "UserName" placeholder="email or username"/>
+    <input type="password" placeholder="password"/>
+    <label>Temporary Password</label>
+    <input type="checkbox" placeholder="Temporary Password"/>
+    <br>
+    <select name="Roles" multiple size="4">
+        <option value="PersonAdmin">PersonAdmin</option>
+        <option value="PPAdmin">PPAdmin</option>
+        <option value="PCSAdmin">PCSAdmin</option>
+        <option value="AssessmentsAdmin">AssessmentsAdmin</option>
+    </select>
+    <br>
+    <select name="Local Offices" multiple size="4">
+        <option value="North East">North East</option>
+        <option value="North West">North West</option>
+        <option value="South West">South West</option>
+        <option value="Thames Valley">Thames Valley</option>
+    </select>
+    <input type="submit" value="Submit" >
+
+</form>
+</body>
+</html>
