@@ -54,7 +54,7 @@ public class KeyCloakAdminClientService {
     return groupList;
   }
 
-  private User getUser (String username) {
+  public User getUser (String username) {
     User user = keycloakAdminClient.findByUsername(REALM_LIN,username);
     return user;
   }

@@ -18,4 +18,9 @@ public class ProfileService {
     List<HeeUserDTO> heeUserDTOS = profileServiceImpl.getAllAdminUsers();
     return heeUserDTOS;
   }
+
+  public HeeUserDTO getUserByUsername(String username) {
+    HeeUserDTO heeUserDTO = profileServiceImpl.getSingleAdminUser(username);
+    return heeUserDTO;
+  }
 }
