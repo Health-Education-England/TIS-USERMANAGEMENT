@@ -26,6 +26,7 @@
         <th>Forenames</th>
         <th>Surname</th>
         <th>Email Address</th>
+        <th></th>
 
     </tr>
     <tr th:each="user : ${users}">
@@ -33,6 +34,7 @@
         <td th:text="${user.firstName}">firstName</td>
         <td th:text="${user.lastName}">firstName</td>
         <td th:text="${user.emailAddress}">email</td>
+        <td><a th:href="@{'/user/' + ${user.name}}">Edit</a></td>
 
     </tr>
 </table>
