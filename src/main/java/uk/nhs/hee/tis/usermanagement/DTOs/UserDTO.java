@@ -1,9 +1,12 @@
-package uk.nhs.hee.tis.usermanagement.model;
+package uk.nhs.hee.tis.usermanagement.DTOs;
 
+import com.transformuk.hee.tis.profile.dto.RoleDTO;
+import com.transformuk.hee.tis.profile.service.dto.UserTrustDTO;
+
+import java.util.HashSet;
 import java.util.Set;
 
-
-public class HeeUser {
+public class UserDTO {
   private String name;
   private String firstName;
   private String lastName;
@@ -13,9 +16,9 @@ public class HeeUser {
   private Boolean active;
   private String password;
   private Boolean isTemporaryPassword;
-  private Set<String> roles;
-  private Set<String> groups;
-  private Set<String> associatedTrusts;
+  private Set<String> roles = new HashSet<>();
+  private Set<String> localOffices = new HashSet<>();
+  private Set<UserTrustDTO> associatedTrusts = new HashSet<>();
 
   public String getName() {
     return name;
@@ -97,21 +100,19 @@ public class HeeUser {
     this.roles = roles;
   }
 
-  public Set<String> getGroups() {
-    return groups;
+  public Set<String> getLocalOffices() {
+    return localOffices;
   }
 
-  public void setGroups(Set<String> groups) {
-    this.groups = groups;
+  public void setLocalOffices(Set<String> localOffices) {
+    this.localOffices = localOffices;
   }
 
-  public Set<String> getAssociatedTrusts() {
+  public Set<UserTrustDTO> getAssociatedTrusts() {
     return associatedTrusts;
   }
 
-  public void setAssociatedTrusts(Set<String> associatedTrusts) {
+  public void setAssociatedTrusts(Set<UserTrustDTO> associatedTrusts) {
     this.associatedTrusts = associatedTrusts;
   }
-
-
 }

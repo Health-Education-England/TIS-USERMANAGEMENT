@@ -4,14 +4,15 @@ import com.transform.hee.tis.keycloak.KeycloakAdminClient;
 import com.transform.hee.tis.keycloak.User;
 import org.keycloak.representations.idm.GroupRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.apache.commons.collections4.CollectionUtils;
-import uk.nhs.hee.tis.usermanagement.model.HeeUser;
+import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Service
 public class KeyCloakAdminClientService {
   private static final String REALM_LIN = "lin";
 
@@ -21,23 +22,25 @@ public class KeyCloakAdminClientService {
   /**
    * Create user in Keycloak
    *
-   * @param heeUser
+   * @param UserDTO
    */
-  public void createUser(HeeUser heeUser) {
+  public void createUser(UserDTO UserDTO) {
     // create user in KeyCloak
-    User userToCreate = heeUserToKeycloakUser(heeUser);
+    User userToCreate = heeUserToKeycloakUser(UserDTO);
     keycloakAdminClient.createUser(REALM_LIN, userToCreate);
   }
 
   /**
    * Update user in Keycloak
    *
-   * @param heeUser
+   * @param UserDTO
    */
-  public void updateUser(HeeUser heeUser) {
-    // First try to create convert user in KeyCloak
-    User existingUser = keycloakAdminClient.findByUsername(REALM_LIN, heeUser.getName());
-    User userToUpdate = heeUserToKeycloakUser(heeUser);
+  public void updateUser(UserDTO UserDTO) {
+
+    // Need to validate here - or check KC client behaviour
+
+    User existingUser = getUser(UserDTO.getName());
+    User userToUpdate = heeUserToKeycloakUser(UserDTO);
     keycloakAdminClient.updateUser(REALM_LIN, existingUser.getId(), userToUpdate);
   }
 
@@ -46,19 +49,21 @@ public class KeyCloakAdminClientService {
   }
 
   public List<GroupRepresentation> getUserGroups(String username) {
-    User user = keycloakAdminClient.findByUsername(REALM_LIN, username);
+    User user = getUser(username);
     List<GroupRepresentation> groupList = keycloakAdminClient.listGroups(REALM_LIN, user);
     return groupList;
   }
 
-  private User heeUserToKeycloakUser(HeeUser heeUser) {
+  public User getUser (String username) {
+    User user = keycloakAdminClient.findByUsername(REALM_LIN,username);
+    return user;
+  }
+
+  private User heeUserToKeycloakUser(UserDTO UserDTO) {
     Map<String,List<String>> attributes = new HashMap<>();
     List<String> dbcs = new ArrayList<>();
-//    if(CollectionUtils.isNotEmpty(heeUser.getDesignatedBodyCodes())) {
-//      dbcs.addAll(heeUser.getDesignatedBodyCodes());
-//    }
     attributes.put("DBC",dbcs);
-    return User.create(heeUser.getFirstName(), heeUser.getLastName(), heeUser.getName(),
-        heeUser.getEmailAddress(), heeUser.getPassword(),heeUser.getTemporaryPassword(),attributes);
+    return User.create(UserDTO.getFirstName(), UserDTO.getLastName(), UserDTO.getName(),
+        UserDTO.getEmailAddress(), UserDTO.getPassword(), UserDTO.getTemporaryPassword(),attributes,UserDTO.getActive());
   }
 }
