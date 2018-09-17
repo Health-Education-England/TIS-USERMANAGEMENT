@@ -30,13 +30,12 @@ public class UserManagementController {
   }
 
   @GetMapping("/user/{username}")
-  public ResponseEntity<UserDTO> getCompleteUser(@PathVariable("username") String userName) {
+  public String getCompleteUser(@PathVariable("username") String userName, Model model) {
     Optional<UserDTO> completeUserDTO = userManagementFacade.getCompleteUser(userName);
     if (completeUserDTO.isPresent()) {
-      return ResponseEntity.ok(completeUserDTO.get());
-    } else {
-      return ResponseEntity.notFound().build();
+      model.addAttribute("user", completeUserDTO.get());
     }
+    return "userEdit";
   }
 
   @GetMapping("/allUsers")

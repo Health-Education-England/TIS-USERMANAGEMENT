@@ -2,30 +2,43 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
-    <title>Notes</title>
-
- <!--   <link rel="stylesheet" type="text/css" media="all" href="../../css/bootstrap.min.css" th:href="@{/css/bootstrap.min.css}" />
--->
-    <script type="text/javascript" th:src="@{/js/jquery.min.js}" src="js/jquery.min.js"></script>
-    <script type="text/javascript" th:src="@{/js/bootstrap.min.js}" src="js/bootstrap.min.js"></script>
+    <style>
+        table {
+            width:100%;
+        }
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+        }
+    </style>
+    <title>User</title>
 </head>
 <body>
-<div class="container">
+<table>
+    <tr>
+        <th>Username</th>
+        <th>Forenames</th>
+        <th>Surname</th>
+        <th>Email Address</th>
+        <th>Active</th>
+        <th>GMC Number</th>
+        <th>Temporary Password</th>
 
-    <h1>Edit User</h1>
+    </tr>
+    <tr th:each="user : ${user}">
+        <td th:text="${user.name}">name</td>
+        <td th:text="${user.firstName}">firstName</td>
+        <td th:text="${user.lastName}">firstName</td>
+        <td th:text="${user.emailAddress}">email</td>
+        <td th:text="${user.active}">active</td>
+        <td th:text="${user.gmcId}">gmcId</td>
+        <td th:text="${user.temporaryPassword}">temporaryPassword</td>
 
-    <form class="form-group" action="/getUser1/" th:action="@{/getUser1}" method="post">
-        <input th:type="hidden" name="userName" th:field="${user.name}" />
-        <div class="form-group">
-            <label for="title">Title</label>
-            <input type="text" class="form-control" id="title" th:field="${user.name}" />
-        </div>
-        <button type="submit" class="btn btn-primary">Save</button>
-        <a href="#" th:href="@{/}" class="btn btn-danger" role="button">Cancel</a>
-    </form>
-
-</div>
-
+    </tr>
+</table>
 </body>
 </html>
