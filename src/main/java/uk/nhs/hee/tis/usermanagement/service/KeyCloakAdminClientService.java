@@ -64,6 +64,6 @@ public class KeyCloakAdminClientService {
     List<String> dbcs = new ArrayList<>();
     attributes.put("DBC",dbcs);
     return User.create(UserDTO.getFirstName(), UserDTO.getLastName(), UserDTO.getName(),
-        UserDTO.getEmailAddress(), UserDTO.getPassword(), UserDTO.getTemporaryPassword(),attributes);
+        UserDTO.getEmailAddress(), UserDTO.getPassword(), UserDTO.getTemporaryPassword(),attributes,UserDTO.getActive());
   }
 }
