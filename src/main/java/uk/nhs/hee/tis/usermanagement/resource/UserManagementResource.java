@@ -5,6 +5,7 @@ import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,8 +46,8 @@ public class UserManagementResource {
   }
 
   @GetMapping("/allUsers")
-  public ResponseEntity<List<UserDTO>> getAllUsers(Pageable pageable) {
-    List<UserDTO> userDTOS = userManagementFacade.getAllUsers(pageable);
+  public ResponseEntity<Page<UserDTO>> getAllUsers(Pageable pageable) {
+    Page<UserDTO> userDTOS = userManagementFacade.getAllUsers(pageable);
     return ResponseEntity.ok(userDTOS) ;
   }
 }

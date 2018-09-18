@@ -20,6 +20,11 @@
 </head>
 
 <body>
+<form method="get">
+    <label for="search">Search by username</label>
+    <input type="text" name="search" id="search" placeholder="Bob Wankel">
+    <input type="submit" value="Submit">
+</form>
 <table>
     <tr>
         <th>Username</th>
@@ -29,7 +34,7 @@
         <th></th>
 
     </tr>
-    <tr th:each="user : ${users}">
+    <tr th:each="user : ${pagedUsers.getContent()}">
         <td th:text="${user.name}">name</td>
         <td th:text="${user.firstName}">firstName</td>
         <td th:text="${user.lastName}">firstName</td>
