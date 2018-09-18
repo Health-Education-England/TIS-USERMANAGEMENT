@@ -30,8 +30,8 @@ public class UserManagementController {
     return "success";
   }
 
-  @GetMapping("/user/{username}")
-  public String getCompleteUser(@PathVariable("username") String userName, Model model) {
+  @GetMapping("/user")
+  public String getCompleteUser(@RequestParam String userName, Model model) {
     Optional<UserDTO> completeUserDTO = userManagementFacade.getCompleteUser(userName);
     if (completeUserDTO.isPresent()) {
       model.addAttribute("user", completeUserDTO.get());
