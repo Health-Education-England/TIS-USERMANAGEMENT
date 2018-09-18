@@ -47,27 +47,29 @@ public class HeeUserMapper {
   }
 
   private UserDTO mapHeeUserAttributes(UserDTO userDTO, HeeUserDTO heeUserDTO) {
-    userDTO.setName(heeUserDTO.getName());
-    userDTO.setFirstName(heeUserDTO.getFirstName());
-    userDTO.setLastName(heeUserDTO.getLastName());
-    userDTO.setGmcId(heeUserDTO.getGmcId());
-    userDTO.setPhoneNumber(heeUserDTO.getPhoneNumber());
-    userDTO.setEmailAddress(heeUserDTO.getEmailAddress());
+    if(heeUserDTO != null) {
+      userDTO.setName(heeUserDTO.getName());
+      userDTO.setFirstName(heeUserDTO.getFirstName());
+      userDTO.setLastName(heeUserDTO.getLastName());
+      userDTO.setGmcId(heeUserDTO.getGmcId());
+      userDTO.setPhoneNumber(heeUserDTO.getPhoneNumber());
+      userDTO.setEmailAddress(heeUserDTO.getEmailAddress());
 
-    if(CollectionUtils.isNotEmpty(heeUserDTO.getRoles())) {
-      Set<String> setOfRoles = heeUserDTO.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet());
-      userDTO.setRoles(setOfRoles);
+      if (CollectionUtils.isNotEmpty(heeUserDTO.getRoles())) {
+        Set<String> setOfRoles = heeUserDTO.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet());
+        userDTO.setRoles(setOfRoles);
+      }
+
+      userDTO.setAssociatedTrusts(heeUserDTO.getAssociatedTrusts());
     }
-
-    userDTO.setAssociatedTrusts(heeUserDTO.getAssociatedTrusts());
-
     return userDTO;
   }
 
   private UserDTO mapKeycloakAttributes(UserDTO userDTO, User keycloakUser) {
-    userDTO.setActive(keycloakUser.getEnabled());
-    userDTO.setTemporaryPassword(keycloakUser.getTempPassword());
-
+    if(keycloakUser != null) {
+      userDTO.setActive(keycloakUser.getEnabled());
+      userDTO.setTemporaryPassword(keycloakUser.getTempPassword());
+    }
     return userDTO;
   }
 
