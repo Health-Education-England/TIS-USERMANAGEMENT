@@ -41,8 +41,10 @@ public class UserManagementController {
 
   @GetMapping("/allUsers")
   public String getAllUsers(@RequestParam(required = false) String search, Pageable pageable, Model model) {
-    Page<UserDTO> userDTOS = userManagementFacade.getAllUsers(pageable);
+    Page<UserDTO> userDTOS = userManagementFacade.getAllUsers(pageable, search);
     model.addAttribute("pagedUsers", userDTOS);
+    model.addAttribute("currentPage", pageable.getPageNumber());
+    model.addAttribute("searchParam", search);
     return "allUsers";
   }
 }

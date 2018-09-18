@@ -2,46 +2,58 @@
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org">
 <head>
-    <style>
-        table {
-            width:100%;
-        }
-        table, th, td {
-            border: 1px solid black;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 15px;
-            text-align: left;
-        }
-    </style>
-    <meta charset="UTF-8">
-    <title>All Users</title>
+   <style>
+      table {
+         width: 100%;
+      }
+
+      table, th, td {
+         border: 1px solid black;
+         border-collapse: collapse;
+      }
+
+      th, td {
+         padding: 15px;
+         text-align: left;
+      }
+   </style>
+   <meta charset="UTF-8">
+   <title>All Users</title>
 </head>
 
 <body>
 <form method="get">
-    <label for="search">Search by username</label>
-    <input type="text" name="search" id="search" placeholder="Bob Wankel">
-    <input type="submit" value="Submit">
+   <label for="search">Search by username</label>
+   <input type="text" name="search" id="search" placeholder="Bob Wankel">
+   <input type="submit" value="Submit">
 </form>
 <table>
-    <tr>
-        <th>Username</th>
-        <th>Forenames</th>
-        <th>Surname</th>
-        <th>Email Address</th>
-        <th></th>
+   <tr>
+      <th>Username</th>
+      <th>Forenames</th>
+      <th>Surname</th>
+      <th>Email Address</th>
+      <th></th>
 
-    </tr>
-    <tr th:each="user : ${pagedUsers.getContent()}">
-        <td th:text="${user.name}">name</td>
-        <td th:text="${user.firstName}">firstName</td>
-        <td th:text="${user.lastName}">firstName</td>
-        <td th:text="${user.emailAddress}">email</td>
-        <td><a th:href="@{'/user/' + ${user.name}}">Edit</a></td>
-
-    </tr>
+   </tr>
+   <tr th:each="user : ${pagedUsers.getContent()}">
+      <td th:text="${user.name}">name</td>
+      <td th:text="${user.firstName}">firstName</td>
+      <td th:text="${user.lastName}">firstName</td>
+      <td th:text="${user.emailAddress}">email</td>
+      <td><a th:href="@{'/user/' + ${user.name}}">Edit</a></td>
+   </tr>
 </table>
+<div>
+   <span th:if="${pagedUsers.hasPrevious()}">
+      <a th:href="@{'/allUsers?' + ${currentPage - 1}}">Previous</a>
+   </span>
+
+   <span th:text="'Page: ' + ${currentPage}">page</span>
+
+   <span th:if="${pagedUsers.hasNext()}">
+      <a th:href="@{'/allUsers?' + ${currentPage + 1}}">Next</a>
+   </span>
+</div>
 </body>
 </html>

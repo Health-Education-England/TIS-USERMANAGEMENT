@@ -15,8 +15,8 @@ public class ProfileService {
   @Autowired
   private ProfileServiceImpl profileServiceImpl;
 
-  public Page<HeeUserDTO> getAllUsers(Pageable pageable) {
-    Page<HeeUserDTO> heeUserDTOS = profileServiceImpl.getAllAdminUsers(pageable,null);
+  public Page<HeeUserDTO> getAllUsers(Pageable pageable, String search) {
+    Page<HeeUserDTO> heeUserDTOS = profileServiceImpl.getAllAdminUsers(pageable,search);
     return heeUserDTOS;
   }
 

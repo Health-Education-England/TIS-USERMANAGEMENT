@@ -47,7 +47,7 @@ public class UserManagementResource {
 
   @GetMapping("/allUsers")
   public ResponseEntity<Page<UserDTO>> getAllUsers(Pageable pageable) {
-    Page<UserDTO> userDTOS = userManagementFacade.getAllUsers(pageable);
+    Page<UserDTO> userDTOS = userManagementFacade.getAllUsers(pageable, null);
     return ResponseEntity.ok(userDTOS) ;
   }
 }

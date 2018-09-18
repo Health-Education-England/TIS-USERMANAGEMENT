@@ -41,8 +41,8 @@ public class UserManagementFacade {
     return Optional.of(completeUserDto);
   }
 
-  public Page<UserDTO> getAllUsers(Pageable pageable) {
-    Page<HeeUserDTO> heeUserDTOS = profileService.getAllUsers(pageable);
+  public Page<UserDTO> getAllUsers(Pageable pageable, String search) {
+    Page<HeeUserDTO> heeUserDTOS = profileService.getAllUsers(pageable, search);
     List<UserDTO> userDTOS = heeUserMapper.convertAll(heeUserDTOS.getContent());
     return new PageImpl<>(userDTOS, pageable, userDTOS.size());
   }
