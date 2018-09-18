@@ -82,7 +82,7 @@
       <a th:href="@{'/allUsers?' + ${currentPage - 1}}">Previous</a>
    </span>
 
-      <span th:text="'Page: ' + ${currentPage}">page</span>
+      <span th:text="'Page: ' + ${currentPage + 1}">page</span>
 
       <span th:if="${pagedUsers.hasNext()}">
       <a th:href="@{'/allUsers?' + ${currentPage + 1}}">Next</a>
