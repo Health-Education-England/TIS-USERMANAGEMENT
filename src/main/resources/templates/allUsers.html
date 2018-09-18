@@ -41,7 +41,7 @@
       <td th:text="${user.firstName}">firstName</td>
       <td th:text="${user.lastName}">firstName</td>
       <td th:text="${user.emailAddress}">email</td>
-      <td><a th:href="@{'/user/' + ${user.name}}">Edit</a></td>
+      <td><a th:href="@{'/user?userName=' + ${user.name}}">Edit</a></td>
    </tr>
 </table>
 <div>

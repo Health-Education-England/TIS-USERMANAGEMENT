@@ -3,6 +3,7 @@ package uk.nhs.hee.tis.usermanagement.mapper;
 import com.transform.hee.tis.keycloak.User;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 
@@ -53,8 +54,10 @@ public class HeeUserMapper {
     userDTO.setPhoneNumber(heeUserDTO.getPhoneNumber());
     userDTO.setEmailAddress(heeUserDTO.getEmailAddress());
 
-    Set<String> setOfRoles = heeUserDTO.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet());
-    userDTO.setRoles(setOfRoles);
+    if(CollectionUtils.isNotEmpty(heeUserDTO.getRoles())) {
+      Set<String> setOfRoles = heeUserDTO.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet());
+      userDTO.setRoles(setOfRoles);
+    }
 
     userDTO.setAssociatedTrusts(heeUserDTO.getAssociatedTrusts());
 
