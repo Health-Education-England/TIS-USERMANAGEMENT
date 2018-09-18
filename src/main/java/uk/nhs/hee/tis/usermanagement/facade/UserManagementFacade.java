@@ -33,6 +33,7 @@ public class UserManagementFacade {
   @Autowired
   private ReferenceService referenceService;
 
+  
   public Optional<UserDTO> getCompleteUser(String username) {
     HeeUserDTO heeUserDTO = profileService.getUserByUsername(username);
     User kcUser = keyCloakAdminClientService.getUser(username);
