@@ -2,6 +2,8 @@ package uk.nhs.hee.tis.usermanagement.resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -40,10 +42,14 @@ public class UserManagementController {
   }
 
   @GetMapping("/allUsers")
-  public String getAllUsers(@RequestParam(required = false) String search, Pageable pageable, Model model) {
+  public String getAllUsers(@RequestParam(required = false, defaultValue = "") String search,
+                            @RequestParam(required = false, defaultValue = "0") int page,
+                            @RequestParam(required = false, defaultValue = "20") int size,
+                            Model model) {
+    Pageable pageable = PageRequest.of(page, size);
     Page<UserDTO> userDTOS = userManagementFacade.getAllUsers(pageable, search);
     model.addAttribute("pagedUsers", userDTOS);
-    model.addAttribute("currentPage", pageable.getPageNumber());
+    model.addAttribute("currentPage", pageable.getPageNumber() + 1);
     model.addAttribute("searchParam", search);
     return "allUsers";
   }
