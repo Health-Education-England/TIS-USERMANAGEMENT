@@ -63,13 +63,13 @@
    <div class="pure-u-1-5"></div>
    <div class="pure-u-3-5">
    <span th:if="${pagedUsers.hasPrevious()}">
-      <a th:href="@{'/allUsers?' + ${currentPage - 1}}">Previous</a>
+      <a th:href="@{'/allUsers?' + ${pagedUsers.getPreviousPageRequestParameters()} + '&search=' + ${searchParam}}">Previous</a>
    </span>
 
-      <span th:text="'Page: ' + ${currentPage + 1}">page</span>
+   <span th:text="'Page: ' + ${currentPage}">page</span>
 
-      <span th:if="${pagedUsers.hasNext()}">
-      <a th:href="@{'/allUsers?' + ${currentPage + 1}}">Next</a>
+   <span th:if="${pagedUsers.hasNext()}">
+      <a th:href="@{'/allUsers?' + ${pagedUsers.getNextPageRequestParameters()} + '&search=' + ${searchParam}}">Next</a>
    </span>
    </div>
    <div class="pure-u-1-5"></div>

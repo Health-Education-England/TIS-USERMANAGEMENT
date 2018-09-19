@@ -1,6 +1,7 @@
 package uk.nhs.hee.tis.usermanagement.facade;
 
 import com.transform.hee.tis.keycloak.User;
+import com.transformuk.hee.tis.profile.client.service.impl.CustomPageable;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,6 @@ public class UserManagementFacade {
   @Autowired
   private ReferenceService referenceService;
 
-  
   public Optional<UserDTO> getCompleteUser(String username) {
     HeeUserDTO heeUserDTO = profileService.getUserByUsername(username);
     User kcUser = keyCloakAdminClientService.getUser(username);
@@ -45,6 +45,6 @@ public class UserManagementFacade {
   public Page<UserDTO> getAllUsers(Pageable pageable, String search) {
     Page<HeeUserDTO> heeUserDTOS = profileService.getAllUsers(pageable, search);
     List<UserDTO> userDTOS = heeUserMapper.convertAll(heeUserDTOS.getContent());
-    return new PageImpl<>(userDTOS, pageable, userDTOS.size());
+    return new CustomPageable<>(userDTOS, pageable, heeUserDTOS.getTotalElements());
   }
 }
