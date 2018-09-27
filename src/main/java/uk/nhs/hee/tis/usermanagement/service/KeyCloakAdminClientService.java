@@ -14,7 +14,7 @@ import java.util.Map;
 
 @Service
 public class KeyCloakAdminClientService {
-  private static final String REALM_LIN = "lin";
+  static final String REALM_LIN = "lin";
 
   @Autowired
   public KeycloakAdminClient keycloakAdminClient;
