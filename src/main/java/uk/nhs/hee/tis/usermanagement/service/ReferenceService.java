@@ -13,7 +13,7 @@ public class ReferenceService {
   @Autowired
   ReferenceServiceImpl remoteReferenceService;
 
-  public Set<DBCDTO> getAllDBCs () {
+  public Set<DBCDTO> getAllDBCs() {
     return remoteReferenceService.getAllDBCs();
   }
 }

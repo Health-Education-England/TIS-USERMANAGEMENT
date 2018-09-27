@@ -54,16 +54,16 @@ public class KeyCloakAdminClientService {
     return groupList;
   }
 
-  public User getUser (String username) {
-    User user = keycloakAdminClient.findByUsername(REALM_LIN,username);
+  public User getUser(String username) {
+    User user = keycloakAdminClient.findByUsername(REALM_LIN, username);
     return user;
   }
 
   private User heeUserToKeycloakUser(UserDTO UserDTO) {
-    Map<String,List<String>> attributes = new HashMap<>();
+    Map<String, List<String>> attributes = new HashMap<>();
     List<String> dbcs = new ArrayList<>();
-    attributes.put("DBC",dbcs);
+    attributes.put("DBC", dbcs);
     return User.create(UserDTO.getFirstName(), UserDTO.getLastName(), UserDTO.getName(),
-        UserDTO.getEmailAddress(), UserDTO.getPassword(), UserDTO.getTemporaryPassword(),attributes,UserDTO.getActive());
+        UserDTO.getEmailAddress(), UserDTO.getPassword(), UserDTO.getTemporaryPassword(), attributes, UserDTO.getActive());
   }
 }

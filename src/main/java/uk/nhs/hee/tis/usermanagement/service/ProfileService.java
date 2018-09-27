@@ -7,8 +7,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class ProfileService {
 
@@ -16,7 +14,7 @@ public class ProfileService {
   private ProfileServiceImpl profileServiceImpl;
 
   public Page<HeeUserDTO> getAllUsers(Pageable pageable, String search) {
-    Page<HeeUserDTO> heeUserDTOS = profileServiceImpl.getAllAdminUsers(pageable,search);
+    Page<HeeUserDTO> heeUserDTOS = profileServiceImpl.getAllAdminUsers(pageable, search);
     return heeUserDTOS;
   }
 

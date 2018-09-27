@@ -1,6 +1,5 @@
 package uk.nhs.hee.tis.usermanagement.DTOs;
 
-import com.transformuk.hee.tis.profile.dto.RoleDTO;
 import com.transformuk.hee.tis.profile.service.dto.UserTrustDTO;
 
 import java.util.HashSet;

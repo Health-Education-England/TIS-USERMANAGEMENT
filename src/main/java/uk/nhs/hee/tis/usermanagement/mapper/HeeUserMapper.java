@@ -21,6 +21,7 @@ public class HeeUserMapper {
 
   /**
    * Used for the list page where only the profile service info is needed
+   *
    * @param heeUserDTO
    * @return
    */
@@ -47,7 +48,7 @@ public class HeeUserMapper {
   }
 
   private UserDTO mapHeeUserAttributes(UserDTO userDTO, HeeUserDTO heeUserDTO) {
-    if(heeUserDTO != null) {
+    if (heeUserDTO != null) {
       userDTO.setName(heeUserDTO.getName());
       userDTO.setFirstName(heeUserDTO.getFirstName());
       userDTO.setLastName(heeUserDTO.getLastName());
@@ -66,7 +67,7 @@ public class HeeUserMapper {
   }
 
   private UserDTO mapKeycloakAttributes(UserDTO userDTO, User keycloakUser) {
-    if(keycloakUser != null) {
+    if (keycloakUser != null) {
       userDTO.setActive(keycloakUser.getEnabled());
       userDTO.setTemporaryPassword(keycloakUser.getTempPassword());
     }
