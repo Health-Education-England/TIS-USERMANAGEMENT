@@ -69,4 +69,11 @@ public class UserManagementController {
         "The user " + user.getFirstName() + " " + user.getLastName() + " (" + user.getName() + ") has been updated");
     return "redirect:/allUsers";
   }
+
+  @PostMapping("/deleteUser")
+  public String deleteUser(@ModelAttribute UserDTO user, RedirectAttributes attributes) {
+    attributes.addFlashAttribute("message",
+        "The user " + user.getFirstName() + " " + user.getLastName() + " (" + user.getName() + ") has been deleted");
+    return "redirect:/allUsers";
+  }
 }

@@ -15,6 +15,11 @@
    <!--<![endif]-->
 
    <title>Edit User</title>
+   <style>
+      .main-form, .delete-form { display: inline-block; }
+      fieldset { border-style: hidden; }
+      .delete-form { margin-left: -100px; }
+   </style>
 </head>
 <body>
 <div class="pure-g">
@@ -26,7 +31,7 @@
 
    <div class="pure-u-1-5"></div>
    <div class="pure-u-3-5">
-      <form class="pure-form-aligned" th:method="post" th:action="@{'/updateUser'}" th:object="${user}">
+      <form class="pure-form-aligned main-form" th:method="post" th:action="@{'/updateUser'}" th:object="${user}">
          <fieldset>
             <div class="pure-control-group">
                <label for="username">Username</label>
@@ -58,7 +63,14 @@
             </div>
             <div class="pure-controls">
                <button type="submit" class="pure-button pure-button-primary">Submit</button>
+
             </div>
+         </fieldset>
+      </form>
+      <form class="pure-form-aligned delete-form" th:method="post" th:action="@{/deleteUser}" th:object="${user}">
+         <fieldset>
+            <input name="username" type="hidden" th:field="${user.name}">
+            <button type="submit" class="pure-button pure-button-primary">Delete</button>
          </fieldset>
       </form>
    </div>

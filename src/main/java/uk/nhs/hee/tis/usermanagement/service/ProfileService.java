@@ -34,7 +34,8 @@ public class ProfileService {
   }
 
   public Optional<HeeUserDTO> createUser(HeeUserDTO userToCreateDTO) {
-    return null;
+    HeeUserDTO heeUserDTO = profileServiceImpl.createDto(userToCreateDTO, "/api/hee-users", HeeUserDTO.class);
+    return Optional.ofNullable(heeUserDTO);
   }
 
   public Optional<HeeUserDTO> updateUser(HeeUserDTO userToUpdateDTO) {
