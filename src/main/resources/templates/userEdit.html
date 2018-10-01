@@ -26,7 +26,7 @@
 
    <div class="pure-u-1-5"></div>
    <div class="pure-u-3-5">
-      <form class="pure-form-aligned" method="put" action="@{'/'}">
+      <form class="pure-form-aligned" th:method="post" th:action="@{'/updateUser'}" th:object="${user}">
          <fieldset>
             <div class="pure-control-group">
                <label for="username">Username</label>

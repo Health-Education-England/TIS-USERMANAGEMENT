@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -63,9 +64,11 @@ public class UserManagementController {
     return "createUser";
   }
 
-  @PutMapping("/updateUser")
-  public String updateUser(Model model) {
+  @PostMapping("/updateUser")
+  public String updateUser(@ModelAttribute UserDTO user, Model model) {
+    System.out.println("random: " + user.toString());
+    userManagementFacade.updateSingleUser(user);
     model.addAttribute("message", "blah");
-    return "allUsers";
+    return "redirect:/allUsers";
   }
 }

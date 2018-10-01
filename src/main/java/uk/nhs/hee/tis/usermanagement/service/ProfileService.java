@@ -38,6 +38,7 @@ public class ProfileService {
   }
 
   public Optional<HeeUserDTO> updateUser(HeeUserDTO userToUpdateDTO) {
-    return null;
+    HeeUserDTO heeUserDTO = profileServiceImpl.updateDto(userToUpdateDTO, profileServiceImpl.getServiceUrl() + "/api/hee-users", HeeUserDTO.class);
+    return Optional.ofNullable(heeUserDTO);
   }
 }

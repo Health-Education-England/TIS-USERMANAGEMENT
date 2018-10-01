@@ -46,4 +46,9 @@ public class UserManagementFacade {
     List<UserDTO> userDTOS = heeUserMapper.convertAll(heeUserDTOS.getContent());
     return new CustomPageable<>(userDTOS, pageable, heeUserDTOS.getTotalElements());
   }
+
+  public void updateSingleUser(UserDTO userDTO) {
+    profileService.updateUser(heeUserMapper.convert(userDTO));
+    keyCloakAdminClientService.updateUser(userDTO);
+  }
 }
