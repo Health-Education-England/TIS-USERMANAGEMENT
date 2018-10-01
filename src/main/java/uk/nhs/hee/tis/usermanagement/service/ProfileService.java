@@ -8,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class ProfileService {
 
@@ -29,5 +31,13 @@ public class ProfileService {
   public HeeUserDTO getUserByUsername(String username) {
     HeeUserDTO heeUserDTO = profileServiceImpl.getSingleAdminUser(username);
     return heeUserDTO;
+  }
+
+  public Optional<HeeUserDTO> createUser(HeeUserDTO userToCreateDTO) {
+    return null;
+  }
+
+  public Optional<HeeUserDTO> updateUser(HeeUserDTO userToUpdateDTO) {
+    return null;
   }
 }
