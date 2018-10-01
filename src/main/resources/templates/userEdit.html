@@ -30,31 +30,31 @@
          <fieldset>
             <div class="pure-control-group">
                <label for="username">Username</label>
-               <input id="username" name="username" type="text" th:value="${user.name}">
+               <input id="username" name="username" type="text" th:field="${user.name}">
             </div>
             <div class="pure-control-group">
                <label for="forenames">Forenames</label>
-               <input id="forenames" name="forenames" type="text" th:value="${user.firstName}">
+               <input id="forenames" name="forenames" type="text" th:field="${user.firstName}">
             </div>
             <div class="pure-control-group">
                <label for="surname">Surname</label>
-               <input id="surname" name="surname" type="text" th:value="${user.lastName}">
+               <input id="surname" name="surname" type="text" th:field="${user.lastName}">
             </div>
             <div class="pure-control-group">
                <label for="email">Email</label>
-               <input id="email" name="email" type="email" th:value="${user.emailAddress}">
+               <input id="email" name="email" type="email" th:field="${user.emailAddress}">
             </div>
             <div class="pure-control-group">
                <label for="active">Active</label>
-               <input id="active" name="active" type="text" th:value="${user.active}">
+               <input id="active" name="active" type="text" th:field="${user.active}">
             </div>
             <div class="pure-control-group">
                <label for="gmcId">GMC ID</label>
-               <input id="gmcId" name="gmcId" type="text" th:value="${user.gmcId}">
+               <input id="gmcId" name="gmcId" type="text" th:field="${user.gmcId}">
             </div>
             <div class="pure-control-group">
                <label for="temporaryPassword">Temporary Password</label>
-               <input id="temporaryPassword" type="text" name="temporaryPassword" th:value="${user.temporaryPassword}">
+               <input id="temporaryPassword" type="text" name="temporaryPassword" th:field="${user.temporaryPassword}">
             </div>
             <div class="pure-controls">
                <button type="submit" class="pure-button pure-button-primary">Submit</button>

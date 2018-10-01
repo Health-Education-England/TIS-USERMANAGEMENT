@@ -14,6 +14,12 @@
    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css">
    <!--<![endif]-->
    <title>All Users</title>
+
+   <style>
+      .create-user { float: right; }
+      table.pure-table { width: 100%; }
+      div.control-section { margin-bottom: 10px; }
+   </style>
 </head>
 
 <body>
@@ -27,8 +33,13 @@
    <div class="pure-u-1-5"></div>
 
    <div class="pure-u-1-5"></div>
-   <div class="pure-u-3-5">
-      <div><a th:href="@{'/createUser'}">Create User</a></div>
+   <div class="pure-u-3-5 control-section">
+
+
+      <div>
+         <h3 th:text="${message != null} ? ${message}">Flash Message</h3>
+         <a class="pure-button create-user" th:href="@{'/createUser'}">Create User</a>
+      </div>
       <div>
          <form method="get" class="pure-form">
             <label for="search">Search by username</label>

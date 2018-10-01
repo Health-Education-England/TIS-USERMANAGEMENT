@@ -9,10 +9,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 
@@ -65,10 +63,10 @@ public class UserManagementController {
   }
 
   @PostMapping("/updateUser")
-  public String updateUser(@ModelAttribute UserDTO user, Model model) {
-    System.out.println("random: " + user.toString());
+  public String updateUser(@ModelAttribute UserDTO user, RedirectAttributes attributes) {
     userManagementFacade.updateSingleUser(user);
-    model.addAttribute("message", "blah");
+    attributes.addFlashAttribute("message",
+        "The user " + user.getFirstName() + " " + user.getLastName() + " (" + user.getName() + ") has been updated");
     return "redirect:/allUsers";
   }
 }
