@@ -55,6 +55,16 @@ public class ProfileServiceTest {
   }
 
   @Test
+  public void getAllUsersShouldReturnEmptyPageWhenProfileServiceIsDown() {
+
+  }
+
+  @Test
+  public void getAllUsersShouldReturnEmptyPageWhenProfileServiceThrowsAnException() {
+
+  }
+
+  @Test
   public void getAllUsersShouldCallProfileServiceClientToGetPaginatedUsers() {
     PageRequest pageRequest = PageRequest.of(0, 10);
     HeeUserDTO heeUserDTO = new HeeUserDTO();

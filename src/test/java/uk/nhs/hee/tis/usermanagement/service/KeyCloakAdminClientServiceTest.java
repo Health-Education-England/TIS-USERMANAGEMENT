@@ -16,8 +16,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 
-import javax.print.attribute.standard.MediaSize;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -130,6 +128,7 @@ public class KeyCloakAdminClientServiceTest {
 
     when(userMock.getId()).thenReturn(USER_ID);
     when(keycloakAdminClientMock.findByUsername(REALM_LIN, NAME)).thenReturn(userMock);
+
     testObj.updateUser(userDTO);
 
     verify(keycloakAdminClientMock).updateUser(eq(REALM_LIN), eq(USER_ID), userArgumentCaptor.capture());

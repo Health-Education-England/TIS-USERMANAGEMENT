@@ -28,11 +28,14 @@
 
    <div class="pure-u-1-5"></div>
    <div class="pure-u-3-5">
-      <form method="get" class="pure-form">
-         <label for="search">Search by username</label>
-         <input type="text" name="search" id="search" placeholder="Bob Wankel">
-         <input type="submit" value="Submit" class="pure-button">
-      </form>
+      <div><a th:href="@{'/createUser'}">Create User</a></div>
+      <div>
+         <form method="get" class="pure-form">
+            <label for="search">Search by username</label>
+            <input type="text" name="search" id="search" placeholder="Bob Wankel">
+            <input type="submit" value="Submit" class="pure-button">
+         </form>
+      </div>
    </div>
    <div class="pure-u-1-5"></div>
 
@@ -66,9 +69,9 @@
       <a th:href="@{'/allUsers?' + ${pagedUsers.getPreviousPageRequestParameters()} + '&search=' + ${searchParam}}">Previous</a>
    </span>
 
-   <span th:text="'Page: ' + ${currentPage}">page</span>
+      <span th:text="'Page: ' + ${currentPage}">page</span>
 
-   <span th:if="${pagedUsers.hasNext()}">
+      <span th:if="${pagedUsers.hasNext()}">
       <a th:href="@{'/allUsers?' + ${pagedUsers.getNextPageRequestParameters()} + '&search=' + ${searchParam}}">Next</a>
    </span>
    </div>
