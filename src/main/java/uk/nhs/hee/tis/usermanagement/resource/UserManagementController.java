@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,12 +24,7 @@ public class UserManagementController {
   @Autowired
   UserManagementFacade userManagementFacade;
 
-//  @RequestMapping(method = RequestMethod.POST, value = "/createUser")
-//  public String createUser(@RequestParam("Forename") String forename) {
-//    System.out.println(forename);
-//    return "success";
-//  }
-
+  @PreAuthorize("hasAuthority('heeuser:view')")
   @GetMapping("/user")
   public String getCompleteUser(@RequestParam String userName, Model model) {
     Optional<UserDTO> completeUserDTO = userManagementFacade.getCompleteUser(userName);
@@ -38,6 +34,7 @@ public class UserManagementController {
     return "userEdit";
   }
 
+  @PreAuthorize("hasAuthority('heeuser:view')")
   @GetMapping("/allUsers")
   public String getAllUsers(@RequestParam(required = false, defaultValue = "") String search,
                             @RequestParam(required = false, defaultValue = "0") int page,
@@ -51,17 +48,19 @@ public class UserManagementController {
     return "allUsers";
   }
 
+  @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @GetMapping("/createUser")
   public String viewCreateUser() {
     return "createUser";
   }
 
-
+  @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PostMapping("/createUser")
   public String createUser() {
     return "createUser";
   }
 
+  @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PostMapping("/updateUser")
   public String updateUser(@ModelAttribute UserDTO user, RedirectAttributes attributes) {
     userManagementFacade.updateSingleUser(user);
@@ -70,6 +69,7 @@ public class UserManagementController {
     return "redirect:/allUsers";
   }
 
+  @PreAuthorize("hasAuthority('heeuser:delete')")
   @PostMapping("/deleteUser")
   public String deleteUser(@ModelAttribute UserDTO user, RedirectAttributes attributes) {
     attributes.addFlashAttribute("message",
