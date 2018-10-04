@@ -5,6 +5,7 @@ import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class ProfileServiceTest {
 

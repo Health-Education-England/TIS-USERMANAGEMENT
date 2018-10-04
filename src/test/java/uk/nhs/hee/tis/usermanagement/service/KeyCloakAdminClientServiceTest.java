@@ -5,6 +5,7 @@ import com.transform.hee.tis.keycloak.KeycloakAdminClient;
 import com.transform.hee.tis.keycloak.User;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.keycloak.representations.idm.GroupRepresentation;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.usermanagement.service.KeyCloakAdminClientService.REALM_LIN;
 
+@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class KeyCloakAdminClientServiceTest {
 
