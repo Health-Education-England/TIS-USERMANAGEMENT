@@ -14,7 +14,12 @@
    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css">
    <!--<![endif]-->
 
-   <title>User</title>
+   <title>Edit User</title>
+   <style>
+      .main-form, .delete-form { display: inline-block; }
+      fieldset { border-style: hidden; }
+      .delete-form { margin-left: -100px; }
+   </style>
 </head>
 <body>
 <div class="pure-g">
@@ -23,33 +28,51 @@
       <a th:href="@{'/allUsers'}">Back</a>
    </div>
    <div class="pure-u-1-5"></div>
-   
+
    <div class="pure-u-1-5"></div>
    <div class="pure-u-3-5">
-      <table class="pure-table">
-         <thead>
-         <tr>
-            <th>Username</th>
-            <th>Forenames</th>
-            <th>Surname</th>
-            <th>Email Address</th>
-            <th>Active</th>
-            <th>GMC Number</th>
-            <th>Temporary Password</th>
-         </tr>
-         </thead>
-         <tbody>
-         <tr th:each="user : ${user}">
-            <td th:text="${user.name}">name</td>
-            <td th:text="${user.firstName}">firstName</td>
-            <td th:text="${user.lastName}">firstName</td>
-            <td th:text="${user.emailAddress}">email</td>
-            <td th:text="${user.active}">active</td>
-            <td th:text="${user.gmcId}">gmcId</td>
-            <td th:text="${user.temporaryPassword}">temporaryPassword</td>
-         </tr>
-         </tbody>
-      </table>
+      <form class="pure-form-aligned main-form" th:method="post" th:action="@{'/updateUser'}" th:object="${user}">
+         <fieldset>
+            <div class="pure-control-group">
+               <label for="username">Username</label>
+               <input id="username" name="username" type="text" th:field="${user.name}">
+            </div>
+            <div class="pure-control-group">
+               <label for="forenames">Forenames</label>
+               <input id="forenames" name="forenames" type="text" th:field="${user.firstName}">
+            </div>
+            <div class="pure-control-group">
+               <label for="surname">Surname</label>
+               <input id="surname" name="surname" type="text" th:field="${user.lastName}">
+            </div>
+            <div class="pure-control-group">
+               <label for="email">Email</label>
+               <input id="email" name="email" type="email" th:field="${user.emailAddress}">
+            </div>
+            <div class="pure-control-group">
+               <label for="active">Active</label>
+               <input id="active" name="active" type="text" th:field="${user.active}">
+            </div>
+            <div class="pure-control-group">
+               <label for="gmcId">GMC ID</label>
+               <input id="gmcId" name="gmcId" type="text" th:field="${user.gmcId}">
+            </div>
+            <div class="pure-control-group">
+               <label for="temporaryPassword">Temporary Password</label>
+               <input id="temporaryPassword" type="text" name="temporaryPassword" th:field="${user.temporaryPassword}">
+            </div>
+            <div class="pure-controls">
+               <button type="submit" class="pure-button pure-button-primary">Submit</button>
+
+            </div>
+         </fieldset>
+      </form>
+      <form class="pure-form-aligned delete-form" th:method="post" th:action="@{/deleteUser}" th:object="${user}">
+         <fieldset>
+            <input name="username" type="hidden" th:field="${user.name}">
+            <button type="submit" class="pure-button pure-button-primary">Delete</button>
+         </fieldset>
+      </form>
    </div>
    <div class="pure-u-1-5"></div>
 </div>

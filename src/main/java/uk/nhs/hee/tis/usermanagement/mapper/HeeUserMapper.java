@@ -1,6 +1,8 @@
 package uk.nhs.hee.tis.usermanagement.mapper;
 
+import com.google.common.base.Preconditions;
 import com.transform.hee.tis.keycloak.User;
+import com.transformuk.hee.tis.profile.dto.RoleDTO;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import org.apache.commons.collections4.CollectionUtils;
@@ -21,12 +23,43 @@ public class HeeUserMapper {
 
   /**
    * Used for the list page where only the profile service info is needed
+   *
    * @param heeUserDTO
    * @return
    */
   public UserDTO convert(HeeUserDTO heeUserDTO) {
     UserDTO userDTO = new UserDTO();
     return mapHeeUserAttributes(userDTO, heeUserDTO);
+  }
+
+  public HeeUserDTO convert(UserDTO userDTO) {
+    Preconditions.checkNotNull(userDTO, "stop being stooopid");
+    return mapUserAttributes(userDTO);
+  }
+
+  private HeeUserDTO mapUserAttributes(UserDTO userDTO) {
+    HeeUserDTO heeUserDTO = new HeeUserDTO();
+    heeUserDTO.setName(userDTO.getName());
+    heeUserDTO.setFirstName(userDTO.getFirstName());
+    heeUserDTO.setLastName(userDTO.getLastName());
+    heeUserDTO.setGmcId(userDTO.getGmcId());
+    heeUserDTO.setPhoneNumber(userDTO.getPhoneNumber());
+    heeUserDTO.setEmailAddress(userDTO.getEmailAddress());
+
+    if (CollectionUtils.isNotEmpty(userDTO.getRoles())) {
+      Set<RoleDTO> setOfRoles = userDTO.getRoles()
+          .stream()
+          .map(roleName -> {
+            RoleDTO roleDTO = new RoleDTO();
+            roleDTO.setName(roleName);
+            return roleDTO;
+          }).collect(Collectors.toSet());
+      heeUserDTO.setRoles(setOfRoles);
+    }
+
+    heeUserDTO.setAssociatedTrusts(userDTO.getAssociatedTrusts());
+
+    return heeUserDTO;
   }
 
   /**
@@ -47,7 +80,7 @@ public class HeeUserMapper {
   }
 
   private UserDTO mapHeeUserAttributes(UserDTO userDTO, HeeUserDTO heeUserDTO) {
-    if(heeUserDTO != null) {
+    if (heeUserDTO != null) {
       userDTO.setName(heeUserDTO.getName());
       userDTO.setFirstName(heeUserDTO.getFirstName());
       userDTO.setLastName(heeUserDTO.getLastName());
@@ -66,7 +99,7 @@ public class HeeUserMapper {
   }
 
   private UserDTO mapKeycloakAttributes(UserDTO userDTO, User keycloakUser) {
-    if(keycloakUser != null) {
+    if (keycloakUser != null) {
       userDTO.setActive(keycloakUser.getEnabled());
       userDTO.setTemporaryPassword(keycloakUser.getTempPassword());
     }

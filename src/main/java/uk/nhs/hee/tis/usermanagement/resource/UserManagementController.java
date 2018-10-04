@@ -2,21 +2,19 @@ package uk.nhs.hee.tis.usermanagement.resource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 
-import java.util.List;
 import java.util.Optional;
 
 
@@ -26,12 +24,7 @@ public class UserManagementController {
   @Autowired
   UserManagementFacade userManagementFacade;
 
-  @RequestMapping(method = RequestMethod.POST, value = "/createUser")
-  public String createUser(@RequestParam("Forename") String forename) {
-    System.out.println(forename);
-    return "success";
-  }
-
+  @PreAuthorize("hasAuthority('heeuser:view')")
   @GetMapping("/user")
   public String getCompleteUser(@RequestParam String userName, Model model) {
     Optional<UserDTO> completeUserDTO = userManagementFacade.getCompleteUser(userName);
@@ -41,6 +34,7 @@ public class UserManagementController {
     return "userEdit";
   }
 
+  @PreAuthorize("hasAuthority('heeuser:view')")
   @GetMapping("/allUsers")
   public String getAllUsers(@RequestParam(required = false, defaultValue = "") String search,
                             @RequestParam(required = false, defaultValue = "0") int page,
@@ -52,5 +46,34 @@ public class UserManagementController {
     model.addAttribute("currentPage", pageable.getPageNumber() + 1);
     model.addAttribute("searchParam", search);
     return "allUsers";
+  }
+
+  @PreAuthorize("hasAuthority('heeuser:add:modify')")
+  @GetMapping("/createUser")
+  public String viewCreateUser() {
+    return "createUser";
+  }
+
+  @PreAuthorize("hasAuthority('heeuser:add:modify')")
+  @PostMapping("/createUser")
+  public String createUser() {
+    return "createUser";
+  }
+
+  @PreAuthorize("hasAuthority('heeuser:add:modify')")
+  @PostMapping("/updateUser")
+  public String updateUser(@ModelAttribute UserDTO user, RedirectAttributes attributes) {
+    userManagementFacade.updateSingleUser(user);
+    attributes.addFlashAttribute("message",
+        "The user " + user.getFirstName() + " " + user.getLastName() + " (" + user.getName() + ") has been updated");
+    return "redirect:/allUsers";
+  }
+
+  @PreAuthorize("hasAuthority('heeuser:delete')")
+  @PostMapping("/deleteUser")
+  public String deleteUser(@ModelAttribute UserDTO user, RedirectAttributes attributes) {
+    attributes.addFlashAttribute("message",
+        "The user " + user.getFirstName() + " " + user.getLastName() + " (" + user.getName() + ") has been deleted");
+    return "redirect:/allUsers";
   }
 }

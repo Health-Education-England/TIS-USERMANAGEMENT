@@ -11,7 +11,7 @@ public class ProfileServiceImplConfig {
   private static final double BULK_RATE_LIMIT = 10d;
 
   @Bean
-  public ProfileServiceImpl profileServiceImp(){
-    return new ProfileServiceImpl(RATE_LIMIT,BULK_RATE_LIMIT);
-  };
+  public ProfileServiceImpl profileServiceImp() {
+    return new ProfileServiceImpl(RATE_LIMIT, BULK_RATE_LIMIT);
+  }
 }

@@ -6,7 +6,6 @@ import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
@@ -46,5 +45,10 @@ public class UserManagementFacade {
     Page<HeeUserDTO> heeUserDTOS = profileService.getAllUsers(pageable, search);
     List<UserDTO> userDTOS = heeUserMapper.convertAll(heeUserDTOS.getContent());
     return new CustomPageable<>(userDTOS, pageable, heeUserDTOS.getTotalElements());
+  }
+
+  public void updateSingleUser(UserDTO userDTO) {
+    profileService.updateUser(heeUserMapper.convert(userDTO));
+    keyCloakAdminClientService.updateUser(userDTO);
   }
 }
