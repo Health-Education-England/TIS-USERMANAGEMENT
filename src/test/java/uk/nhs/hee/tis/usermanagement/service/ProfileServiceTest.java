@@ -5,7 +5,6 @@ import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -24,22 +23,21 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.usermanagement.service.ProfileService.HEE_USERS_ENDPOINT;
 
-@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class ProfileServiceTest {
 
   private static final String USERNAME = "username";
   private static final String NON_EXISTING_USER = "NON EXISTING USER";
-  public static final String FIRST_NAME = "FIRST NAME";
-  public static final String LAST_NAME = "LAST NAME";
-  public static final String NAME = "NAME";
-  public static final boolean ACTIVE = true;
-  public static final String EMAIL_ADDRESS = "EMAIL ADDRESS";
-  public static final String GMC_ID = "1234567";
-  public static final String PASSWORD = "PASSWORD";
-  public static final boolean TEMPORARY_PASSWORD = false;
-  public static final String URL = "URL";
+  private static final String FIRST_NAME = "FIRST NAME";
+  private static final String LAST_NAME = "LAST NAME";
+  private static final String NAME = "NAME";
+  private static final boolean ACTIVE = true;
+  private static final String EMAIL_ADDRESS = "EMAIL ADDRESS";
+  private static final String GMC_ID = "1234567";
+  private static final String PASSWORD = "PASSWORD";
+  private static final boolean TEMPORARY_PASSWORD = false;
 
   @InjectMocks
   private ProfileService testObj;
@@ -58,12 +56,24 @@ public class ProfileServiceTest {
 
   @Test
   public void getAllUsersShouldReturnEmptyPageWhenProfileServiceIsDown() {
+    PageRequest pageRequest = PageRequest.of(0, 10);
 
+    doThrow(new HttpServerErrorException(HttpStatus.SERVICE_UNAVAILABLE)).when(profileServiceImplMock).getAllAdminUsers(pageRequest, USERNAME);
+
+    Page<HeeUserDTO> result = testObj.getAllUsers(pageRequest, USERNAME);
+
+    Assert.assertEquals(0, result.getContent().size());
   }
 
   @Test
   public void getAllUsersShouldReturnEmptyPageWhenProfileServiceThrowsAnException() {
+    PageRequest pageRequest = PageRequest.of(0, 10);
 
+    doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(profileServiceImplMock).getAllAdminUsers(pageRequest, USERNAME);
+
+    Page<HeeUserDTO> result = testObj.getAllUsers(pageRequest, USERNAME);
+
+    Assert.assertEquals(0, result.getContent().size());
   }
 
   @Test
@@ -133,58 +143,68 @@ public class ProfileServiceTest {
   public void createUserShouldReturnEmptyOptionalWhenProfileServiceErrors() {
     HeeUserDTO userToCreateDTO = createHeeUserDto();
 
-    when(profileServiceImplMock.getServiceUrl()).thenReturn(URL);
-    doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(profileServiceImplMock).createDto(userToCreateDTO, URL, HeeUserDTO.class);
+    doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
     Optional<HeeUserDTO> result = testObj.createUser(userToCreateDTO);
 
     Assert.assertFalse(result.isPresent());
-    verify(profileServiceImplMock).createDto(userToCreateDTO, URL, HeeUserDTO.class);
+    verify(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
   }
 
   @Test
   public void createUserShouldReturnEmptyOptionalWhenProfileServiceIsDown() {
     HeeUserDTO userToCreateDTO = createHeeUserDto();
 
-    when(profileServiceImplMock.getServiceUrl()).thenReturn(URL);
-    doThrow(new HttpServerErrorException(HttpStatus.SERVICE_UNAVAILABLE)).when(profileServiceImplMock).createDto(userToCreateDTO, URL, HeeUserDTO.class);
+    doThrow(new HttpServerErrorException(HttpStatus.SERVICE_UNAVAILABLE)).when(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
     Optional<HeeUserDTO> result = testObj.createUser(userToCreateDTO);
 
     Assert.assertFalse(result.isPresent());
-    verify(profileServiceImplMock).createDto(userToCreateDTO, URL, HeeUserDTO.class);
+    verify(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
   }
 
   @Test
   public void createUserShouldReturnEmptyOptionalWhenRequestFailsValidation() {
     HeeUserDTO userToCreateDTO = createHeeUserDto();
 
-    when(profileServiceImplMock.getServiceUrl()).thenReturn(URL);
-    doThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST)).when(profileServiceImplMock).createDto(userToCreateDTO, URL, HeeUserDTO.class);
+    doThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST)).when(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
     Optional<HeeUserDTO> result = testObj.createUser(userToCreateDTO);
 
     Assert.assertFalse(result.isPresent());
-    verify(profileServiceImplMock).createDto(userToCreateDTO, URL, HeeUserDTO.class);
+    verify(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
   }
 
   @Test
   public void createUserShouldCallProfileServiceToCreateUser() {
     HeeUserDTO userToCreateDTO = createHeeUserDto();
+    when(profileServiceImplMock.createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class)).thenReturn(userToCreateDTO);
 
     Optional<HeeUserDTO> result = testObj.createUser(userToCreateDTO);
 
-    verify(profileServiceImplMock).createDto(userToCreateDTO, profileServiceImplMock.getServiceUrl(), HeeUserDTO.class);
+    verify(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
 
     Assert.assertTrue(result.isPresent());
-    Assert.assertEquals(userToCreateDTO, result.get());
+    Assert.assertSame(userToCreateDTO, result.get());
   }
 
+
+  @Test(expected = NullPointerException.class)
+  public void updateUserShouldThrowExceptionWhenUserIsNull() {
+    try {
+      testObj.updateUser(null);
+    } finally {
+      verifyZeroInteractions(profileServiceImplMock);
+    }
+  }
+
+
   @Test
-  public void updateUserShouldReturnEmptyOptionalWhenUserDoesNotExist() {
+  public void updateUserShouldReturnNewUserWhenUserDoesNotExist() {
     HeeUserDTO userToUpdateDTO = createHeeUserDto();
+    when(profileServiceImplMock.updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class)).thenReturn(userToUpdateDTO);
 
     Optional<HeeUserDTO> result = testObj.updateUser(userToUpdateDTO);
 
-    Assert.assertFalse(result.isPresent());
-    verify(profileServiceImplMock).updateDto(userToUpdateDTO, profileServiceImplMock.getServiceUrl(), HeeUserDTO.class);
+    Assert.assertTrue(result.isPresent());
+    verify(profileServiceImplMock).updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
   }
 
 
@@ -192,49 +212,45 @@ public class ProfileServiceTest {
   public void updateUserShouldReturnEmptyOptionalWhenServiceIsDown() {
     HeeUserDTO userToUpdateDTO = createHeeUserDto();
 
-    when(profileServiceImplMock.getServiceUrl()).thenReturn(URL);
-    doThrow(new HttpServerErrorException(HttpStatus.SERVICE_UNAVAILABLE)).when(profileServiceImplMock).updateDto(userToUpdateDTO, URL, HeeUserDTO.class);
+    doThrow(new HttpServerErrorException(HttpStatus.SERVICE_UNAVAILABLE)).when(profileServiceImplMock).updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
     Optional<HeeUserDTO> result = testObj.updateUser(userToUpdateDTO);
 
     Assert.assertFalse(result.isPresent());
-    verify(profileServiceImplMock).updateDto(userToUpdateDTO, profileServiceImplMock.getServiceUrl(), HeeUserDTO.class);
+    verify(profileServiceImplMock).updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
   }
 
   @Test
   public void updateUserShouldReturnEmptyOptionalWhenServiceErrors() {
     HeeUserDTO userToUpdateDTO = createHeeUserDto();
 
-    when(profileServiceImplMock.getServiceUrl()).thenReturn(URL);
-    doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(profileServiceImplMock).updateDto(userToUpdateDTO, URL, HeeUserDTO.class);
+    doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(profileServiceImplMock).updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
     Optional<HeeUserDTO> result = testObj.updateUser(userToUpdateDTO);
 
     Assert.assertFalse(result.isPresent());
-    verify(profileServiceImplMock).updateDto(userToUpdateDTO, profileServiceImplMock.getServiceUrl(), HeeUserDTO.class);
+    verify(profileServiceImplMock).updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
   }
 
   @Test
   public void updateUserShouldReturnEmptyOptionalWhenFailsValidation() {
     HeeUserDTO userToUpdateDTO = createHeeUserDto();
 
-    when(profileServiceImplMock.getServiceUrl()).thenReturn(URL);
-    doThrow(new HttpServerErrorException(HttpStatus.BAD_REQUEST)).when(profileServiceImplMock).updateDto(userToUpdateDTO, URL, HeeUserDTO.class);
+    doThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST)).when(profileServiceImplMock).updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
     Optional<HeeUserDTO> result = testObj.updateUser(userToUpdateDTO);
 
     Assert.assertFalse(result.isPresent());
-    verify(profileServiceImplMock).updateDto(userToUpdateDTO, profileServiceImplMock.getServiceUrl(), HeeUserDTO.class);
+    verify(profileServiceImplMock).updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
   }
 
   @Test
   public void updateUserShouldReturnUpdatedModelOfUserAfterUpdate() {
     HeeUserDTO userToUpdateDTO = createHeeUserDto();
 
-    when(profileServiceImplMock.getServiceUrl()).thenReturn(URL);
-    when(profileServiceImplMock.updateDto(userToUpdateDTO, URL, HeeUserDTO.class)).thenReturn(userToUpdateDTO);
+    when(profileServiceImplMock.updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class)).thenReturn(userToUpdateDTO);
 
     Optional<HeeUserDTO> result = testObj.updateUser(userToUpdateDTO);
 
-    Assert.assertFalse(result.isPresent());
-    verify(profileServiceImplMock).updateDto(userToUpdateDTO, profileServiceImplMock.getServiceUrl(), HeeUserDTO.class);
+    Assert.assertTrue(result.isPresent());
+    verify(profileServiceImplMock).updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
 
   }
 
