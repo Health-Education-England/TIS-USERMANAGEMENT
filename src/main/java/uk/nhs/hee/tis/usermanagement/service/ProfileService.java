@@ -1,19 +1,19 @@
 package uk.nhs.hee.tis.usermanagement.service;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.HttpServerErrorException;
+import uk.nhs.hee.tis.usermanagement.command.profile.CreateUserCommand;
+import uk.nhs.hee.tis.usermanagement.command.profile.GetPaginatedUsersCommand;
+import uk.nhs.hee.tis.usermanagement.command.profile.GetUserByUsernameCommand;
+import uk.nhs.hee.tis.usermanagement.command.profile.UpdateUserCommand;
 
 import java.util.Optional;
 
@@ -35,53 +35,47 @@ public class ProfileService {
    */
   public Page<HeeUserDTO> getAllUsers(Pageable pageable, @Nullable String username) {
     Preconditions.checkNotNull(pageable, "Pageable cannot be null when requesting a paginated result");
-    try {
-      Page<HeeUserDTO> heeUserDTOS = profileServiceImpl.getAllAdminUsers(pageable, username);
-      return heeUserDTOS;
-    } catch (HttpServerErrorException e) {
-      LOG.warn("A server error occurred while getting a page of users from profile service, returning an empty page of users as fallback");
-      e.printStackTrace();
-      return new PageImpl<>(Lists.newArrayList());
-    }
+
+    GetPaginatedUsersCommand getPaginatedUsersCommand = new GetPaginatedUsersCommand(profileServiceImpl, pageable, username);
+    return getPaginatedUsersCommand.execute();
   }
 
-  public HeeUserDTO getUserByUsername(String username) {
+  /**
+   * Get a single user by username
+   *
+   * @param username the username to search by
+   * @return an optional of the found user
+   */
+  public Optional<HeeUserDTO> getUserByUsername(String username) {
     Preconditions.checkNotNull(username, "Username cannot be null when searching for a user by username");
 
-    HeeUserDTO heeUserDTO = profileServiceImpl.getSingleAdminUser(username);
-    return heeUserDTO;
+    GetUserByUsernameCommand getUserByUsernameCommand = new GetUserByUsernameCommand(profileServiceImpl, username);
+    return getUserByUsernameCommand.execute();
   }
 
+  /**
+   * Create a user in the profile service
+   *
+   * @param userToCreateDTO the new user details
+   * @return an optional HeeUserDTO that represents the user in the profile service
+   */
   public Optional<HeeUserDTO> createUser(HeeUserDTO userToCreateDTO) {
     Preconditions.checkNotNull(userToCreateDTO, "Cannot create user if user is null");
 
-    try {
-      HeeUserDTO heeUserDTO = profileServiceImpl.createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
-      return Optional.ofNullable(heeUserDTO);
-    } catch (HttpServerErrorException e) {
-      LOG.warn("A server error occurred while attempting to create a hee user in profile service, returning an empty optional as fallback");
-      e.printStackTrace();
-      return Optional.empty();
-    } catch (HttpClientErrorException e) {
-      LOG.warn("A client exception thrown while attempting to create a hee user in profile service, returning an empty optional as fallback");
-      e.printStackTrace();
-      return Optional.empty();
-    }
+    CreateUserCommand createUserCommand = new CreateUserCommand(profileServiceImpl, userToCreateDTO);
+    return createUserCommand.execute();
   }
 
+  /**
+   * Update a user in the profile service
+   *
+   * @param userToUpdateDTO the state of the user details to update to
+   * @return an optional of the HeeUserDTO that represents the user in the profile service
+   */
   public Optional<HeeUserDTO> updateUser(HeeUserDTO userToUpdateDTO) {
     Preconditions.checkNotNull(userToUpdateDTO, "Cannot update user if user to update is null");
-    try {
-      HeeUserDTO heeUserDTO = profileServiceImpl.updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
-      return Optional.ofNullable(heeUserDTO);
-    } catch (HttpServerErrorException e) {
-      LOG.warn("A server error occurred while trying to update a user in profile service, returning empty optional as fallback");
-      e.printStackTrace();
-      return Optional.empty();
-    } catch (HttpClientErrorException e) {
-      LOG.warn("A client error occurred while trying to update a user in profile service, returning empty optional as fallback");
-      e.printStackTrace();
-      return Optional.empty();
-    }
+
+    UpdateUserCommand updateUserCommand = new UpdateUserCommand(profileServiceImpl, userToUpdateDTO);
+    return updateUserCommand.execute();
   }
 }

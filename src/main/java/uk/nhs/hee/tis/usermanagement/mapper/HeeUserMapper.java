@@ -37,7 +37,7 @@ public class HeeUserMapper {
     return mapUserAttributes(userDTO);
   }
 
-  private HeeUserDTO mapUserAttributes(UserDTO userDTO) {
+  public HeeUserDTO mapUserAttributes(UserDTO userDTO) {
     HeeUserDTO heeUserDTO = new HeeUserDTO();
     heeUserDTO.setName(userDTO.getName());
     heeUserDTO.setFirstName(userDTO.getFirstName());
@@ -79,7 +79,7 @@ public class HeeUserMapper {
     return userDTO;
   }
 
-  private UserDTO mapHeeUserAttributes(UserDTO userDTO, HeeUserDTO heeUserDTO) {
+  public UserDTO mapHeeUserAttributes(UserDTO userDTO, HeeUserDTO heeUserDTO) {
     if (heeUserDTO != null) {
       userDTO.setName(heeUserDTO.getName());
       userDTO.setFirstName(heeUserDTO.getFirstName());
@@ -98,7 +98,7 @@ public class HeeUserMapper {
     return userDTO;
   }
 
-  private UserDTO mapKeycloakAttributes(UserDTO userDTO, User keycloakUser) {
+  public UserDTO mapKeycloakAttributes(UserDTO userDTO, User keycloakUser) {
     if (keycloakUser != null) {
       userDTO.setActive(keycloakUser.getEnabled());
       userDTO.setTemporaryPassword(keycloakUser.getTempPassword());
@@ -106,7 +106,7 @@ public class HeeUserMapper {
     return userDTO;
   }
 
-  private UserDTO mapDBCAttributes(UserDTO userDTO, HeeUserDTO heeUserDTO, Set<DBCDTO> dbcdtos) {
+  public UserDTO mapDBCAttributes(UserDTO userDTO, HeeUserDTO heeUserDTO, Set<DBCDTO> dbcdtos) {
     Map<String, String> dbcToLocalOffice = dbcdtos.stream().collect(Collectors.toMap(DBCDTO::getDbc, DBCDTO::getName));
     Set<String> setOfLOs = heeUserDTO.getDesignatedBodyCodes().stream().map(dbc -> dbcToLocalOffice.get(dbc)).collect(Collectors.toSet());
     userDTO.setLocalOffices(setOfLOs);

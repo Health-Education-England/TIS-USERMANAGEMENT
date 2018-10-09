@@ -11,6 +11,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 @SpringBootApplication
 @EnableWebMvc
 @EnableSpringDataWebSupport
+//@EnableEurekaClient
 @PropertySource(
     {
         "classpath:/application.properties",

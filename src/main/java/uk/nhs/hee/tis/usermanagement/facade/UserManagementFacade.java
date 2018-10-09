@@ -34,11 +34,20 @@ public class UserManagementFacade {
   private ReferenceService referenceService;
 
   public Optional<UserDTO> getCompleteUser(String username) {
-    HeeUserDTO heeUserDTO = profileService.getUserByUsername(username);
-    User kcUser = keyCloakAdminClientService.getUser(username);
-    Set<DBCDTO> dbcdtos = referenceService.getAllDBCs();
-    UserDTO completeUserDto = heeUserMapper.convert(heeUserDTO, kcUser, dbcdtos);
-    return Optional.of(completeUserDto);
+    Optional<HeeUserDTO> heeUserDTO = profileService.getUserByUsername(username);
+    UserDTO completeUserDto = new UserDTO();
+    if (heeUserDTO.isPresent()) {
+      completeUserDto = heeUserMapper.mapHeeUserAttributes(completeUserDto, heeUserDTO.get());
+      Optional<User> optionalKeycloakUser = keyCloakAdminClientService.getUser(username);
+      if (optionalKeycloakUser.isPresent()) {
+        User kcUser = optionalKeycloakUser.get();
+        completeUserDto = heeUserMapper.mapKeycloakAttributes(completeUserDto, kcUser);
+      }
+      Set<DBCDTO> dbcdtos = referenceService.getAllDBCs();
+      completeUserDto = heeUserMapper.mapDBCAttributes(completeUserDto, heeUserDTO.get(), dbcdtos);
+
+    }
+    return Optional.ofNullable(completeUserDto);
   }
 
   public Page<UserDTO> getAllUsers(Pageable pageable, String search) {
@@ -47,8 +56,24 @@ public class UserManagementFacade {
     return new CustomPageable<>(userDTOS, pageable, heeUserDTOS.getTotalElements());
   }
 
+  /**
+   * Update a user in both KC and the Profile service.
+   * <p>
+   * Do KC first as thats more likely to fail
+   *
+   * @param userDTO
+   */
   public void updateSingleUser(UserDTO userDTO) {
-    profileService.updateUser(heeUserMapper.convert(userDTO));
-    keyCloakAdminClientService.updateUser(userDTO);
+    Optional<User> originalUser = keyCloakAdminClientService.getUser(userDTO.getName());
+    if (originalUser.isPresent()) {
+      boolean success = keyCloakAdminClientService.updateUser(userDTO);
+      if (success) {
+        Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO));
+        if (!optionalHeeUserDTO.isPresent()) {
+          //revert KC changes
+          keyCloakAdminClientService.updateUser(originalUser.get());
+        }
+      }
+    }
   }
 }
