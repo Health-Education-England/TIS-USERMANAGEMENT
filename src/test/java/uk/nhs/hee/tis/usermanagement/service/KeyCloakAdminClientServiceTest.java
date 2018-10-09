@@ -56,6 +56,7 @@ public class KeyCloakAdminClientServiceTest {
 
   private UserDTO createUserDTO() {
     UserDTO userDTO = new UserDTO();
+    userDTO.setId(USER_ID);
     userDTO.setFirstName(FIRST_NAME);
     userDTO.setLastName(LAST_NAME);
     userDTO.setName(NAME);
@@ -113,9 +114,9 @@ public class KeyCloakAdminClientServiceTest {
 
     try {
       testObj.updateUser(userDTO);
-
     } catch (UserNotFoundException unfe) {
       Assert.assertEquals("User " + NAME_THAT_IS_NOT_IN_THE_SYSTEM + " could not be found in keycloak", unfe.getMessage());
+      throw unfe;
     } finally {
       verify(keycloakAdminClientMock).findByUsername(REALM_LIN, NAME_THAT_IS_NOT_IN_THE_SYSTEM);
       verify(keycloakAdminClientMock, never()).updateUser(anyString(), anyString(), any(User.class));
@@ -127,7 +128,6 @@ public class KeyCloakAdminClientServiceTest {
     UserDTO userDTO = createUserDTO();
     User userMock = mock(User.class);
 
-    when(userMock.getId()).thenReturn(USER_ID);
     when(keycloakAdminClientMock.findByUsername(REALM_LIN, NAME)).thenReturn(userMock);
 
     testObj.updateUser(userDTO);
@@ -176,8 +176,7 @@ public class KeyCloakAdminClientServiceTest {
 
   @Test(expected = UserNotFoundException.class)
   public void getUserGroupsShouldThrowUserNotFoundExceptionWhenUserCannotBeFoundInKC() {
-    User userMock = mock(User.class);
-    when(keycloakAdminClientMock.findByUsername(REALM_LIN, NAME)).thenReturn(userMock);
+    when(keycloakAdminClientMock.findByUsername(REALM_LIN, NAME)).thenReturn(null);
     try {
       testObj.getUserGroups(NAME);
     } finally {

@@ -56,7 +56,7 @@ public class KeyCloakAdminClientService {
 
     // Need to validate here - or check KC client behaviour
     Optional<User> existingUser = getUser(userDTO.getName());
-    existingUser.orElseThrow(UserNotFoundException::new);
+    existingUser.orElseThrow(() -> new UserNotFoundException("User " + userDTO.getName() + " could not be found in keycloak"));
 
     User userToUpdate = heeUserToKeycloakUser(userDTO);
     return updateUser(userToUpdate);
@@ -93,7 +93,7 @@ public class KeyCloakAdminClientService {
     Preconditions.checkNotNull(username, "Cannot get groups of user if username is null");
 
     Optional<User> optionalUser = getUser(username);
-    User user = optionalUser.orElseThrow(UserNotFoundException::new);
+    User user = optionalUser.orElseThrow(() -> new UserNotFoundException("User " + username + " could not be found in keycloak"));
 
     GetUserGroupsCommand getUserGroupsCommand = new GetUserGroupsCommand(keycloakAdminClient, REALM_LIN, user);
     return getUserGroupsCommand.execute();
@@ -104,7 +104,7 @@ public class KeyCloakAdminClientService {
     Map<String, List<String>> attributes = new HashMap<>();
     List<String> dbcs = new ArrayList<>();
     attributes.put("DBC", dbcs);
-    return User.create(UserDTO.getFirstName(), UserDTO.getLastName(), UserDTO.getName(),
+    return User.create(UserDTO.getId(), UserDTO.getFirstName(), UserDTO.getLastName(), UserDTO.getName(),
         UserDTO.getEmailAddress(), UserDTO.getPassword(), UserDTO.getTemporaryPassword(), attributes, UserDTO.getActive());
   }
 }
