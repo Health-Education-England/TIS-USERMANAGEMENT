@@ -31,7 +31,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.usermanagement.service.KeyCloakAdminClientService.REALM_LIN;
 
-@Ignore
 @RunWith(MockitoJUnitRunner.class)
 public class KeyCloakAdminClientServiceTest {
 
@@ -101,7 +100,7 @@ public class KeyCloakAdminClientServiceTest {
   @Test(expected = NullPointerException.class)
   public void updateUserShouldThrowExceptionWhenUserIsNull() {
     try {
-      testObj.updateUser(null);
+      testObj.updateUser((UserDTO) null);
     } finally {
       verifyZeroInteractions(keycloakAdminClientMock);
     }
