@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class UserDTO {
-  private String id;
+  private String kcId;
   private String name;
   private String firstName;
   private String lastName;
@@ -20,12 +20,12 @@ public class UserDTO {
   private Set<String> localOffices = new HashSet<>();
   private Set<UserTrustDTO> associatedTrusts = new HashSet<>();
 
-  public String getId() {
-    return id;
+  public String getKcId() {
+    return kcId;
   }
 
-  public void setId(String id) {
-    this.id = id;
+  public void setKcId(String kcId) {
+    this.kcId = kcId;
   }
 
   public String getName() {

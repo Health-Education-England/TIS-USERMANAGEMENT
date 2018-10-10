@@ -1,5 +1,7 @@
 package uk.nhs.hee.tis.usermanagement.resource;
 
+import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
+import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,6 +17,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -22,7 +25,7 @@ import java.util.Optional;
 public class UserManagementController {
 
   @Autowired
-  UserManagementFacade userManagementFacade;
+  private UserManagementFacade userManagementFacade;
 
   @PreAuthorize("hasAuthority('heeuser:view')")
   @GetMapping("/user")
@@ -31,6 +34,14 @@ public class UserManagementController {
     if (completeUserDTO.isPresent()) {
       model.addAttribute("user", completeUserDTO.get());
     }
+
+    List<String> allRoles = userManagementFacade.getAllRoles();
+    List<DBCDTO> allDBCs = userManagementFacade.getAllDBCs();
+    List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
+
+    model.addAttribute("roles", allRoles);
+    model.addAttribute("designatedBodyCodes", allDBCs);
+    model.addAttribute("trusts", allTrusts);
     return "userEdit";
   }
 

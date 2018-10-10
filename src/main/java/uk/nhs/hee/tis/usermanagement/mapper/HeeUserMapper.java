@@ -100,6 +100,7 @@ public class HeeUserMapper {
 
   public UserDTO mapKeycloakAttributes(UserDTO userDTO, User keycloakUser) {
     if (keycloakUser != null) {
+      userDTO.setKcId(keycloakUser.getId());
       userDTO.setActive(keycloakUser.getEnabled());
       userDTO.setTemporaryPassword(keycloakUser.getTempPassword());
     }

@@ -104,7 +104,7 @@ public class KeyCloakAdminClientService {
     Map<String, List<String>> attributes = new HashMap<>();
     List<String> dbcs = new ArrayList<>();
     attributes.put("DBC", dbcs);
-    return User.create(UserDTO.getId(), UserDTO.getFirstName(), UserDTO.getLastName(), UserDTO.getName(),
+    return User.create(UserDTO.getKcId(), UserDTO.getFirstName(), UserDTO.getLastName(), UserDTO.getName(),
         UserDTO.getEmailAddress(), UserDTO.getPassword(), UserDTO.getTemporaryPassword(), attributes, UserDTO.getActive());
   }
 }

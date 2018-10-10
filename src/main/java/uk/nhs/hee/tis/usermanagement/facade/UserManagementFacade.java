@@ -4,6 +4,7 @@ import com.transform.hee.tis.keycloak.User;
 import com.transformuk.hee.tis.profile.client.service.impl.CustomPageable;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
+import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,7 @@ import uk.nhs.hee.tis.usermanagement.service.KeyCloakAdminClientService;
 import uk.nhs.hee.tis.usermanagement.service.ProfileService;
 import uk.nhs.hee.tis.usermanagement.service.ReferenceService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -73,5 +75,17 @@ public class UserManagementFacade {
     } else {
       throw new UpdateUserException(userDTO.getName(), "KC");
     }
+  }
+
+  public List<String> getAllRoles() {
+    return profileService.getAllRoles();
+  }
+
+  public List<DBCDTO> getAllDBCs() {
+    return new ArrayList<>(referenceService.getAllDBCs());
+  }
+
+  public List<TrustDTO> getAllTrusts() {
+    return new ArrayList<>(referenceService.getAllTrusts());
   }
 }

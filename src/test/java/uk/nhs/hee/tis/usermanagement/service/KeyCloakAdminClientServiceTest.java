@@ -5,7 +5,6 @@ import com.transform.hee.tis.keycloak.KeycloakAdminClient;
 import com.transform.hee.tis.keycloak.User;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.keycloak.representations.idm.GroupRepresentation;
@@ -56,7 +55,7 @@ public class KeyCloakAdminClientServiceTest {
 
   private UserDTO createUserDTO() {
     UserDTO userDTO = new UserDTO();
-    userDTO.setId(USER_ID);
+    userDTO.setKcId(USER_ID);
     userDTO.setFirstName(FIRST_NAME);
     userDTO.setLastName(LAST_NAME);
     userDTO.setName(NAME);
