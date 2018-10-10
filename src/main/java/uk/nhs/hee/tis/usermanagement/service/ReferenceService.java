@@ -11,7 +11,7 @@ import java.util.Set;
 public class ReferenceService {
 
   @Autowired
-  ReferenceServiceImpl remoteReferenceService;
+  private ReferenceServiceImpl remoteReferenceService;
 
   public Set<DBCDTO> getAllDBCs() {
     return remoteReferenceService.getAllDBCs();

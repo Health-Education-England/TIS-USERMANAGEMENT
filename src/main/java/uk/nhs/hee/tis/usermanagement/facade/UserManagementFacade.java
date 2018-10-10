@@ -9,6 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
+import uk.nhs.hee.tis.usermanagement.exception.UpdateUserException;
+import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.mapper.HeeUserMapper;
 import uk.nhs.hee.tis.usermanagement.service.KeyCloakAdminClientService;
 import uk.nhs.hee.tis.usermanagement.service.ProfileService;
@@ -34,19 +36,14 @@ public class UserManagementFacade {
   private ReferenceService referenceService;
 
   public Optional<UserDTO> getCompleteUser(String username) {
-    Optional<HeeUserDTO> heeUserDTO = profileService.getUserByUsername(username);
-    UserDTO completeUserDto = new UserDTO();
-    if (heeUserDTO.isPresent()) {
-      completeUserDto = heeUserMapper.mapHeeUserAttributes(completeUserDto, heeUserDTO.get());
-      Optional<User> optionalKeycloakUser = keyCloakAdminClientService.getUser(username);
-      if (optionalKeycloakUser.isPresent()) {
-        User kcUser = optionalKeycloakUser.get();
-        completeUserDto = heeUserMapper.mapKeycloakAttributes(completeUserDto, kcUser);
-      }
-      Set<DBCDTO> dbcdtos = referenceService.getAllDBCs();
-      completeUserDto = heeUserMapper.mapDBCAttributes(completeUserDto, heeUserDTO.get(), dbcdtos);
+    Optional<HeeUserDTO> optionalHeeUserDTO = profileService.getUserByUsername(username);
+    Optional<User> optionalKeycloakUser = keyCloakAdminClientService.getUser(username);
 
-    }
+    HeeUserDTO heeUserDTO = optionalHeeUserDTO.orElseThrow(() -> new UserNotFoundException(username, "Profile"));
+    User kcUser = optionalKeycloakUser.orElseThrow(() -> new UserNotFoundException(username, "KC"));
+    Set<DBCDTO> dbcdtos = referenceService.getAllDBCs();
+    UserDTO completeUserDto = heeUserMapper.convert(heeUserDTO, kcUser, dbcdtos);
+
     return Optional.ofNullable(completeUserDto);
   }
 
@@ -64,16 +61,17 @@ public class UserManagementFacade {
    * @param userDTO
    */
   public void updateSingleUser(UserDTO userDTO) {
-    Optional<User> originalUser = keyCloakAdminClientService.getUser(userDTO.getName());
-    if (originalUser.isPresent()) {
-      boolean success = keyCloakAdminClientService.updateUser(userDTO);
-      if (success) {
-        Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO));
-        if (!optionalHeeUserDTO.isPresent()) {
-          //revert KC changes
-          keyCloakAdminClientService.updateUser(originalUser.get());
-        }
+    Optional<User> optionalOriginalUser = keyCloakAdminClientService.getUser(userDTO.getName());
+    User originalUser = optionalOriginalUser.orElseThrow(() -> new UserNotFoundException(userDTO.getName(), "KC"));
+    boolean success = keyCloakAdminClientService.updateUser(userDTO);
+    if (success) {
+      Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO));
+      if (!optionalHeeUserDTO.isPresent()) {
+        //revert KC changes
+        keyCloakAdminClientService.updateUser(originalUser);
       }
+    } else {
+      throw new UpdateUserException(userDTO.getName(), "KC");
     }
   }
 }
