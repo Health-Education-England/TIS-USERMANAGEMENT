@@ -41,14 +41,20 @@ public class GetAllTrustsCommand extends HystrixCommand<List<TrustDTO>> {
 
   @Override
   protected List<TrustDTO> run() throws Exception {
-    ParameterizedTypeReference<List<TrustDTO>> trustDtoListType = new ParameterizedTypeReference<List<TrustDTO>>() {
-    };
+    try {
+      ParameterizedTypeReference<List<TrustDTO>> trustDtoListType = new ParameterizedTypeReference<List<TrustDTO>>() {
+      };
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serviceUrl + "/api/trusts")
-        .queryParam("page", page)
-        .queryParam("size", size);
-    ResponseEntity<List<TrustDTO>> result = referenceRestTemplate.exchange(builder.toUriString(), HttpMethod.GET, null, trustDtoListType);
 
-    return result.getBody();
+      UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serviceUrl + "/api/trusts")
+          .queryParam("page", page  )
+          .queryParam("size", size);
+      ResponseEntity<List<TrustDTO>> result = referenceRestTemplate.exchange(builder.toUriString(), HttpMethod.GET, null, trustDtoListType);
+
+      return result.getBody();
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
 }

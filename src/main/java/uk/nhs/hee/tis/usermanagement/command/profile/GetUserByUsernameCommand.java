@@ -32,7 +32,12 @@ public class GetUserByUsernameCommand extends HystrixCommand<Optional<HeeUserDTO
 
   @Override
   protected Optional<HeeUserDTO> run() throws Exception {
-    HeeUserDTO userDto = profileServiceImpl.getSingleAdminUser(username);
-    return Optional.of(userDto);
+    try {
+      HeeUserDTO userDto = profileServiceImpl.getSingleAdminUser(username);
+      return Optional.of(userDto);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
 }

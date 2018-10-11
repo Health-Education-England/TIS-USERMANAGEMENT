@@ -36,7 +36,12 @@ public class UpdateUserCommand extends HystrixCommand<Boolean> {
 
   @Override
   protected Boolean run() throws Exception {
-    keycloakAdminClient.updateUser(realm, userId, userToUpdate);
-    return true;
+    try {
+      keycloakAdminClient.updateUser(realm, userId, userToUpdate);
+      return true;
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
 }

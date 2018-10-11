@@ -35,6 +35,11 @@ public class GetUserAttributesCommand extends HystrixCommand<Map<String, List<St
 
   @Override
   protected Map<String, List<String>> run() throws Exception {
-    return keycloakAdminClient.getAttributesForUser(realm, username);
+    try{
+      return keycloakAdminClient.getAttributesForUser(realm, username);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
 }

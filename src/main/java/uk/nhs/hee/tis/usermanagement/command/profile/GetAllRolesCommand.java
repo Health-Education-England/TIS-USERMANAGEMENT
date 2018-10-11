@@ -40,18 +40,23 @@ public class GetAllRolesCommand extends HystrixCommand<List<String>> {
 
   @Override
   protected List<String> run() throws Exception {
-    ParameterizedTypeReference<List<RoleDTO>> roleDtoListType = new ParameterizedTypeReference<List<RoleDTO>>() {
-    };
+    try {
+      ParameterizedTypeReference<List<RoleDTO>> roleDtoListType = new ParameterizedTypeReference<List<RoleDTO>>() {
+      };
 
-    UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serviceUrl + "/api/roles")
-        .queryParam("page", 0)
-        .queryParam("size", 500); //quick hack for now as we dont have nowhere near 500 roles
+      UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serviceUrl + "/api/roles")
+          .queryParam("page", 0)
+          .queryParam("size", 500); //quick hack for now as we dont have nowhere near 500 roles
 
-    ResponseEntity<List<RoleDTO>> result = profileRestTemplate.exchange(builder.toUriString(), HttpMethod.GET, null, roleDtoListType);
-    List<String> roles = Collections.EMPTY_LIST;
-    if (CollectionUtils.isNotEmpty(result.getBody())) {
-      roles = result.getBody().stream().map(RoleDTO::getName).sorted().collect(Collectors.toList());
+      ResponseEntity<List<RoleDTO>> result = profileRestTemplate.exchange(builder.toUriString(), HttpMethod.GET, null, roleDtoListType);
+      List<String> roles = Collections.EMPTY_LIST;
+      if (CollectionUtils.isNotEmpty(result.getBody())) {
+        roles = result.getBody().stream().map(RoleDTO::getName).sorted().collect(Collectors.toList());
+      }
+      return roles;
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw e;
     }
-    return roles;
   }
 }

@@ -34,7 +34,12 @@ public class GetUserCommand extends HystrixCommand<Optional<User>> {
 
   @Override
   protected Optional<User> run() throws Exception {
-    User foundUser = keycloakAdminClient.findByUsername(realm, username);
-    return Optional.ofNullable(foundUser);
+    try {
+      User foundUser = keycloakAdminClient.findByUsername(realm, username);
+      return Optional.ofNullable(foundUser);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
 }

@@ -35,8 +35,12 @@ public class CreateUserCommand extends HystrixCommand<Boolean> {
 
   @Override
   protected Boolean run() throws Exception {
-    //ughh
-    keycloakAdminClient.createUser(realm, userToCreate);
-    return true;
+    try {
+      keycloakAdminClient.createUser(realm, userToCreate);
+      return true;
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
 }

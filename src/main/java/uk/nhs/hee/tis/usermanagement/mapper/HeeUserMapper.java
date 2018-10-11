@@ -48,6 +48,7 @@ public class HeeUserMapper {
     heeUserDTO.setGmcId(userDTO.getGmcId());
     heeUserDTO.setPhoneNumber(userDTO.getPhoneNumber());
     heeUserDTO.setEmailAddress(userDTO.getEmailAddress());
+    heeUserDTO.setDesignatedBodyCodes(userDTO.getLocalOffices());
 
     if (CollectionUtils.isNotEmpty(userDTO.getRoles())) {
       Set<RoleDTO> setOfRoles = userDTO.getRoles()
@@ -60,16 +61,14 @@ public class HeeUserMapper {
       heeUserDTO.setRoles(setOfRoles);
     }
 
-
     Set<String> associatedTrusts = userDTO.getAssociatedTrusts();
-    mapUserTrust(associatedTrusts, heeUserDTO, knownTrusts);
 
-    heeUserDTO.setAssociatedTrusts(mapUserTrust(associatedTrusts, heeUserDTO, knownTrusts));
+    heeUserDTO.setAssociatedTrusts(mapUserTrust(associatedTrusts, knownTrusts));
 
     return heeUserDTO;
   }
 
-  private Set<UserTrustDTO> mapUserTrust(Set<String> associatedTrusts, HeeUserDTO heeUserDTO, List<TrustDTO> knownTrusts) {
+  private Set<UserTrustDTO> mapUserTrust(Set<String> associatedTrusts, List<TrustDTO> knownTrusts) {
     Set<UserTrustDTO> trusts = Collections.EMPTY_SET;
     if (CollectionUtils.isNotEmpty(associatedTrusts)) {
       Map<Long, TrustDTO> idsToTrust = knownTrusts.stream().collect(Collectors.toMap((TrustDTO::getId), (trust) -> trust));
@@ -82,7 +81,6 @@ public class HeeUserMapper {
             userTrustDTO.setTrustId(trustDTO.getId());
             userTrustDTO.setTrustCode(trustDTO.getCode());
             userTrustDTO.setTrustName(trustDTO.getTrustName());
-            userTrustDTO.setHeeUserDTO(heeUserDTO);
             return userTrustDTO;
           })
           .collect(Collectors.toSet());
@@ -103,7 +101,7 @@ public class HeeUserMapper {
     UserDTO userDTO = new UserDTO();
     mapHeeUserAttributes(userDTO, heeUserDTO);
     mapKeycloakAttributes(userDTO, keycloakUser);
-    mapDBCAttributes(userDTO, heeUserDTO, dbcdtos);
+//    mapDBCAttributes(userDTO, heeUserDTO, dbcdtos);
 
     return userDTO;
   }
@@ -116,9 +114,9 @@ public class HeeUserMapper {
       userDTO.setGmcId(heeUserDTO.getGmcId());
       userDTO.setPhoneNumber(heeUserDTO.getPhoneNumber());
       userDTO.setEmailAddress(heeUserDTO.getEmailAddress());
-
+      userDTO.setLocalOffices(heeUserDTO.getDesignatedBodyCodes());
       if (CollectionUtils.isNotEmpty(heeUserDTO.getRoles())) {
-        Set<String> setOfRoles = heeUserDTO.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet());
+        Set<String> setOfRoles = heeUserDTO.getRoles().stream().map(RoleDTO::getName).collect(Collectors.toSet());
         userDTO.setRoles(setOfRoles);
       }
 

@@ -38,6 +38,11 @@ public class GetUserGroupsCommand extends HystrixCommand<List<GroupRepresentatio
 
   @Override
   protected List<GroupRepresentation> run() throws Exception {
-    return keycloakAdminClient.listGroups(realm, user);
+    try {
+      return keycloakAdminClient.listGroups(realm, user);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
 }

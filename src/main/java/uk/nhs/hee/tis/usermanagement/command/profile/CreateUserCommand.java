@@ -35,7 +35,12 @@ public class CreateUserCommand extends HystrixCommand<Optional<HeeUserDTO>> {
 
   @Override
   protected Optional<HeeUserDTO> run() throws Exception {
-    HeeUserDTO createdUserDto = profileServiceImpl.createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
-    return Optional.of(createdUserDto);
+    try {
+      HeeUserDTO createdUserDto = profileServiceImpl.createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
+      return Optional.of(createdUserDto);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
 }

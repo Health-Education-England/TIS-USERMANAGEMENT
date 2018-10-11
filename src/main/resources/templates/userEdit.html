@@ -17,7 +17,13 @@
    <title>Edit User</title>
    <style>
       .main-form, .delete-form {
-         display: inline-block;
+         display: block;
+      }
+
+      .delete-form button {
+         position: absolute;
+         margin-left: 370px;
+         margin-top: -50px;
       }
 
       fieldset {
@@ -27,6 +33,11 @@
       .delete-form {
          margin-left: -100px;
       }
+
+      #trusts {
+         max-width: 500px;
+      }
+
    </style>
 </head>
 <body>
@@ -43,7 +54,7 @@
          <fieldset>
             <div class="pure-control-group">
                <label for="username">Username</label>
-               <input id="username" name="username" type="text" disabled th:field="${user.name}">
+               <input id="username" name="username" type="text" readonly th:field="${user.name}">
             </div>
             <div class="pure-control-group">
                <label for="forenames">Forenames</label>
@@ -79,21 +90,21 @@
             <div class="pure-control-group">
                <label for="roles">Roles</label>
                <select multiple id="roles" name="roles" size="10">
-                  <option th:each="role : ${roles}" th:value="${role}" th:text="${role}" th:selected="${false}"></option>
+                  <option th:each="role : ${roles}" th:value="${role}" th:text="${role}" th:selected="${#lists.contains(user.roles, role)}"></option>
                </select>
             </div>
 
             <div class="pure-control-group">
                <label for="designatedBodyCodes">Designated Body Codes</label>
-               <select multiple id="designatedBodyCodes" name="designatedBodyCodes" size="10">
-                  <option th:each="dbc : ${designatedBodyCodes}" th:value="${dbc.dbc}" th:text="${dbc.name} + ' - ' + ${dbc.abbr}" th:selected="${false}"></option>
+               <select multiple id="designatedBodyCodes" name="localOffices" size="10">
+                  <option th:each="dbc : ${designatedBodyCodes}" th:value="${dbc.dbc}" th:text="${dbc.name} + ' - ' + ${dbc.abbr}" th:selected="${#lists.contains(user.localOffices, dbc.dbc)}"></option>
                </select>
             </div>
 
             <div class="pure-control-group">
-               <label for="trusts">Trusts</label>
-               <select multiple id="trusts" name="trusts" size="10">
-                  <option th:each="trust : ${trusts}" th:value="${trust.id}" th:text="${trust.code} + ' - ' + ${trust.trustName}" th:selected="${false}"></option>
+               <label for="trusts">Trusts (associating a trust with a user will turn them into trust users)</label>
+               <select multiple id="trusts" name="associatedTrusts" size="10">
+                  <option th:each="trust : ${trusts}" th:value="${trust.id}" th:text="${trust.code} + ' - ' + ${trust.trustName}" th:selected="${#lists.contains(user.associatedTrusts, #strings.toString(trust.id))}"></option>
                </select>
             </div>
 

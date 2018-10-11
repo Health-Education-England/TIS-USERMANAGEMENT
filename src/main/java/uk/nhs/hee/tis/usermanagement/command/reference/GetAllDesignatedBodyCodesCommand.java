@@ -30,6 +30,11 @@ public class GetAllDesignatedBodyCodesCommand extends HystrixCommand<Set<DBCDTO>
 
   @Override
   protected Set<DBCDTO> run() throws Exception {
-    return remoteReferenceService.getAllDBCs();
+    try {
+      return remoteReferenceService.getAllDBCs();
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
 }

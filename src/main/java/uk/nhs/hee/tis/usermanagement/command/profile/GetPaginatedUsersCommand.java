@@ -40,6 +40,11 @@ public class GetPaginatedUsersCommand extends HystrixCommand<Page<HeeUserDTO>> {
 
   @Override
   protected Page<HeeUserDTO> run() throws Exception {
-    return profileServiceImpl.getAllAdminUsers(pageable, username);
+    try {
+      return profileServiceImpl.getAllAdminUsers(pageable, username);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw e;
+    }
   }
 }
