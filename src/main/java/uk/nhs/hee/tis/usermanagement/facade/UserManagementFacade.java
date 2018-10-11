@@ -26,10 +26,10 @@ import java.util.Set;
 public class UserManagementFacade {
 
   @Autowired
-  ProfileService profileService;
+  private ProfileService profileService;
 
   @Autowired
-  KeyCloakAdminClientService keyCloakAdminClientService;
+  private KeyCloakAdminClientService keyCloakAdminClientService;
 
   @Autowired
   private HeeUserMapper heeUserMapper;
@@ -67,7 +67,7 @@ public class UserManagementFacade {
     User originalUser = optionalOriginalUser.orElseThrow(() -> new UserNotFoundException(userDTO.getName(), "KC"));
     boolean success = keyCloakAdminClientService.updateUser(userDTO);
     if (success) {
-      Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO));
+      Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO, referenceService.getAllTrusts()));
       if (!optionalHeeUserDTO.isPresent()) {
         //revert KC changes
         keyCloakAdminClientService.updateUser(originalUser);

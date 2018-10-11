@@ -79,21 +79,21 @@
             <div class="pure-control-group">
                <label for="roles">Roles</label>
                <select multiple id="roles" name="roles" size="10">
-                  <option th:each="role : ${roles}" th:value="${role}" th:text="${role}"></option>
+                  <option th:each="role : ${roles}" th:value="${role}" th:text="${role}" th:selected="${false}"></option>
                </select>
             </div>
 
             <div class="pure-control-group">
                <label for="designatedBodyCodes">Designated Body Codes</label>
                <select multiple id="designatedBodyCodes" name="designatedBodyCodes" size="10">
-                  <option th:each="dbc : ${designatedBodyCodes}" th:value="${dbc.dbc}" th:text="${dbc.name} + ' - ' + ${dbc.abbr}"></option>
+                  <option th:each="dbc : ${designatedBodyCodes}" th:value="${dbc.dbc}" th:text="${dbc.name} + ' - ' + ${dbc.abbr}" th:selected="${false}"></option>
                </select>
             </div>
 
             <div class="pure-control-group">
                <label for="trusts">Trusts</label>
                <select multiple id="trusts" name="trusts" size="10">
-                  <option th:each="trust : ${trusts}" th:value="${trust.id}" th:text="${trust.code} + ' - ' + ${trust.trustName}"></option>
+                  <option th:each="trust : ${trusts}" th:value="${trust.id}" th:text="${trust.code} + ' - ' + ${trust.trustName}" th:selected="${false}"></option>
                </select>
             </div>
 

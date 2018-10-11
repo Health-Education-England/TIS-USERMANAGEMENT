@@ -1,7 +1,5 @@
 package uk.nhs.hee.tis.usermanagement.DTOs;
 
-import com.transformuk.hee.tis.profile.service.dto.UserTrustDTO;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,7 +16,7 @@ public class UserDTO {
   private Boolean isTemporaryPassword;
   private Set<String> roles = new HashSet<>();
   private Set<String> localOffices = new HashSet<>();
-  private Set<UserTrustDTO> associatedTrusts = new HashSet<>();
+  private Set<String> associatedTrusts = new HashSet<>();
 
   public String getKcId() {
     return kcId;
@@ -116,11 +114,11 @@ public class UserDTO {
     this.localOffices = localOffices;
   }
 
-  public Set<UserTrustDTO> getAssociatedTrusts() {
+  public Set<String> getAssociatedTrusts() {
     return associatedTrusts;
   }
 
-  public void setAssociatedTrusts(Set<UserTrustDTO> associatedTrusts) {
+  public void setAssociatedTrusts(Set<String> associatedTrusts) {
     this.associatedTrusts = associatedTrusts;
   }
 }

@@ -7,12 +7,10 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
+import uk.nhs.hee.tis.usermanagement.command.reference.GetAllDesignatedBodyCodesCommand;
+import uk.nhs.hee.tis.usermanagement.command.reference.GetAllTrustsCommand;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +18,8 @@ import java.util.Set;
 
 @Service
 public class ReferenceService {
+
+  private static final int PAGE_SIZE_INCREMENTS = 500;
 
   @Autowired
   private ReferenceServiceImpl remoteReferenceService;
@@ -31,29 +31,24 @@ public class ReferenceService {
   private List<TrustDTO> dumbTrustCache;
 
   public Set<DBCDTO> getAllDBCs() {
-    return remoteReferenceService.getAllDBCs();
+    GetAllDesignatedBodyCodesCommand getAllDesignatedBodyCodesCommand = new GetAllDesignatedBodyCodesCommand(remoteReferenceService);
+    return getAllDesignatedBodyCodesCommand.execute();
   }
 
   public List<TrustDTO> getAllTrusts() {
     if (CollectionUtils.isEmpty(dumbTrustCache)) {
-      ParameterizedTypeReference<List<TrustDTO>> trustDtoListType = new ParameterizedTypeReference<List<TrustDTO>>() {
-      };
-
       boolean hasNext = true;
       dumbTrustCache = new ArrayList<>();
       int page = 0;
-      int pageSize = 500;
+      int pageSize = PAGE_SIZE_INCREMENTS;
       while (hasNext) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serviceUrl + "/api/trusts")
-            .queryParam("page", page)
-            .queryParam("size", pageSize);
 
-        ResponseEntity<List<TrustDTO>> result = referenceRestTemplate.exchange(builder.toUriString(), HttpMethod.GET, null, trustDtoListType);
-        dumbTrustCache.addAll(result.getBody());
-        List<String> link = result.getHeaders().get("Link");
-        if (CollectionUtils.isNotEmpty(link) && link.get(0).contains("next")) {
+        GetAllTrustsCommand getAllTrustsCommand = new GetAllTrustsCommand(referenceRestTemplate, serviceUrl, page, pageSize);
+        List<TrustDTO> result = getAllTrustsCommand.execute();
+        dumbTrustCache.addAll(result);
+        if (CollectionUtils.isNotEmpty(result)) {
           page++;
-          pageSize += 500;
+          pageSize += PAGE_SIZE_INCREMENTS;
         } else {
           hasNext = false;
         }
@@ -61,6 +56,10 @@ public class ReferenceService {
 
       dumbTrustCache.sort((o1, o2) -> StringUtils.compare(o1.getCode(), o2.getCode()));
     }
+    return dumbTrustCache;
+  }
+
+  public List<TrustDTO> getDumbTrustCache() {
     return dumbTrustCache;
   }
 }

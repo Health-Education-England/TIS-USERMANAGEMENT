@@ -2,30 +2,24 @@ package uk.nhs.hee.tis.usermanagement.service;
 
 import com.google.common.base.Preconditions;
 import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
-import com.transformuk.hee.tis.profile.dto.RoleDTO;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
-import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.usermanagement.command.profile.CreateUserCommand;
+import uk.nhs.hee.tis.usermanagement.command.profile.GetAllRolesCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.GetPaginatedUsersCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.GetUserByUsernameCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.UpdateUserCommand;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ProfileService {
@@ -99,15 +93,8 @@ public class ProfileService {
    * @return
    */
   public List<String> getAllRoles() {
-    ParameterizedTypeReference<List<RoleDTO>> roleDtoListType = new ParameterizedTypeReference<List<RoleDTO>>() {
-    };
-
-    ResponseEntity<List<RoleDTO>> result = profileRestTemplate.exchange(serviceUrl + "/api/roles", HttpMethod.GET, null, roleDtoListType);
-    List<String> roles = Collections.EMPTY_LIST;
-    if (CollectionUtils.isNotEmpty(result.getBody())) {
-      roles = result.getBody().stream().map(RoleDTO::getName).sorted().collect(Collectors.toList());
-    }
-    return roles;
+    GetAllRolesCommand getAllRolesCommand = new GetAllRolesCommand(profileRestTemplate, serviceUrl);
+    return getAllRolesCommand.execute();
   }
 
 
