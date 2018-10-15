@@ -60,8 +60,6 @@ public class KeyCloakAdminClientServiceTest {
     userDTO.setLastName(LAST_NAME);
     userDTO.setName(NAME);
     userDTO.setEmailAddress(EMAIL_ADDRESS);
-    userDTO.setPassword(PASSWORD);
-    userDTO.setTemporaryPassword(TEMPORARY_PASSWORD);
 //    userDTO.setAttributes(); missing from dto class
     userDTO.setActive(ACTIVE);
     return userDTO;

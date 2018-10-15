@@ -14,11 +14,13 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.thymeleaf.util.StringUtils;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
+import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 
 import java.util.List;
-import java.util.Optional;
 
 
 @Controller
@@ -30,10 +32,12 @@ public class UserManagementController {
   @PreAuthorize("hasAuthority('heeuser:view')")
   @GetMapping("/user")
   public String getCompleteUser(@RequestParam String userName, Model model) {
-    Optional<UserDTO> completeUserDTO = userManagementFacade.getCompleteUser(userName);
-    if (completeUserDTO.isPresent()) {
-      model.addAttribute("user", completeUserDTO.get());
-    }
+    UserDTO completeUserDTO = userManagementFacade.getCompleteUser(userName);
+
+    model.addAttribute("user", completeUserDTO);
+    UserPasswordDTO userPasswordDTO = new UserPasswordDTO();
+    userPasswordDTO.setKcId(completeUserDTO.getKcId());
+    model.addAttribute("userPassword", userPasswordDTO);
 
     List<String> allRoles = userManagementFacade.getAllRoles();
     List<DBCDTO> allDBCs = userManagementFacade.getAllDBCs();
@@ -77,6 +81,20 @@ public class UserManagementController {
     userManagementFacade.updateSingleUser(user);
     attributes.addFlashAttribute("message",
         "The user " + user.getFirstName() + " " + user.getLastName() + " (" + user.getName() + ") has been updated");
+    return "redirect:/allUsers";
+  }
+
+  @PreAuthorize("hasAuthority('heeuser:add:modify')")
+  @PostMapping("/updatePassword")
+  public String updatePassword(@ModelAttribute UserPasswordDTO passwordDTO, RedirectAttributes attributes) {
+
+    if (!StringUtils.equals(passwordDTO.getPassword(), passwordDTO.getConfirmPassword())) {
+      throw new PasswordException("Passwords do not match");
+    }
+
+    userManagementFacade.updatePassword(passwordDTO);
+    attributes.addFlashAttribute("message",
+        "Password has been updated for the user");
     return "redirect:/allUsers";
   }
 

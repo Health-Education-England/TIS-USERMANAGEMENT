@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
 import uk.nhs.hee.tis.usermanagement.exception.UpdateUserException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.mapper.HeeUserMapper;
@@ -37,16 +38,14 @@ public class UserManagementFacade {
   @Autowired
   private ReferenceService referenceService;
 
-  public Optional<UserDTO> getCompleteUser(String username) {
+  public UserDTO getCompleteUser(String username) {
     Optional<HeeUserDTO> optionalHeeUserDTO = profileService.getUserByUsername(username);
     Optional<User> optionalKeycloakUser = keyCloakAdminClientService.getUser(username);
 
     HeeUserDTO heeUserDTO = optionalHeeUserDTO.orElseThrow(() -> new UserNotFoundException(username, "Profile"));
     User kcUser = optionalKeycloakUser.orElseThrow(() -> new UserNotFoundException(username, "KC"));
     Set<DBCDTO> dbcdtos = referenceService.getAllDBCs();
-    UserDTO completeUserDto = heeUserMapper.convert(heeUserDTO, kcUser, dbcdtos);
-
-    return Optional.ofNullable(completeUserDto);
+    return heeUserMapper.convert(heeUserDTO, kcUser, dbcdtos);
   }
 
   public Page<UserDTO> getAllUsers(Pageable pageable, String search) {
@@ -87,5 +86,9 @@ public class UserManagementFacade {
 
   public List<TrustDTO> getAllTrusts() {
     return new ArrayList<>(referenceService.getAllTrusts());
+  }
+
+  public void updatePassword(UserPasswordDTO passwordDTO) {
+    keyCloakAdminClientService.updatePassword(passwordDTO.getKcId(), passwordDTO.getPassword(), passwordDTO.isTempPassword());
   }
 }

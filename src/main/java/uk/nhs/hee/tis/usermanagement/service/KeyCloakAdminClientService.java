@@ -12,6 +12,7 @@ import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserAttributesCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserGroupsCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.UpdateUserCommand;
+import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 
 import java.util.ArrayList;
@@ -69,6 +70,15 @@ public class KeyCloakAdminClientService {
     return updateUserCommand.execute();
   }
 
+  public void updatePassword(String userId, String password, boolean tempPassword) {
+    Preconditions.checkNotNull(userId);
+    Preconditions.checkNotNull(password);
+
+    boolean success = keycloakAdminClient.updateUserPassword(REALM_LIN, userId, password, tempPassword);
+    if (!success) {
+      throw new PasswordException("Update password with KC failed");
+    }
+  }
 
   /**
    * Get the user attributes attached to a keycloak user
@@ -105,6 +115,6 @@ public class KeyCloakAdminClientService {
     List<String> dbcs = new ArrayList<>();
     attributes.put("DBC", dbcs);
     return User.create(UserDTO.getKcId(), UserDTO.getFirstName(), UserDTO.getLastName(), UserDTO.getName(),
-        UserDTO.getEmailAddress(), UserDTO.getPassword(), UserDTO.getTemporaryPassword(), attributes, UserDTO.getActive());
+        UserDTO.getEmailAddress(), null, null, attributes, UserDTO.getActive());
   }
 }

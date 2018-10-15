@@ -52,6 +52,7 @@
    <div class="pure-u-3-5">
       <form class="pure-form-aligned main-form" th:method="post" th:action="@{'/updateUser'}" th:object="${user}">
          <fieldset>
+            <legend>User Properties</legend>
             <div class="pure-control-group">
                <label for="username">Username</label>
                <input id="username" name="username" type="text" readonly th:field="${user.name}">
@@ -76,17 +77,6 @@
                <label for="gmcId">GMC ID</label>
                <input id="gmcId" name="gmcId" type="text" th:field="${user.gmcId}">
             </div>
-            <div class="pure-control-group">
-               <label for="password">Password</label>
-               <input type="password" id="password" name="password" th:checked="${user.password}">
-            </div>
-            <div class="pure-control-group">
-               <label for="temporaryPassword">Temporary Password</label>
-               <input type="checkbox" id="temporaryPassword" name="temporaryPassword"
-                      th:checked="${user.temporaryPassword}">
-            </div>
-
-
             <div class="pure-control-group">
                <label for="roles">Roles</label>
                <select multiple id="roles" name="roles" size="10">
@@ -121,6 +111,30 @@
             <input name="username" type="hidden" th:field="${user.name}">
             <button type="submit" class="pure-button pure-button-primary">Delete</button>
          </fieldset>
+      </form>
+      <form class="pure-form-aligned update-password-form" th:method="post" th:action="@{/updatePassword}" th:object="${userPassword}">
+         <fieldset>
+            <legend>Password</legend>
+            <div hidden>
+               <input id="kcId" type="text" th:field="${userPassword.kcId}">
+            </div>
+            <div class="pure-control-group">
+               <label for="password">Password</label>
+               <input type="password" id="password" name="password" th:checked="${userPassword.password}">
+            </div>
+            <div class="pure-control-group">
+               <label for="confirmPassword">Confirm Password</label>
+               <input type="password" id="confirmPassword" name="confirmPassword" th:checked="${userPassword.confirmPassword}">
+            </div>
+            <div class="pure-control-group">
+               <label for="tempPassword">Temporary Password</label>
+               <input type="checkbox" id="tempPassword" name="tempPassword"
+                      th:checked="${userPassword.tempPassword}">
+            </div>
+         </fieldset>
+         <div class="pure-controls">
+            <button type="submit" class="pure-button pure-button-primary">Submit</button>
+         </div>
       </form>
    </div>
    <div class="pure-u-1-5"></div>

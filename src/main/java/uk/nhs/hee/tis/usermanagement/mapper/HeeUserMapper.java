@@ -135,7 +135,6 @@ public class HeeUserMapper {
     if (keycloakUser != null) {
       userDTO.setKcId(keycloakUser.getId());
       userDTO.setActive(keycloakUser.getEnabled());
-      userDTO.setTemporaryPassword(keycloakUser.getTempPassword());
     }
     return userDTO;
   }

@@ -11,9 +11,7 @@ public class UserDTO {
   private String gmcId;
   private String phoneNumber;
   private String emailAddress;
-  private Boolean active;
-  private String password;
-  private Boolean isTemporaryPassword;
+  private boolean active;
   private Set<String> roles = new HashSet<>();
   private Set<String> localOffices = new HashSet<>();
   private Set<String> associatedTrusts = new HashSet<>();
@@ -74,28 +72,12 @@ public class UserDTO {
     this.emailAddress = emailAddress;
   }
 
-  public Boolean getActive() {
+  public boolean getActive() {
     return active;
   }
 
-  public void setActive(Boolean active) {
+  public void setActive(boolean active) {
     this.active = active;
-  }
-
-  public String getPassword() {
-    return password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
-  }
-
-  public Boolean getTemporaryPassword() {
-    return isTemporaryPassword;
-  }
-
-  public void setTemporaryPassword(Boolean temporaryPassword) {
-    isTemporaryPassword = temporaryPassword;
   }
 
   public Set<String> getRoles() {
