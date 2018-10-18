@@ -23,6 +23,7 @@ public class GetAllTrustsCommand extends HystrixCommand<List<TrustDTO>> {
   private String serviceUrl;
   private int page;
   private int size;
+  private Throwable throwable;
 
   public GetAllTrustsCommand(RestTemplate referenceRestTemplate, String serviceUrl, int page, int size) {
     super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
@@ -47,13 +48,13 @@ public class GetAllTrustsCommand extends HystrixCommand<List<TrustDTO>> {
 
 
       UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serviceUrl + "/api/trusts")
-          .queryParam("page", page  )
+          .queryParam("page", page)
           .queryParam("size", size);
       ResponseEntity<List<TrustDTO>> result = referenceRestTemplate.exchange(builder.toUriString(), HttpMethod.GET, null, trustDtoListType);
 
       return result.getBody();
-    } catch (Exception e) {
-      e.printStackTrace();
+    } catch (Throwable e) {
+      this.throwable = e;
       throw e;
     }
   }

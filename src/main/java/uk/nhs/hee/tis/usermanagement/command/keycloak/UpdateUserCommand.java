@@ -13,14 +13,16 @@ public class UpdateUserCommand extends HystrixCommand<Boolean> {
   private static final String COMMAND_KEY = "KEYCLOAK_COMMAND";
   private static final Logger LOG = LoggerFactory.getLogger(CreateUserCommand.class);
   private static final Gson GSON = new Gson();
+  private static final int TWO_SECOND_TIMEOUT_IN_MILLIS = 2000;
 
   private KeycloakAdminClient keycloakAdminClient;
   private String realm;
   private String userId;
   private User userToUpdate;
+  private Throwable throwable;
 
   public UpdateUserCommand(KeycloakAdminClient keycloakAdminClient, String realm, String userId, User userToUpdate) {
-    super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
+    super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY), TWO_SECOND_TIMEOUT_IN_MILLIS);
     this.keycloakAdminClient = keycloakAdminClient;
     this.realm = realm;
     this.userId = userId;
@@ -39,8 +41,8 @@ public class UpdateUserCommand extends HystrixCommand<Boolean> {
     try {
       keycloakAdminClient.updateUser(realm, userId, userToUpdate);
       return true;
-    } catch (Exception e) {
-      e.printStackTrace();
+    } catch (Throwable e) {
+      this.throwable = e;
       throw e;
     }
   }

@@ -4,13 +4,10 @@ import com.google.gson.Gson;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
-import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
-
-public class CreateUserCommand extends HystrixCommand<Optional<HeeUserDTO>> {
+public class DeleteUserCommand extends HystrixCommand<Boolean> {
 
   private static final String COMMAND_KEY = "PROFILE_COMMANDS";
   private static final String HEE_USERS_ENDPOINT = "/api/hee-users";
@@ -18,27 +15,25 @@ public class CreateUserCommand extends HystrixCommand<Optional<HeeUserDTO>> {
   private static final Gson GSON = new Gson();
 
   private ProfileServiceImpl profileServiceImpl;
-  private HeeUserDTO userToCreateDTO;
+  private String username;
   private Throwable throwable;
 
-  public CreateUserCommand(ProfileServiceImpl profileServiceImpl, HeeUserDTO userToCreateDTO) {
+  public DeleteUserCommand(ProfileServiceImpl profileServiceImpl, String username) {
     super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
     this.profileServiceImpl = profileServiceImpl;
-    this.userToCreateDTO = userToCreateDTO;
+    this.username = username;
   }
 
   @Override
-  protected Optional<HeeUserDTO> getFallback() {
-    LOG.warn("An occurred while attempting to create a hee user in Profile service, returning an empty optional as fallback");
-    LOG.debug("Data that was sent: [{}]", GSON.toJson(userToCreateDTO));
-    return Optional.empty();
+  protected Boolean getFallback() {
+    LOG.warn("An error was thrown while attempting to delete user [{}] from the Profile service", this.username);
+    return false;
   }
 
   @Override
-  protected Optional<HeeUserDTO> run() throws Exception {
+  protected Boolean run() throws Exception {
     try {
-      HeeUserDTO createdUserDto = profileServiceImpl.createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
-      return Optional.of(createdUserDto);
+      return profileServiceImpl.deleteUser(username);
     } catch (Throwable e) {
       this.throwable = e;
       throw e;

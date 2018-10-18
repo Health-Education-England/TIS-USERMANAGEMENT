@@ -6,8 +6,10 @@ import com.transform.hee.tis.keycloak.User;
 import org.keycloak.representations.idm.GroupRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.CreateUserCommand;
+import uk.nhs.hee.tis.usermanagement.command.keycloak.DeleteUserCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserAttributesCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserGroupsCommand;
@@ -38,14 +40,15 @@ public class KeyCloakAdminClientService {
   /**
    * Create user in Keycloak
    *
-   * @param UserDTO
+   * @param createUserDTO the user to create
    */
-  public boolean createUser(UserDTO UserDTO) {
+  public Optional<User> createUser(CreateUserDTO createUserDTO) {
     // create user in KeyCloak
-    User userToCreate = heeUserToKeycloakUser(UserDTO);
+    User userToCreate = heeUserToKeycloakUser(createUserDTO);
     CreateUserCommand createUserCommand = new CreateUserCommand(keycloakAdminClient, REALM_LIN, userToCreate);
     return createUserCommand.execute();
   }
+
 
   /**
    * Update user in Keycloak
@@ -110,11 +113,24 @@ public class KeyCloakAdminClientService {
   }
 
 
-  private User heeUserToKeycloakUser(UserDTO UserDTO) {
+  private User heeUserToKeycloakUser(UserDTO userDTO) {
     Map<String, List<String>> attributes = new HashMap<>();
     List<String> dbcs = new ArrayList<>();
     attributes.put("DBC", dbcs);
-    return User.create(UserDTO.getKcId(), UserDTO.getFirstName(), UserDTO.getLastName(), UserDTO.getName(),
-        UserDTO.getEmailAddress(), null, null, attributes, UserDTO.getActive());
+    return User.create(userDTO.getKcId(), userDTO.getFirstName(), userDTO.getLastName(), userDTO.getName(),
+        userDTO.getEmailAddress(), null, null, attributes, userDTO.getActive());
+  }
+
+  private User heeUserToKeycloakUser(CreateUserDTO createUserDTO) {
+    Map<String, List<String>> attributes = new HashMap<>();
+    List<String> dbcs = new ArrayList<>();
+    attributes.put("DBC", dbcs);
+    return User.create(null, createUserDTO.getFirstName(), createUserDTO.getLastName(), createUserDTO.getName(),
+        createUserDTO.getEmailAddress(), createUserDTO.getPassword(), createUserDTO.getTempPassword(), attributes, createUserDTO.isActive());
+  }
+
+  public boolean deleteUser(User user) {
+    DeleteUserCommand deleteUserCommand = new DeleteUserCommand(REALM_LIN, user, keycloakAdminClient);
+    return deleteUserCommand.execute();
   }
 }

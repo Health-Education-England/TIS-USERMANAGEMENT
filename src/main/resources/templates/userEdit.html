@@ -23,7 +23,7 @@
       .delete-form button {
          position: absolute;
          margin-left: 370px;
-         margin-top: -50px;
+         margin-top: -52px;
       }
 
       fieldset {
@@ -48,6 +48,12 @@
    </div>
    <div class="pure-u-1-5"></div>
 
+    <div class="pure-u-1-5"></div>
+    <div class="pure-u-3-5">
+        <h1>Edit User</h1>
+    </div>
+    <div class="pure-u-1-5"></div>
+
    <div class="pure-u-1-5"></div>
    <div class="pure-u-3-5">
       <form class="pure-form-aligned main-form" th:method="post" th:action="@{'/updateUser'}" th:object="${user}">
@@ -59,15 +65,15 @@
             </div>
             <div class="pure-control-group">
                <label for="forenames">Forenames</label>
-               <input id="forenames" name="forenames" type="text" th:field="${user.firstName}">
+               <input id="forenames" name="forenames" type="text" required th:field="${user.firstName}">
             </div>
             <div class="pure-control-group">
                <label for="surname">Surname</label>
-               <input id="surname" name="surname" type="text" th:field="${user.lastName}">
+               <input id="surname" name="surname" type="text" required th:field="${user.lastName}">
             </div>
             <div class="pure-control-group">
                <label for="email">Email</label>
-               <input id="email" name="email" type="email" th:field="${user.emailAddress}">
+               <input id="email" name="email" type="email" required th:field="${user.emailAddress}">
             </div>
             <div class="pure-control-group">
                <label for="active">Active</label>
@@ -75,7 +81,7 @@
             </div>
             <div class="pure-control-group">
                <label for="gmcId">GMC ID</label>
-               <input id="gmcId" name="gmcId" type="text" th:field="${user.gmcId}">
+               <input id="gmcId" name="gmcId" type="text" required th:field="${user.gmcId}">
             </div>
             <div class="pure-control-group">
                <label for="roles">Roles</label>
@@ -120,11 +126,11 @@
             </div>
             <div class="pure-control-group">
                <label for="password">Password</label>
-               <input type="password" id="password" name="password" th:checked="${userPassword.password}">
+               <input type="password" id="password" name="password"  minlength="8" required placeholder="minimum 8 characters" th:field="${userPassword.password}">
             </div>
             <div class="pure-control-group">
                <label for="confirmPassword">Confirm Password</label>
-               <input type="password" id="confirmPassword" name="confirmPassword" th:checked="${userPassword.confirmPassword}">
+               <input type="password" id="confirmPassword" name="confirmPassword"  minlength="8" required placeholder="minimum 8 characters" th:field="${userPassword.confirmPassword}">
             </div>
             <div class="pure-control-group">
                <label for="tempPassword">Temporary Password</label>

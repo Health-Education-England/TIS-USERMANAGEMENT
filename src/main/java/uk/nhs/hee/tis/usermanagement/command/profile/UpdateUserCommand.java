@@ -19,6 +19,7 @@ public class UpdateUserCommand extends HystrixCommand<Optional<HeeUserDTO>> {
 
   private ProfileServiceImpl profileServiceImpl;
   private HeeUserDTO userToUpdateDto;
+  private Throwable throwable;
 
   public UpdateUserCommand(ProfileServiceImpl profileServiceImpl, HeeUserDTO userToUpdateDto) {
     super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
@@ -38,8 +39,8 @@ public class UpdateUserCommand extends HystrixCommand<Optional<HeeUserDTO>> {
     try {
       HeeUserDTO heeUserDTO = profileServiceImpl.updateDto(userToUpdateDto, HEE_USERS_ENDPOINT, HeeUserDTO.class);
       return Optional.of(heeUserDTO);
-    } catch (Exception e) {
-      e.printStackTrace();
+    } catch (Throwable e) {
+      this.throwable = e;
       throw e;
     }
   }

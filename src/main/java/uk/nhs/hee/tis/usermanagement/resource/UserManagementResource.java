@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 
-import java.util.Optional;
-
 
 //@RestController
 @RequestMapping("/api")

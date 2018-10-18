@@ -13,6 +13,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 
@@ -22,7 +23,6 @@ import java.util.Map;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -60,9 +60,21 @@ public class KeyCloakAdminClientServiceTest {
     userDTO.setLastName(LAST_NAME);
     userDTO.setName(NAME);
     userDTO.setEmailAddress(EMAIL_ADDRESS);
-//    userDTO.setAttributes(); missing from dto class
     userDTO.setActive(ACTIVE);
     return userDTO;
+  }
+
+  private CreateUserDTO createCreateUserDTO() {
+    CreateUserDTO createUserDTO = new CreateUserDTO();
+    createUserDTO.setFirstName(FIRST_NAME);
+    createUserDTO.setLastName(LAST_NAME);
+    createUserDTO.setName(NAME);
+    createUserDTO.setEmailAddress(EMAIL_ADDRESS);
+    createUserDTO.setPassword(PASSWORD);
+    createUserDTO.setConfirmPassword(PASSWORD);
+    createUserDTO.setTempPassword(TEMPORARY_PASSWORD);
+    createUserDTO.setActive(ACTIVE);
+    return createUserDTO;
   }
 
   @Test(expected = NullPointerException.class)
@@ -76,11 +88,12 @@ public class KeyCloakAdminClientServiceTest {
 
   @Test
   public void createUserShouldCreateUserUsingKeyCloakAdminClient() {
-    UserDTO userDTO = createUserDTO();
+    CreateUserDTO createUserDTO = createCreateUserDTO();
+    User expectedCreatedUser = User.create("ID", FIRST_NAME, LAST_NAME, NAME, EMAIL_ADDRESS, PASSWORD, TEMPORARY_PASSWORD, Maps.newHashMap(), ACTIVE);
 
-    doNothing().when(keycloakAdminClientMock).createUser(eq(REALM_LIN), userArgumentCaptor.capture());
+    when(keycloakAdminClientMock.createUser(eq(REALM_LIN), userArgumentCaptor.capture())).thenReturn(expectedCreatedUser);
 
-    testObj.createUser(userDTO);
+    testObj.createUser(createUserDTO);
 
     User capturedUser = userArgumentCaptor.getValue();
     Assert.assertEquals(FIRST_NAME, capturedUser.getFirstname());
@@ -89,7 +102,6 @@ public class KeyCloakAdminClientServiceTest {
     Assert.assertEquals(EMAIL_ADDRESS, capturedUser.getEmail());
     Assert.assertEquals(PASSWORD, capturedUser.getPassword());
     Assert.assertEquals(TEMPORARY_PASSWORD, capturedUser.getTempPassword());
-    Assert.assertEquals(Lists.emptyList(), capturedUser.getAttributes().get("DBC"));
     Assert.assertEquals(ACTIVE, capturedUser.getEnabled());
 
     verify(keycloakAdminClientMock).createUser(REALM_LIN, capturedUser);
@@ -112,7 +124,7 @@ public class KeyCloakAdminClientServiceTest {
     try {
       testObj.updateUser(userDTO);
     } catch (UserNotFoundException unfe) {
-      Assert.assertEquals("User " + NAME_THAT_IS_NOT_IN_THE_SYSTEM + " could not be found in keycloak", unfe.getMessage());
+      Assert.assertEquals("Could not find user: [" + NAME_THAT_IS_NOT_IN_THE_SYSTEM + "] in the keycloak service", unfe.getMessage());
       throw unfe;
     } finally {
       verify(keycloakAdminClientMock).findByUsername(REALM_LIN, NAME_THAT_IS_NOT_IN_THE_SYSTEM);
@@ -136,8 +148,6 @@ public class KeyCloakAdminClientServiceTest {
     Assert.assertEquals(LAST_NAME, capturedUser.getSurname());
     Assert.assertEquals(NAME, capturedUser.getUsername());
     Assert.assertEquals(EMAIL_ADDRESS, capturedUser.getEmail());
-    Assert.assertEquals(PASSWORD, capturedUser.getPassword());
-    Assert.assertEquals(TEMPORARY_PASSWORD, capturedUser.getTempPassword());
     Assert.assertEquals(Lists.emptyList(), capturedUser.getAttributes().get("DBC"));
     Assert.assertEquals(ACTIVE, capturedUser.getEnabled());
   }

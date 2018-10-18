@@ -16,6 +16,7 @@ public class GetUserByUsernameCommand extends HystrixCommand<Optional<HeeUserDTO
 
   private ProfileServiceImpl profileServiceImpl;
   private String username;
+  private Throwable throwable;
 
   public GetUserByUsernameCommand(ProfileServiceImpl profileServiceImpl, String username) {
     super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
@@ -35,8 +36,8 @@ public class GetUserByUsernameCommand extends HystrixCommand<Optional<HeeUserDTO
     try {
       HeeUserDTO userDto = profileServiceImpl.getSingleAdminUser(username);
       return Optional.of(userDto);
-    } catch (Exception e) {
-      e.printStackTrace();
+    } catch (Throwable e) {
+      this.throwable = e;
       throw e;
     }
   }

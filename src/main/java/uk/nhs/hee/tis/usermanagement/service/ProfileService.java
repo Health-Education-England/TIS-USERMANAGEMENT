@@ -13,6 +13,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.usermanagement.command.profile.CreateUserCommand;
+import uk.nhs.hee.tis.usermanagement.command.profile.DeleteUserCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.GetAllRolesCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.GetPaginatedUsersCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.GetUserByUsernameCommand;
@@ -97,5 +98,9 @@ public class ProfileService {
     return getAllRolesCommand.execute();
   }
 
+  public boolean deleteUser(String username) {
+    DeleteUserCommand deleteUserCommand = new DeleteUserCommand(profileServiceImpl, username);
+    return deleteUserCommand.execute();
+  }
 
 }

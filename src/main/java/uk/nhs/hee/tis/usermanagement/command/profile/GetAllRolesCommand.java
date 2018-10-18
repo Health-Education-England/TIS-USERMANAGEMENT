@@ -24,6 +24,7 @@ public class GetAllRolesCommand extends HystrixCommand<List<String>> {
 
   private RestTemplate profileRestTemplate;
   private String serviceUrl;
+  private Throwable throwable;
 
   public GetAllRolesCommand(RestTemplate profileRestTemplate, String serviceUrl) {
     super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
@@ -54,8 +55,8 @@ public class GetAllRolesCommand extends HystrixCommand<List<String>> {
         roles = result.getBody().stream().map(RoleDTO::getName).sorted().collect(Collectors.toList());
       }
       return roles;
-    } catch (Exception e) {
-      e.printStackTrace();
+    } catch (Throwable e) {
+      this.throwable = e;
       throw e;
     }
   }

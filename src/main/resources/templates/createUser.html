@@ -1,34 +1,131 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
 <head>
-   <meta charset="utf-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1">
-   <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css"
-         integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css"
+          integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
 
-   <!--[if lte IE 8]>
-   <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-old-ie-min.css">
-   <![endif]-->
-   <!--[if gt IE 8]><!-->
-   <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css">
-   <!--<![endif]-->
-   <title>Create User</title>
+    <!--[if lte IE 8]>
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-old-ie-min.css">
+    <![endif]-->
+    <!--[if gt IE 8]><!-->
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css">
+    <!--<![endif]-->
 
+    <title>Create User</title>
+    <style>
+        .main-form, .delete-form {
+            display: block;
+        }
+
+        .delete-form button {
+            position: absolute;
+            margin-left: 370px;
+            margin-top: -50px;
+        }
+
+        fieldset {
+            border-style: hidden;
+        }
+
+        .delete-form {
+            margin-left: -100px;
+        }
+
+        #trusts {
+            max-width: 500px;
+        }
+
+    </style>
 </head>
 <body>
 <div class="pure-g">
-   <div class="pure-u-1-5"></div>
-   <div class="pure-u-3-5">
-      <h1>Create User</h1>
-   </div>
-   <div class="pure-u-1-5"></div>
+    <div class="pure-u-1-5"></div>
+    <div class="pure-u-3-5">
+        <a th:href="@{'/allUsers'}">Back</a>
+    </div>
+    <div class="pure-u-1-5"></div>
 
-   <div class="pure-u-1-5"></div>
-   <div class="pure-u-3-5">
+    <div class="pure-u-1-5"></div>
+    <div class="pure-u-3-5">
+        <h1>Create User</h1>
+    </div>
+    <div class="pure-u-1-5"></div>
 
-   </div>
-   <div class="pure-u-1-5"></div>
+    <div class="pure-u-1-5"></div>
+    <div class="pure-u-3-5">
+        <form class="pure-form-aligned main-form" th:method="post" th:action="@{'/createUser'}" th:object="${user}">
+            <fieldset>
+                <legend>User Properties</legend>
+                <div class="pure-control-group">
+                    <label for="username">Username</label>
+                    <input id="username" name="username" type="text" required th:field="${user.name}">
+                </div>
+                <div class="pure-control-group">
+                    <label for="forenames">Forenames</label>
+                    <input id="forenames" name="forenames" type="text" required th:field="${user.firstName}">
+                </div>
+                <div class="pure-control-group">
+                    <label for="surname">Surname</label>
+                    <input id="surname" name="surname" type="text" required th:field="${user.lastName}">
+                </div>
+                <div class="pure-control-group">
+                    <label for="email">Email</label>
+                    <input id="email" name="email" type="email" required th:field="${user.emailAddress}">
+                </div>
+                <div class="pure-control-group">
+                    <label for="active">Active</label>
+                    <input type="checkbox" id="active" name="active" th:checked="${user.active}">
+                </div>
+                <div class="pure-control-group">
+                    <label for="gmcId">GMC ID</label>
+                    <input id="gmcId" name="gmcId" type="text" required th:field="${user.gmcId}">
+                </div>
+                <div class="pure-control-group">
+                    <label for="roles">Roles</label>
+                    <select multiple id="roles" name="roles" size="10">
+                        <option th:each="role : ${roles}" th:value="${role}" th:text="${role}" th:selected="${#lists.contains(user.roles, role)}"></option>
+                    </select>
+                </div>
+
+                <div class="pure-control-group">
+                    <label for="designatedBodyCodes">Designated Body Codes</label>
+                    <select multiple id="designatedBodyCodes" name="localOffices" size="10">
+                        <option th:each="dbc : ${designatedBodyCodes}" th:value="${dbc.dbc}" th:text="${dbc.name} + ' - ' + ${dbc.abbr}" th:selected="${#lists.contains(user.localOffices, dbc.dbc)}"></option>
+                    </select>
+                </div>
+
+                <div class="pure-control-group">
+                    <label for="trusts">Trusts (associating a trust with a user will turn them into trust users)</label>
+                    <select multiple id="trusts" name="associatedTrusts" size="10">
+                        <option th:each="trust : ${trusts}" th:value="${trust.id}" th:text="${trust.code} + ' - ' + ${trust.trustName}" th:selected="${#lists.contains(user.associatedTrusts, #strings.toString(trust.id))}"></option>
+                    </select>
+                </div>
+
+                <div class="pure-control-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" minlength="8" required placeholder="minimum 8 characters" th:field="${user.password}">
+                </div>
+
+                <div class="pure-control-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword"  minlength="8" required placeholder="minimum 8 characters"  th:field="${user.confirmPassword}">
+                </div>
+
+                <div class="pure-control-group">
+                    <label for="tempPassword">Temporary Password</label>
+                    <input type="checkbox" id="tempPassword" name="tempPassword" th:field="${user.tempPassword}">
+                </div>
+
+                <div class="pure-controls">
+                    <button type="submit" class="pure-button pure-button-primary">Submit</button>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+    <div class="pure-u-1-5"></div>
 </div>
 </body>
 </html>

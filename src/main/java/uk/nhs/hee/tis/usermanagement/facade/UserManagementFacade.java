@@ -5,13 +5,18 @@ import com.transformuk.hee.tis.profile.client.service.impl.CustomPageable;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
 import uk.nhs.hee.tis.usermanagement.exception.UpdateUserException;
+import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
+import uk.nhs.hee.tis.usermanagement.exception.UserDeletionException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.mapper.HeeUserMapper;
 import uk.nhs.hee.tis.usermanagement.service.KeyCloakAdminClientService;
@@ -25,6 +30,8 @@ import java.util.Set;
 
 @Component
 public class UserManagementFacade {
+
+  private static final Logger LOG = LoggerFactory.getLogger(UserManagementFacade.class);
 
   @Autowired
   private ProfileService profileService;
@@ -69,10 +76,40 @@ public class UserManagementFacade {
       Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO, referenceService.getAllTrusts()));
       if (!optionalHeeUserDTO.isPresent()) {
         //revert KC changes
-        keyCloakAdminClientService.updateUser(originalUser);
+        if (!keyCloakAdminClientService.updateUser(originalUser)) {
+          LOG.error("Could not revert KC changes back to previous version after profile update failed! Its possible that KC user [{}] is out of sync", userDTO.getName());
+        }
       }
     } else {
       throw new UpdateUserException(userDTO.getName(), "KC");
+    }
+  }
+
+  /**
+   * Create a user in both KC and Profile service.
+   *
+   * @param userDTO the DTO that contains the details to create
+   */
+  public void createUser(CreateUserDTO userDTO) {
+    Optional<User> optionalKcUser = keyCloakAdminClientService.createUser(userDTO);
+    User kcUser = optionalKcUser.orElseThrow(() -> new UserCreationException("Could not create user in KC"));
+    Optional<HeeUserDTO> optionalHeeUserDTO = profileService.createUser(heeUserMapper.convert(userDTO, referenceService.getAllTrusts()));
+    if (!optionalHeeUserDTO.isPresent()) {
+      LOG.warn("Attempting to revert creation of user in KC");
+      if (!keyCloakAdminClientService.deleteUser(kcUser)) {
+        LOG.error("Could not revert KC changes back to previous version create creating user in Profile failed. There may be more users in KC now than Profile user [{}]", userDTO.getName());
+      }
+    }
+  }
+
+  public void deleteUser(String username) {
+    Optional<User> optionalUser = keyCloakAdminClientService.getUser(username);
+    User kcUser = optionalUser.orElseThrow(() -> new UserNotFoundException(username, "Keycloak"));
+    boolean success = keyCloakAdminClientService.deleteUser(kcUser);
+    if (success) {
+      profileService.deleteUser(username);
+    } else {
+      throw new UserDeletionException(username);
     }
   }
 

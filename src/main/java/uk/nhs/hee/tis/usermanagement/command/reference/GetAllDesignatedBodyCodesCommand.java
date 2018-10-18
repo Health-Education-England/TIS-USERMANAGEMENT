@@ -16,6 +16,7 @@ public class GetAllDesignatedBodyCodesCommand extends HystrixCommand<Set<DBCDTO>
   private static final String COMMAND_KEY = "REFERENCE_COMMANDS";
 
   private ReferenceServiceImpl remoteReferenceService;
+  private Throwable throwable;
 
   public GetAllDesignatedBodyCodesCommand(ReferenceServiceImpl remoteReferenceService) {
     super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
@@ -32,8 +33,8 @@ public class GetAllDesignatedBodyCodesCommand extends HystrixCommand<Set<DBCDTO>
   protected Set<DBCDTO> run() throws Exception {
     try {
       return remoteReferenceService.getAllDBCs();
-    } catch (Exception e) {
-      e.printStackTrace();
+    } catch (Throwable e) {
+      this.throwable = e;
       throw e;
     }
   }

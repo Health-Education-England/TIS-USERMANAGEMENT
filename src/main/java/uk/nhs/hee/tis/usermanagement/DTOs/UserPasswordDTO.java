@@ -4,34 +4,34 @@ import java.io.Serializable;
 
 public class UserPasswordDTO implements Serializable {
 
-    private String kcId;
-    private String password;
-    private String confirmPassword;
-    private boolean tempPassword;
+  private String kcId;
+  private String password;
+  private String confirmPassword;
+  private boolean tempPassword;
 
-    public String getKcId() {
-        return kcId;
-    }
+  public String getKcId() {
+    return kcId;
+  }
 
-    public void setKcId(String kcId) {
-        this.kcId = kcId;
-    }
+  public void setKcId(String kcId) {
+    this.kcId = kcId;
+  }
 
-    public String getPassword() {
-        return password;
-    }
+  public String getPassword() {
+    return password;
+  }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+  public void setPassword(String password) {
+    this.password = password;
+  }
 
-    public String getConfirmPassword() {
-        return confirmPassword;
-    }
+  public String getConfirmPassword() {
+    return confirmPassword;
+  }
 
-    public void setConfirmPassword(String confirmPassword) {
-        this.confirmPassword = confirmPassword;
-    }
+  public void setConfirmPassword(String confirmPassword) {
+    this.confirmPassword = confirmPassword;
+  }
 
   public boolean isTempPassword() {
     return tempPassword;
