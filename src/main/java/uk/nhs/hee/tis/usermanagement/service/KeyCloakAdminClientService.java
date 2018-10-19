@@ -73,7 +73,7 @@ public class KeyCloakAdminClientService {
     return updateUserCommand.execute();
   }
 
-  public void updatePassword(String userId, String password, boolean tempPassword) {
+  public boolean updatePassword(String userId, String password, boolean tempPassword) {
     Preconditions.checkNotNull(userId);
     Preconditions.checkNotNull(password);
 
@@ -81,6 +81,7 @@ public class KeyCloakAdminClientService {
     if (!success) {
       throw new PasswordException("Update password with KC failed");
     }
+    return success;
   }
 
   /**

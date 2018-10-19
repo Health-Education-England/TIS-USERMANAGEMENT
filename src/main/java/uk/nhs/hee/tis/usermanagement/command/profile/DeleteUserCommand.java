@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 public class DeleteUserCommand extends HystrixCommand<Boolean> {
 
   private static final String COMMAND_KEY = "PROFILE_COMMANDS";
-  private static final String HEE_USERS_ENDPOINT = "/api/hee-users";
   private static final Logger LOG = LoggerFactory.getLogger(CreateUserCommand.class);
   private static final Gson GSON = new Gson();
 

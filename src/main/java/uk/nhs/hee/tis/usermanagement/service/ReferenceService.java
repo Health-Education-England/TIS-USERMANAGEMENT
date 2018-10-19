@@ -19,7 +19,7 @@ import java.util.Set;
 @Service
 public class ReferenceService {
 
-  private static final int PAGE_SIZE_INCREMENTS = 500;
+  private static final int PAGE_SIZE = 500;
 
   @Autowired
   private ReferenceServiceImpl remoteReferenceService;
@@ -40,15 +40,13 @@ public class ReferenceService {
       boolean hasNext = true;
       dumbTrustCache = new ArrayList<>();
       int page = 0;
-      int pageSize = PAGE_SIZE_INCREMENTS;
       while (hasNext) {
 
-        GetAllTrustsCommand getAllTrustsCommand = new GetAllTrustsCommand(referenceRestTemplate, serviceUrl, page, pageSize);
+        GetAllTrustsCommand getAllTrustsCommand = new GetAllTrustsCommand(referenceRestTemplate, serviceUrl, page, PAGE_SIZE);
         List<TrustDTO> result = getAllTrustsCommand.execute();
         dumbTrustCache.addAll(result);
         if (CollectionUtils.isNotEmpty(result)) {
           page++;
-          pageSize += PAGE_SIZE_INCREMENTS;
         } else {
           hasNext = false;
         }

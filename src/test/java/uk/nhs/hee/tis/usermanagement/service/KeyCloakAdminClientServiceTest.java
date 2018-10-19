@@ -15,12 +15,14 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
+import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -207,6 +209,43 @@ public class KeyCloakAdminClientServiceTest {
 
     verify(keycloakAdminClientMock).findByUsername(REALM_LIN, NAME);
     verify(keycloakAdminClientMock).listGroups(REALM_LIN, userMock);
+  }
 
+  @Test(expected = NullPointerException.class)
+  public void updatePasswordShouldThrowExceptionWhenUserIdIsNull() {
+    try {
+      testObj.updatePassword(null, PASSWORD, TEMPORARY_PASSWORD);
+    } finally {
+      verify(keycloakAdminClientMock, never()).updateUserPassword(anyString(), anyString(), anyString(), anyBoolean());
+    }
+  }
+
+
+  @Test(expected = NullPointerException.class)
+  public void updatePasswordShouldThrowExceptionWhenPasswordIsNull() {
+    try {
+      testObj.updatePassword(USER_ID, null, TEMPORARY_PASSWORD);
+    } finally {
+      verify(keycloakAdminClientMock, never()).updateUserPassword(anyString(), anyString(), anyString(), anyBoolean());
+    }
+  }
+
+  @Test(expected = PasswordException.class)
+  public void updatePasswordShouldThrowPasswordExceptionWhenUpdateFails() {
+    try {
+      testObj.updatePassword(USER_ID, PASSWORD, TEMPORARY_PASSWORD);
+    } finally {
+      verify(keycloakAdminClientMock).updateUserPassword(REALM_LIN, USER_ID, PASSWORD, TEMPORARY_PASSWORD);
+    }
+  }
+
+  @Test
+  public void updatePasswordShouldReturnTrueWhenUpdateSucceedsWithKC() {
+    when(keycloakAdminClientMock.updateUserPassword(REALM_LIN, USER_ID, PASSWORD, TEMPORARY_PASSWORD)).thenReturn(true);
+
+    boolean result = testObj.updatePassword(USER_ID, PASSWORD, TEMPORARY_PASSWORD);
+    Assert.assertTrue(result);
+
+    verify(keycloakAdminClientMock).updateUserPassword(REALM_LIN, USER_ID, PASSWORD, TEMPORARY_PASSWORD);
   }
 }
