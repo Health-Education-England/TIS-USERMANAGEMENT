@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 
-import java.util.Optional;
-
 
 //@RestController
 @RequestMapping("/api")
@@ -30,12 +28,13 @@ public class UserManagementResource {
 
   @GetMapping("/user/{username}")
   public ResponseEntity<UserDTO> getCompleteUser(@PathVariable("username") String userName) {
-    Optional<UserDTO> completeUserDTO = userManagementFacade.getCompleteUser(userName);
-    if (completeUserDTO.isPresent()) {
-      return ResponseEntity.ok(completeUserDTO.get());
-    } else {
-      return ResponseEntity.notFound().build();
-    }
+//    Optional<UserDTO> completeUserDTO = userManagementFacade.getCompleteUser(userName);
+//    if (completeUserDTO.isPresent()) {
+//      return ResponseEntity.ok(completeUserDTO.get());
+//    } else {
+//      return ResponseEntity.notFound().build();
+//    }
+    return null;
   }
 
   @GetMapping("/allUsers")

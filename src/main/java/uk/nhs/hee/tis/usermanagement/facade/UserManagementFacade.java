@@ -4,16 +4,26 @@ import com.transform.hee.tis.keycloak.User;
 import com.transformuk.hee.tis.profile.client.service.impl.CustomPageable;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
+import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
+import uk.nhs.hee.tis.usermanagement.exception.UpdateUserException;
+import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
+import uk.nhs.hee.tis.usermanagement.exception.UserDeletionException;
+import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.mapper.HeeUserMapper;
 import uk.nhs.hee.tis.usermanagement.service.KeyCloakAdminClientService;
 import uk.nhs.hee.tis.usermanagement.service.ProfileService;
 import uk.nhs.hee.tis.usermanagement.service.ReferenceService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -21,11 +31,13 @@ import java.util.Set;
 @Component
 public class UserManagementFacade {
 
-  @Autowired
-  ProfileService profileService;
+  private static final Logger LOG = LoggerFactory.getLogger(UserManagementFacade.class);
 
   @Autowired
-  KeyCloakAdminClientService keyCloakAdminClientService;
+  private ProfileService profileService;
+
+  @Autowired
+  private KeyCloakAdminClientService keyCloakAdminClientService;
 
   @Autowired
   private HeeUserMapper heeUserMapper;
@@ -33,21 +45,14 @@ public class UserManagementFacade {
   @Autowired
   private ReferenceService referenceService;
 
-  public Optional<UserDTO> getCompleteUser(String username) {
-    Optional<HeeUserDTO> heeUserDTO = profileService.getUserByUsername(username);
-    UserDTO completeUserDto = new UserDTO();
-    if (heeUserDTO.isPresent()) {
-      completeUserDto = heeUserMapper.mapHeeUserAttributes(completeUserDto, heeUserDTO.get());
-      Optional<User> optionalKeycloakUser = keyCloakAdminClientService.getUser(username);
-      if (optionalKeycloakUser.isPresent()) {
-        User kcUser = optionalKeycloakUser.get();
-        completeUserDto = heeUserMapper.mapKeycloakAttributes(completeUserDto, kcUser);
-      }
-      Set<DBCDTO> dbcdtos = referenceService.getAllDBCs();
-      completeUserDto = heeUserMapper.mapDBCAttributes(completeUserDto, heeUserDTO.get(), dbcdtos);
+  public UserDTO getCompleteUser(String username) {
+    Optional<HeeUserDTO> optionalHeeUserDTO = profileService.getUserByUsername(username);
+    Optional<User> optionalKeycloakUser = keyCloakAdminClientService.getUser(username);
 
-    }
-    return Optional.ofNullable(completeUserDto);
+    HeeUserDTO heeUserDTO = optionalHeeUserDTO.orElseThrow(() -> new UserNotFoundException(username, "Profile"));
+    User kcUser = optionalKeycloakUser.orElseThrow(() -> new UserNotFoundException(username, "KC"));
+    Set<DBCDTO> dbcdtos = referenceService.getAllDBCs();
+    return heeUserMapper.convert(heeUserDTO, kcUser, dbcdtos);
   }
 
   public Page<UserDTO> getAllUsers(Pageable pageable, String search) {
@@ -64,16 +69,63 @@ public class UserManagementFacade {
    * @param userDTO
    */
   public void updateSingleUser(UserDTO userDTO) {
-    Optional<User> originalUser = keyCloakAdminClientService.getUser(userDTO.getName());
-    if (originalUser.isPresent()) {
-      boolean success = keyCloakAdminClientService.updateUser(userDTO);
-      if (success) {
-        Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO));
-        if (!optionalHeeUserDTO.isPresent()) {
-          //revert KC changes
-          keyCloakAdminClientService.updateUser(originalUser.get());
+    Optional<User> optionalOriginalUser = keyCloakAdminClientService.getUser(userDTO.getName());
+    User originalUser = optionalOriginalUser.orElseThrow(() -> new UserNotFoundException(userDTO.getName(), "KC"));
+    boolean success = keyCloakAdminClientService.updateUser(userDTO);
+    if (success) {
+      Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO, referenceService.getAllTrusts()));
+      if (!optionalHeeUserDTO.isPresent()) {
+        //revert KC changes
+        if (!keyCloakAdminClientService.updateUser(originalUser)) {
+          LOG.error("Could not revert KC changes back to previous version after profile update failed! Its possible that KC user [{}] is out of sync", userDTO.getName());
         }
       }
+    } else {
+      throw new UpdateUserException(userDTO.getName(), "KC");
     }
+  }
+
+  /**
+   * Create a user in both KC and Profile service.
+   *
+   * @param userDTO the DTO that contains the details to create
+   */
+  public void createUser(CreateUserDTO userDTO) {
+    Optional<User> optionalKcUser = keyCloakAdminClientService.createUser(userDTO);
+    User kcUser = optionalKcUser.orElseThrow(() -> new UserCreationException("Could not create user in KC"));
+    Optional<HeeUserDTO> optionalHeeUserDTO = profileService.createUser(heeUserMapper.convert(userDTO, referenceService.getAllTrusts()));
+    if (!optionalHeeUserDTO.isPresent()) {
+      LOG.warn("Attempting to revert creation of user in KC");
+      if (!keyCloakAdminClientService.deleteUser(kcUser)) {
+        LOG.error("Could not revert KC changes back to previous version create creating user in Profile failed. There may be more users in KC now than Profile user [{}]", userDTO.getName());
+      }
+    }
+  }
+
+  public void deleteUser(String username) {
+    Optional<User> optionalUser = keyCloakAdminClientService.getUser(username);
+    User kcUser = optionalUser.orElseThrow(() -> new UserNotFoundException(username, "Keycloak"));
+    boolean success = keyCloakAdminClientService.deleteUser(kcUser);
+    if (success) {
+      profileService.deleteUser(username);
+    } else {
+      throw new UserDeletionException(username);
+    }
+  }
+
+  public List<String> getAllRoles() {
+    return profileService.getAllRoles();
+  }
+
+  public List<DBCDTO> getAllDBCs() {
+    return new ArrayList<>(referenceService.getAllDBCs());
+  }
+
+  public List<TrustDTO> getAllTrusts() {
+    return new ArrayList<>(referenceService.getAllTrusts());
+  }
+
+  public void updatePassword(UserPasswordDTO passwordDTO) {
+    keyCloakAdminClientService.updatePassword(passwordDTO.getKcId(), passwordDTO.getPassword(), passwordDTO.isTempPassword());
   }
 }

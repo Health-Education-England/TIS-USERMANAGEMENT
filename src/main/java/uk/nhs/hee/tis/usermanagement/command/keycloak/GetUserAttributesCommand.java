@@ -14,13 +14,15 @@ public class GetUserAttributesCommand extends HystrixCommand<Map<String, List<St
 
   private static final String COMMAND_KEY = "KEYCLOAK_COMMAND";
   private static final Logger LOG = LoggerFactory.getLogger(CreateUserCommand.class);
+  private static final int TWO_SECOND_TIMEOUT_IN_MILLIS = 2000;
 
   private KeycloakAdminClient keycloakAdminClient;
   private String realm;
   private String username;
+  private Throwable throwable;
 
   public GetUserAttributesCommand(KeycloakAdminClient keycloakAdminClient, String realm, String username) {
-    super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
+    super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY), TWO_SECOND_TIMEOUT_IN_MILLIS);
     this.keycloakAdminClient = keycloakAdminClient;
     this.realm = realm;
     this.username = username;
@@ -35,6 +37,11 @@ public class GetUserAttributesCommand extends HystrixCommand<Map<String, List<St
 
   @Override
   protected Map<String, List<String>> run() throws Exception {
-    return keycloakAdminClient.getAttributesForUser(realm, username);
+    try {
+      return keycloakAdminClient.getAttributesForUser(realm, username);
+    } catch (Throwable e) {
+      this.throwable = e;
+      throw e;
+    }
   }
 }

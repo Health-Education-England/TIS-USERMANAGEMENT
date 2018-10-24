@@ -6,15 +6,20 @@ import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.usermanagement.command.profile.CreateUserCommand;
+import uk.nhs.hee.tis.usermanagement.command.profile.DeleteUserCommand;
+import uk.nhs.hee.tis.usermanagement.command.profile.GetAllRolesCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.GetPaginatedUsersCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.GetUserByUsernameCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.UpdateUserCommand;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -25,6 +30,10 @@ public class ProfileService {
 
   @Autowired
   private ProfileServiceImpl profileServiceImpl;
+  @Autowired
+  private RestTemplate profileRestTemplate;
+  @Value("${profile.service.url}")
+  private String serviceUrl;
 
   /**
    * Get all users in a paginated form. If a username is provideded, a (sql) like search is done.
@@ -78,4 +87,20 @@ public class ProfileService {
     UpdateUserCommand updateUserCommand = new UpdateUserCommand(profileServiceImpl, userToUpdateDTO);
     return updateUserCommand.execute();
   }
+
+  /**
+   * YOLO
+   *
+   * @return
+   */
+  public List<String> getAllRoles() {
+    GetAllRolesCommand getAllRolesCommand = new GetAllRolesCommand(profileRestTemplate, serviceUrl);
+    return getAllRolesCommand.execute();
+  }
+
+  public boolean deleteUser(String username) {
+    DeleteUserCommand deleteUserCommand = new DeleteUserCommand(profileServiceImpl, username);
+    return deleteUserCommand.execute();
+  }
+
 }

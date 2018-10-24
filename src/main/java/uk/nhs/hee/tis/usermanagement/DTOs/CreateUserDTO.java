@@ -1,10 +1,10 @@
 package uk.nhs.hee.tis.usermanagement.DTOs;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-public class UserDTO {
-  private String kcId;
+public class CreateUserDTO implements Serializable {
   private String name;
   private String firstName;
   private String lastName;
@@ -12,17 +12,12 @@ public class UserDTO {
   private String phoneNumber;
   private String emailAddress;
   private boolean active;
+  private String password;
+  private String confirmPassword;
+  private boolean tempPassword;
   private Set<String> roles = new HashSet<>();
   private Set<String> localOffices = new HashSet<>();
   private Set<String> associatedTrusts = new HashSet<>();
-
-  public String getKcId() {
-    return kcId;
-  }
-
-  public void setKcId(String kcId) {
-    this.kcId = kcId;
-  }
 
   public String getName() {
     return name;
@@ -72,12 +67,36 @@ public class UserDTO {
     this.emailAddress = emailAddress;
   }
 
-  public boolean getActive() {
+  public boolean isActive() {
     return active;
   }
 
   public void setActive(boolean active) {
     this.active = active;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
+  }
+
+  public String getConfirmPassword() {
+    return confirmPassword;
+  }
+
+  public void setConfirmPassword(String confirmPassword) {
+    this.confirmPassword = confirmPassword;
+  }
+
+  public boolean getTempPassword() {
+    return tempPassword;
+  }
+
+  public void setTempPassword(boolean tempPassword) {
+    this.tempPassword = tempPassword;
   }
 
   public Set<String> getRoles() {

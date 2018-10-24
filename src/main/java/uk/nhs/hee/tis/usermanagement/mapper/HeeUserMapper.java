@@ -4,11 +4,15 @@ import com.google.common.base.Preconditions;
 import com.transform.hee.tis.keycloak.User;
 import com.transformuk.hee.tis.profile.dto.RoleDTO;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
+import com.transformuk.hee.tis.profile.service.dto.UserTrustDTO;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
+import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
+import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,22 +36,38 @@ public class HeeUserMapper {
     return mapHeeUserAttributes(userDTO, heeUserDTO);
   }
 
-  public HeeUserDTO convert(UserDTO userDTO) {
+  public HeeUserDTO convert(UserDTO userDTO, List<TrustDTO> knownTrusts) {
     Preconditions.checkNotNull(userDTO, "stop being stooopid");
-    return mapUserAttributes(userDTO);
+    return mapUserAttributes(userDTO.getName(), userDTO.getFirstName(), userDTO.getLastName(), userDTO.getGmcId(),
+        userDTO.getPhoneNumber(), userDTO.getEmailAddress(), userDTO.getLocalOffices(), userDTO.getRoles(),
+        userDTO.getAssociatedTrusts(), knownTrusts);
   }
 
-  public HeeUserDTO mapUserAttributes(UserDTO userDTO) {
-    HeeUserDTO heeUserDTO = new HeeUserDTO();
-    heeUserDTO.setName(userDTO.getName());
-    heeUserDTO.setFirstName(userDTO.getFirstName());
-    heeUserDTO.setLastName(userDTO.getLastName());
-    heeUserDTO.setGmcId(userDTO.getGmcId());
-    heeUserDTO.setPhoneNumber(userDTO.getPhoneNumber());
-    heeUserDTO.setEmailAddress(userDTO.getEmailAddress());
+  public HeeUserDTO convert(CreateUserDTO createUserDTO, List<TrustDTO> knownTrusts) {
+    Preconditions.checkNotNull(createUserDTO, "stop being stooopid");
+    HeeUserDTO heeUserDTO = mapUserAttributes(createUserDTO.getName(), createUserDTO.getFirstName(), createUserDTO.getLastName(), createUserDTO.getGmcId(),
+        createUserDTO.getPhoneNumber(), createUserDTO.getEmailAddress(), createUserDTO.getLocalOffices(), createUserDTO.getRoles(),
+        createUserDTO.getAssociatedTrusts(), knownTrusts);
+    heeUserDTO.setPassword(createUserDTO.getPassword());
+    heeUserDTO.setTemporaryPassword(createUserDTO.getTempPassword());
+    return heeUserDTO;
 
-    if (CollectionUtils.isNotEmpty(userDTO.getRoles())) {
-      Set<RoleDTO> setOfRoles = userDTO.getRoles()
+  }
+
+  private HeeUserDTO mapUserAttributes(String name, String firstName, String lastName, String gmcId, String phoneNumber,
+                                       String emailAddress, Set<String> localOffices, Set<String> roles, Set<String> associatedTrusts,
+                                       List<TrustDTO> knownTrusts) {
+    HeeUserDTO heeUserDTO = new HeeUserDTO();
+    heeUserDTO.setName(name);
+    heeUserDTO.setFirstName(firstName);
+    heeUserDTO.setLastName(lastName);
+    heeUserDTO.setGmcId(gmcId);
+    heeUserDTO.setPhoneNumber(phoneNumber);
+    heeUserDTO.setEmailAddress(emailAddress);
+    heeUserDTO.setDesignatedBodyCodes(localOffices);
+
+    if (CollectionUtils.isNotEmpty(roles)) {
+      Set<RoleDTO> setOfRoles = roles
           .stream()
           .map(roleName -> {
             RoleDTO roleDTO = new RoleDTO();
@@ -56,11 +76,32 @@ public class HeeUserMapper {
           }).collect(Collectors.toSet());
       heeUserDTO.setRoles(setOfRoles);
     }
-
-    heeUserDTO.setAssociatedTrusts(userDTO.getAssociatedTrusts());
+    heeUserDTO.setAssociatedTrusts(mapUserTrust(associatedTrusts, knownTrusts));
 
     return heeUserDTO;
   }
+
+
+  private Set<UserTrustDTO> mapUserTrust(Set<String> associatedTrusts, List<TrustDTO> knownTrusts) {
+    Set<UserTrustDTO> trusts = Collections.EMPTY_SET;
+    if (CollectionUtils.isNotEmpty(associatedTrusts)) {
+      Map<Long, TrustDTO> idsToTrust = knownTrusts.stream().collect(Collectors.toMap((TrustDTO::getId), (trust) -> trust));
+
+      trusts = associatedTrusts.stream()
+          .map(Long::parseLong)
+          .map(idsToTrust::get)
+          .map(trustDTO -> {
+            UserTrustDTO userTrustDTO = new UserTrustDTO();
+            userTrustDTO.setTrustId(trustDTO.getId());
+            userTrustDTO.setTrustCode(trustDTO.getCode());
+            userTrustDTO.setTrustName(trustDTO.getTrustName());
+            return userTrustDTO;
+          })
+          .collect(Collectors.toSet());
+    }
+    return trusts;
+  }
+
 
   /**
    * Used for the details page
@@ -74,12 +115,12 @@ public class HeeUserMapper {
     UserDTO userDTO = new UserDTO();
     mapHeeUserAttributes(userDTO, heeUserDTO);
     mapKeycloakAttributes(userDTO, keycloakUser);
-    mapDBCAttributes(userDTO, heeUserDTO, dbcdtos);
+//    mapDBCAttributes(userDTO, heeUserDTO, dbcdtos);
 
     return userDTO;
   }
 
-  public UserDTO mapHeeUserAttributes(UserDTO userDTO, HeeUserDTO heeUserDTO) {
+  private UserDTO mapHeeUserAttributes(UserDTO userDTO, HeeUserDTO heeUserDTO) {
     if (heeUserDTO != null) {
       userDTO.setName(heeUserDTO.getName());
       userDTO.setFirstName(heeUserDTO.getFirstName());
@@ -87,26 +128,32 @@ public class HeeUserMapper {
       userDTO.setGmcId(heeUserDTO.getGmcId());
       userDTO.setPhoneNumber(heeUserDTO.getPhoneNumber());
       userDTO.setEmailAddress(heeUserDTO.getEmailAddress());
-
+      userDTO.setLocalOffices(heeUserDTO.getDesignatedBodyCodes());
       if (CollectionUtils.isNotEmpty(heeUserDTO.getRoles())) {
-        Set<String> setOfRoles = heeUserDTO.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet());
+        Set<String> setOfRoles = heeUserDTO.getRoles().stream().map(RoleDTO::getName).collect(Collectors.toSet());
         userDTO.setRoles(setOfRoles);
       }
 
-      userDTO.setAssociatedTrusts(heeUserDTO.getAssociatedTrusts());
+      Set<UserTrustDTO> associatedTrusts = heeUserDTO.getAssociatedTrusts();
+      if (CollectionUtils.isNotEmpty(associatedTrusts)) {
+        Set<String> trustIds = associatedTrusts.stream()
+            .map(UserTrustDTO::getTrustId)
+            .map(Object::toString).collect(Collectors.toSet());
+        userDTO.setAssociatedTrusts(trustIds);
+      }
     }
     return userDTO;
   }
 
-  public UserDTO mapKeycloakAttributes(UserDTO userDTO, User keycloakUser) {
+  private UserDTO mapKeycloakAttributes(UserDTO userDTO, User keycloakUser) {
     if (keycloakUser != null) {
+      userDTO.setKcId(keycloakUser.getId());
       userDTO.setActive(keycloakUser.getEnabled());
-      userDTO.setTemporaryPassword(keycloakUser.getTempPassword());
     }
     return userDTO;
   }
 
-  public UserDTO mapDBCAttributes(UserDTO userDTO, HeeUserDTO heeUserDTO, Set<DBCDTO> dbcdtos) {
+  private UserDTO mapDBCAttributes(UserDTO userDTO, HeeUserDTO heeUserDTO, Set<DBCDTO> dbcdtos) {
     Map<String, String> dbcToLocalOffice = dbcdtos.stream().collect(Collectors.toMap(DBCDTO::getDbc, DBCDTO::getName));
     Set<String> setOfLOs = heeUserDTO.getDesignatedBodyCodes().stream().map(dbc -> dbcToLocalOffice.get(dbc)).collect(Collectors.toSet());
     userDTO.setLocalOffices(setOfLOs);

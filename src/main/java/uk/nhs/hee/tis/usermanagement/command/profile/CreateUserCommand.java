@@ -19,6 +19,7 @@ public class CreateUserCommand extends HystrixCommand<Optional<HeeUserDTO>> {
 
   private ProfileServiceImpl profileServiceImpl;
   private HeeUserDTO userToCreateDTO;
+  private Throwable throwable;
 
   public CreateUserCommand(ProfileServiceImpl profileServiceImpl, HeeUserDTO userToCreateDTO) {
     super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
@@ -28,14 +29,19 @@ public class CreateUserCommand extends HystrixCommand<Optional<HeeUserDTO>> {
 
   @Override
   protected Optional<HeeUserDTO> getFallback() {
-    LOG.warn("An occurred while attempting to create a hee user in profile service, returning an empty optional as fallback");
+    LOG.warn("An occurred while attempting to create a hee user in Profile service, returning an empty optional as fallback");
     LOG.debug("Data that was sent: [{}]", GSON.toJson(userToCreateDTO));
     return Optional.empty();
   }
 
   @Override
   protected Optional<HeeUserDTO> run() throws Exception {
-    HeeUserDTO createdUserDto = profileServiceImpl.createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
-    return Optional.of(createdUserDto);
+    try {
+      HeeUserDTO createdUserDto = profileServiceImpl.createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
+      return Optional.of(createdUserDto);
+    } catch (Throwable e) {
+      this.throwable = e;
+      throw e;
+    }
   }
 }
