@@ -4,8 +4,6 @@ def utils = new hee.tis.utils()
 
 node {
 
-    def service = "assessments"
-
     deleteDir()
 
     stage('Checkout Git Repo') {
@@ -21,16 +19,8 @@ node {
     def buildVersion = env.GIT_COMMIT
     def imageName = ""
     def imageVersionTag = ""
-    boolean isService = false
 
     println "[Jenkinsfile INFO] Commit Hash is ${GIT_COMMIT}"
-
-    if (fileExists("$workspace/$service-service/pom.xml")) {
-        workspace = "$workspace/$service-service"
-        env.WORKSPACE = workspace
-        sh 'cd "$workspace"'
-        isService = true
-    }
 
     milestone 1
 
@@ -56,13 +46,12 @@ node {
         env.GROUP_ID = utils.getMvnToPom(workspace, 'groupId')
         env.ARTIFACT_ID = utils.getMvnToPom(workspace, 'artifactId')
         env.PACKAGING = utils.getMvnToPom(workspace, 'packaging')
-        imageName = env.ARTIFACT_ID
+        // imageName = env.ARTIFACT_ID
         imageVersionTag = env.GIT_COMMIT
 
-        if (isService) {
-            imageName = service
-            env.IMAGE_NAME = imageName
-        }
+
+        imageName = "usermanagement"
+        env.IMAGE_NAME = imageName
 
         try {
         sh "ansible-playbook -i $env.DEVOPS_BASE/ansible/inventory/dev $env.DEVOPS_BASE/ansible/tasks/spring-boot-build.yml"
