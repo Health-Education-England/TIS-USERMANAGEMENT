@@ -4,6 +4,8 @@ def utils = new hee.tis.utils()
 
 node {
 
+    def service = "usermanagement"
+
     deleteDir()
 
     stage('Checkout Git Repo') {
@@ -50,7 +52,7 @@ node {
         imageVersionTag = env.GIT_COMMIT
 
 
-        imageName = "usermanagement"
+        imageName = service
         env.IMAGE_NAME = imageName
 
         try {
