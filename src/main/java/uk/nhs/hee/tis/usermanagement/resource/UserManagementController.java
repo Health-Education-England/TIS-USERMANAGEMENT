@@ -84,48 +84,44 @@ public class UserManagementController {
 
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PostMapping("/createUser")
-  public String createUser(@ModelAttribute CreateUserDTO user, RedirectAttributes attributes) {
+  public String createUser(@ModelAttribute CreateUserDTO user, Model model) {
     if (!StringUtils.equals(user.getPassword(), user.getConfirmPassword())) {
       throw new UserCreationException("Cannot create user, passwords do not match");
     } else if (StringUtils.isEmpty(user.getPassword()) || user.getPassword().length() < REQUIRED_PASSWORD_LENGTH) {
       throw new UserCreationException("Cannot create user, password needs to be at least 8 chars long");
     }
     userManagementFacade.createUser(user);
-    attributes.addFlashAttribute("message",
-        "The user " + user.getFirstName() + " " + user.getLastName() + " (" + user.getName() + ") has been created");
-    return "redirect:/allUsers";
-
+    model.addAttribute("message","The user " + user.getFirstName() + " " + user.getLastName() + " (" + user.getName() + ") has been created");
+    return "success";
   }
 
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PostMapping("/updateUser")
-  public String updateUser(@ModelAttribute UserDTO user, RedirectAttributes attributes) {
+  public String updateUser(@ModelAttribute UserDTO user, Model model) {
     userManagementFacade.updateSingleUser(user);
-    attributes.addFlashAttribute("message",
-        "The user " + user.getFirstName() + " " + user.getLastName() + " (" + user.getName() + ") has been updated");
-    return "redirect:/allUsers";
+    model.addAttribute("message", "The user " + user.getFirstName() + " " + user.getLastName() + " (" + user.getName() + ") has been updated");
+    return "success";
   }
 
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PostMapping("/updatePassword")
-  public String updatePassword(@ModelAttribute UserPasswordDTO passwordDTO, RedirectAttributes attributes) {
+  public String updatePassword(@ModelAttribute UserPasswordDTO passwordDTO, Model model) {
 
     if (!StringUtils.equals(passwordDTO.getPassword(), passwordDTO.getConfirmPassword())) {
       throw new PasswordException("Passwords do not match");
     }
 
     userManagementFacade.updatePassword(passwordDTO);
-    attributes.addFlashAttribute("message",
-        "Password has been updated for the user");
-    return "redirect:/allUsers";
+    model.addAttribute("message", "Password has been updated for the user");
+    return "success";
   }
 
   @PreAuthorize("hasAuthority('heeuser:delete')")
   @PostMapping("/deleteUser")
-  public String deleteUser(@ModelAttribute UserDTO user, RedirectAttributes attributes) {
+  public String deleteUser(@ModelAttribute UserDTO user, Model model) {
     userManagementFacade.deleteUser(user.getName());
-    attributes.addFlashAttribute("message",
+    model.addAttribute("message",
         "The user " + user.getName() + " has been deleted");
-    return "redirect:/allUsers";
+    return "success";
   }
 }
