@@ -79,6 +79,7 @@ public class UserManagementFacade {
         if (!keyCloakAdminClientService.updateUser(originalUser)) {
           LOG.error("Could not revert KC changes back to previous version after profile update failed! Its possible that KC user [{}] is out of sync", userDTO.getName());
         }
+        throw new UpdateUserException(userDTO.getName(), "Profile");
       }
     } else {
       throw new UpdateUserException(userDTO.getName(), "KC");
@@ -99,6 +100,7 @@ public class UserManagementFacade {
       if (!keyCloakAdminClientService.deleteUser(kcUser)) {
         LOG.error("Could not revert KC changes back to previous version create creating user in Profile failed. There may be more users in KC now than Profile user [{}]", userDTO.getName());
       }
+      throw new UpdateUserException(userDTO.getName(), "Profile");
     }
   }
 

@@ -5,6 +5,7 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +31,7 @@ public class UpdateUserCommand extends ProfileHystrixCommand<Optional<HeeUserDTO
   protected Optional<HeeUserDTO> getFallback() {
     LOG.warn("An error occurred while trying to update a user in profile service, returning empty optional as fallback");
     LOG.debug("Data that was sent, userToUpdate: [{}]", GSON.toJson(userToUpdateDto));
+    LOG.warn("Exception: [{}]", ExceptionUtils.getStackTrace(throwable));
     return Optional.empty();
   }
 
