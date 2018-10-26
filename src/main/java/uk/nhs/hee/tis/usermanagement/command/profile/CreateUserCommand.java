@@ -5,6 +5,7 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +30,7 @@ public class CreateUserCommand extends ProfileHystrixCommand<Optional<HeeUserDTO
   protected Optional<HeeUserDTO> getFallback() {
     LOG.warn("An occurred while attempting to create a hee user in Profile service, returning an empty optional as fallback");
     LOG.debug("Data that was sent: [{}]", GSON.toJson(userToCreateDTO));
+    LOG.warn("Exception: [{}]", ExceptionUtils.getStackTrace(throwable));
     return Optional.empty();
   }
 

@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +26,7 @@ public class DeleteUserCommand extends ProfileHystrixCommand<Boolean> {
   @Override
   protected Boolean getFallback() {
     LOG.warn("An error was thrown while attempting to delete user [{}] from the Profile service", this.username);
+    LOG.warn("Exception: [{}]", ExceptionUtils.getStackTrace(throwable));
     return false;
   }
 

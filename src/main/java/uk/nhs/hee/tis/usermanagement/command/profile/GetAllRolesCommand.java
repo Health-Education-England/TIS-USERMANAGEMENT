@@ -5,6 +5,7 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.transformuk.hee.tis.profile.dto.RoleDTO;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
@@ -35,6 +36,7 @@ public class GetAllRolesCommand extends ProfileHystrixCommand<List<String>> {
   protected List<String> getFallback() {
     LOG.warn("An occurred while getting all Roles in the Profile service, returning an empty List as fallback");
     LOG.debug("Data that was sent: serviceUrl: [{}]", serviceUrl);
+    LOG.warn("Exception: [{}]", ExceptionUtils.getStackTrace(throwable));
     return Lists.newArrayList();
   }
 

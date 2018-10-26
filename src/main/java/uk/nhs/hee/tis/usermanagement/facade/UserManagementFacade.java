@@ -100,7 +100,7 @@ public class UserManagementFacade {
       if (!keyCloakAdminClientService.deleteUser(kcUser)) {
         LOG.error("Could not revert KC changes back to previous version create creating user in Profile failed. There may be more users in KC now than Profile user [{}]", userDTO.getName());
       }
-      throw new UpdateUserException(userDTO.getName(), "Profile");
+      throw new UserCreationException("Could not create user " + userDTO.getName() + " in Profile service");
     }
   }
 
