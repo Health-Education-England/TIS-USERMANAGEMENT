@@ -10,16 +10,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
-public class GetAllDesignatedBodyCodesCommand extends HystrixCommand<Set<DBCDTO>> {
+public class GetAllDesignatedBodyCodesCommand extends ReferenceHystrixCommand<Set<DBCDTO>> {
 
   private static final Logger LOG = LoggerFactory.getLogger(GetAllDesignatedBodyCodesCommand.class);
-  private static final String COMMAND_KEY = "REFERENCE_COMMANDS";
 
   private ReferenceServiceImpl remoteReferenceService;
   private Throwable throwable;
 
   public GetAllDesignatedBodyCodesCommand(ReferenceServiceImpl remoteReferenceService) {
-    super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
     this.remoteReferenceService = remoteReferenceService;
   }
 

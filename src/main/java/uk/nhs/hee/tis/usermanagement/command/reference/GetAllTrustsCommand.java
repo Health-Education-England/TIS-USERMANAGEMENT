@@ -14,9 +14,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
-public class GetAllTrustsCommand extends HystrixCommand<List<TrustDTO>> {
+public class GetAllTrustsCommand extends ReferenceHystrixCommand<List<TrustDTO>> {
 
-  private static final String COMMAND_KEY = "REFERENCE_COMMANDS";
   private static final Logger LOG = LoggerFactory.getLogger(GetAllTrustsCommand.class);
 
   private RestTemplate referenceRestTemplate;
@@ -26,7 +25,6 @@ public class GetAllTrustsCommand extends HystrixCommand<List<TrustDTO>> {
   private Throwable throwable;
 
   public GetAllTrustsCommand(RestTemplate referenceRestTemplate, String serviceUrl, int page, int size) {
-    super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
     this.referenceRestTemplate = referenceRestTemplate;
     this.serviceUrl = serviceUrl;
     this.page = page;

@@ -10,12 +10,10 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DeleteUserCommand extends HystrixCommand<Boolean> {
+public class DeleteUserCommand extends KeycloakHystrixCommand<Boolean> {
 
-  private static final String COMMAND_KEY = "KEYCLOAK_COMMAND";
   private static final Logger LOG = LoggerFactory.getLogger(DeleteUserCommand.class);
   private static final Gson GSON = new Gson();
-  private static final int TWO_SECOND_TIMEOUT_IN_MILLIS = 2000;
 
   private String realm;
   private User userToDelete;
@@ -23,7 +21,6 @@ public class DeleteUserCommand extends HystrixCommand<Boolean> {
   private Throwable throwable;
 
   public DeleteUserCommand(String realm, User userToDelete, KeycloakAdminClient keycloakAdminClient) {
-    super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY), TWO_SECOND_TIMEOUT_IN_MILLIS);
     this.realm = realm;
     this.userToDelete = userToDelete;
     this.keycloakAdminClient = keycloakAdminClient;

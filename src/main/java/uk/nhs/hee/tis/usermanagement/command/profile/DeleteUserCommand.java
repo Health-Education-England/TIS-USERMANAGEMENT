@@ -7,7 +7,7 @@ import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DeleteUserCommand extends HystrixCommand<Boolean> {
+public class DeleteUserCommand extends ProfileHystrixCommand<Boolean> {
 
   private static final String COMMAND_KEY = "PROFILE_COMMANDS";
   private static final Logger LOG = LoggerFactory.getLogger(CreateUserCommand.class);
@@ -18,7 +18,6 @@ public class DeleteUserCommand extends HystrixCommand<Boolean> {
   private Throwable throwable;
 
   public DeleteUserCommand(ProfileServiceImpl profileServiceImpl, String username) {
-    super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
     this.profileServiceImpl = profileServiceImpl;
     this.username = username;
   }

@@ -10,9 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-public class CreateUserCommand extends HystrixCommand<Optional<HeeUserDTO>> {
+public class CreateUserCommand extends ProfileHystrixCommand<Optional<HeeUserDTO>> {
 
-  private static final String COMMAND_KEY = "PROFILE_COMMANDS";
   private static final String HEE_USERS_ENDPOINT = "/api/hee-users";
   private static final Logger LOG = LoggerFactory.getLogger(CreateUserCommand.class);
   private static final Gson GSON = new Gson();
@@ -22,7 +21,6 @@ public class CreateUserCommand extends HystrixCommand<Optional<HeeUserDTO>> {
   private Throwable throwable;
 
   public CreateUserCommand(ProfileServiceImpl profileServiceImpl, HeeUserDTO userToCreateDTO) {
-    super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
     this.profileServiceImpl = profileServiceImpl;
     this.userToCreateDTO = userToCreateDTO;
   }

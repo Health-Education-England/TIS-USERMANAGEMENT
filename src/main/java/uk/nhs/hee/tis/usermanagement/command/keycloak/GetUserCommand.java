@@ -1,7 +1,5 @@
 package uk.nhs.hee.tis.usermanagement.command.keycloak;
 
-import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.transform.hee.tis.keycloak.KeycloakAdminClient;
 import com.transform.hee.tis.keycloak.User;
 import org.slf4j.Logger;
@@ -9,11 +7,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-public class GetUserCommand extends HystrixCommand<Optional<User>> {
+public class GetUserCommand extends KeycloakHystrixCommand<Optional<User>> {
 
-  private static final String COMMAND_KEY = "KEYCLOAK_COMMAND";
   private static final Logger LOG = LoggerFactory.getLogger(GetUserCommand.class);
-  private static final int TWO_SECOND_TIMEOUT_IN_MILLIS = 2000;
 
   private KeycloakAdminClient keycloakAdminClient;
   private String username;
@@ -21,7 +17,6 @@ public class GetUserCommand extends HystrixCommand<Optional<User>> {
   private Throwable throwable;
 
   public GetUserCommand(KeycloakAdminClient keycloakAdminClient, String username, String realm) {
-    super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY), TWO_SECOND_TIMEOUT_IN_MILLIS);
     this.keycloakAdminClient = keycloakAdminClient;
     this.username = username;
     this.realm = realm;

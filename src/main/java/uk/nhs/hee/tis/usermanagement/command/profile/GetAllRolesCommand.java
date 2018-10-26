@@ -17,7 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class GetAllRolesCommand extends HystrixCommand<List<String>> {
+public class GetAllRolesCommand extends ProfileHystrixCommand<List<String>> {
 
   private static final String COMMAND_KEY = "PROFILE_COMMANDS";
   private static final Logger LOG = LoggerFactory.getLogger(CreateUserCommand.class);
@@ -27,7 +27,6 @@ public class GetAllRolesCommand extends HystrixCommand<List<String>> {
   private Throwable throwable;
 
   public GetAllRolesCommand(RestTemplate profileRestTemplate, String serviceUrl) {
-    super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
     this.profileRestTemplate = profileRestTemplate;
     this.serviceUrl = serviceUrl;
   }

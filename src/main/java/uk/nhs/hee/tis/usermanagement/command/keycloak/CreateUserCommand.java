@@ -8,14 +8,13 @@ import com.transform.hee.tis.keycloak.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
-public class CreateUserCommand extends HystrixCommand<Optional<User>> {
+public class CreateUserCommand extends KeycloakHystrixCommand<Optional<User>> {
 
-  private static final String COMMAND_KEY = "KEYCLOAK_COMMAND";
   private static final Logger LOG = LoggerFactory.getLogger(CreateUserCommand.class);
   private static final Gson GSON = new Gson();
-  private static final int TWO_SECOND_TIMEOUT_IN_MILLIS = 2000;
 
   private String realm;
   private User userToCreate;
@@ -23,7 +22,6 @@ public class CreateUserCommand extends HystrixCommand<Optional<User>> {
   private Throwable throwable;
 
   public CreateUserCommand(KeycloakAdminClient keycloakAdminClient, String realm, User userToCreate) {
-    super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY), TWO_SECOND_TIMEOUT_IN_MILLIS);
     this.keycloakAdminClient = keycloakAdminClient;
     this.realm = realm;
     this.userToCreate = userToCreate;

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-public class UpdateUserCommand extends HystrixCommand<Optional<HeeUserDTO>> {
+public class UpdateUserCommand extends ProfileHystrixCommand<Optional<HeeUserDTO>> {
 
   private static final String COMMAND_KEY = "PROFILE_COMMANDS";
   private static final String HEE_USERS_ENDPOINT = "/api/hee-users";
@@ -22,7 +22,6 @@ public class UpdateUserCommand extends HystrixCommand<Optional<HeeUserDTO>> {
   private Throwable throwable;
 
   public UpdateUserCommand(ProfileServiceImpl profileServiceImpl, HeeUserDTO userToUpdateDto) {
-    super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
     this.profileServiceImpl = profileServiceImpl;
     this.userToUpdateDto = userToUpdateDto;
   }

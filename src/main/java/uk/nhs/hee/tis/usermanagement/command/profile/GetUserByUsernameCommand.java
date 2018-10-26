@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
-public class GetUserByUsernameCommand extends HystrixCommand<Optional<HeeUserDTO>> {
+public class GetUserByUsernameCommand extends ProfileHystrixCommand<Optional<HeeUserDTO>> {
 
   private static final String COMMAND_KEY = "PROFILE_COMMANDS";
   private static final Logger LOG = LoggerFactory.getLogger(GetPaginatedUsersCommand.class);
@@ -19,7 +19,6 @@ public class GetUserByUsernameCommand extends HystrixCommand<Optional<HeeUserDTO
   private Throwable throwable;
 
   public GetUserByUsernameCommand(ProfileServiceImpl profileServiceImpl, String username) {
-    super(HystrixCommandGroupKey.Factory.asKey(COMMAND_KEY));
     this.profileServiceImpl = profileServiceImpl;
     this.username = username;
   }
