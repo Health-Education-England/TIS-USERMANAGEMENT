@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class GetUserAttributesCommand extends KeycloakHystrixCommand<Map<String, List<String>>> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(CreateUserCommand.class);
+  private static final Logger LOG = LoggerFactory.getLogger(GetUserAttributesCommand.class);
 
   private KeycloakAdminClient keycloakAdminClient;
   private String realm;

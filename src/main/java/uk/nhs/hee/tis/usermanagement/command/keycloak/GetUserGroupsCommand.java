@@ -12,7 +12,7 @@ import java.util.List;
 
 public class GetUserGroupsCommand extends KeycloakHystrixCommand<List<GroupRepresentation>> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(CreateUserCommand.class);
+  private static final Logger LOG = LoggerFactory.getLogger(GetUserGroupsCommand.class);
   private static final Gson GSON = new Gson();
 
   private KeycloakAdminClient keycloakAdminClient;

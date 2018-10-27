@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 public class UpdateUserCommand extends KeycloakHystrixCommand<Boolean> {
 
-  private static final Logger LOG = LoggerFactory.getLogger(CreateUserCommand.class);
+  private static final Logger LOG = LoggerFactory.getLogger(UpdateUserCommand.class);
   private static final Gson GSON = new Gson();
 
   private KeycloakAdminClient keycloakAdminClient;

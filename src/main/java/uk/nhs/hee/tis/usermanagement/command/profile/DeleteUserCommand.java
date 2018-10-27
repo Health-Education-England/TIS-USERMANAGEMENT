@@ -1,8 +1,5 @@
 package uk.nhs.hee.tis.usermanagement.command.profile;
 
-import com.google.gson.Gson;
-import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -10,9 +7,7 @@ import org.slf4j.LoggerFactory;
 
 public class DeleteUserCommand extends ProfileHystrixCommand<Boolean> {
 
-  private static final String COMMAND_KEY = "PROFILE_COMMANDS";
-  private static final Logger LOG = LoggerFactory.getLogger(CreateUserCommand.class);
-  private static final Gson GSON = new Gson();
+  private static final Logger LOG = LoggerFactory.getLogger(DeleteUserCommand.class);
 
   private ProfileServiceImpl profileServiceImpl;
   private String username;

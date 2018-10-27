@@ -1,7 +1,5 @@
 package uk.nhs.hee.tis.usermanagement.command.profile;
 
-import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -12,7 +10,6 @@ import java.util.Optional;
 
 public class GetUserByUsernameCommand extends ProfileHystrixCommand<Optional<HeeUserDTO>> {
 
-  private static final String COMMAND_KEY = "PROFILE_COMMANDS";
   private static final Logger LOG = LoggerFactory.getLogger(GetPaginatedUsersCommand.class);
 
   private ProfileServiceImpl profileServiceImpl;

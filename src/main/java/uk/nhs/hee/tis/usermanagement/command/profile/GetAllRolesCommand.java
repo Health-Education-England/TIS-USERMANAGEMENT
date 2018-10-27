@@ -1,8 +1,6 @@
 package uk.nhs.hee.tis.usermanagement.command.profile;
 
 import com.google.common.collect.Lists;
-import com.netflix.hystrix.HystrixCommand;
-import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.transformuk.hee.tis.profile.dto.RoleDTO;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -21,7 +19,7 @@ import java.util.stream.Collectors;
 public class GetAllRolesCommand extends ProfileHystrixCommand<List<String>> {
 
   private static final String COMMAND_KEY = "PROFILE_COMMANDS";
-  private static final Logger LOG = LoggerFactory.getLogger(CreateUserCommand.class);
+  private static final Logger LOG = LoggerFactory.getLogger(GetAllRolesCommand.class);
 
   private RestTemplate profileRestTemplate;
   private String serviceUrl;

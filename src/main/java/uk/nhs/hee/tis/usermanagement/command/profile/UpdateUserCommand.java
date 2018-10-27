@@ -15,7 +15,7 @@ public class UpdateUserCommand extends ProfileHystrixCommand<Optional<HeeUserDTO
 
   private static final String COMMAND_KEY = "PROFILE_COMMANDS";
   private static final String HEE_USERS_ENDPOINT = "/api/hee-users";
-  private static final Logger LOG = LoggerFactory.getLogger(CreateUserCommand.class);
+  private static final Logger LOG = LoggerFactory.getLogger(UpdateUserCommand.class);
   private static final Gson GSON = new Gson();
 
   private ProfileServiceImpl profileServiceImpl;
