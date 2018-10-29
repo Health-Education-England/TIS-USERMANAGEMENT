@@ -39,14 +39,14 @@ public class HeeUserMapper {
   public HeeUserDTO convert(UserDTO userDTO, List<TrustDTO> knownTrusts) {
     Preconditions.checkNotNull(userDTO, "stop being stooopid");
     return mapUserAttributes(userDTO.getName(), userDTO.getFirstName(), userDTO.getLastName(), userDTO.getGmcId(),
-        userDTO.getPhoneNumber(), userDTO.getEmailAddress(), userDTO.getLocalOffices(), userDTO.getRoles(),
+        userDTO.getPhoneNumber(), userDTO.getEmailAddress(), userDTO.getActive(), userDTO.getLocalOffices(), userDTO.getRoles(),
         userDTO.getAssociatedTrusts(), knownTrusts);
   }
 
   public HeeUserDTO convert(CreateUserDTO createUserDTO, List<TrustDTO> knownTrusts) {
     Preconditions.checkNotNull(createUserDTO, "stop being stooopid");
     HeeUserDTO heeUserDTO = mapUserAttributes(createUserDTO.getName(), createUserDTO.getFirstName(), createUserDTO.getLastName(), createUserDTO.getGmcId(),
-        createUserDTO.getPhoneNumber(), createUserDTO.getEmailAddress(), createUserDTO.getLocalOffices(), createUserDTO.getRoles(),
+        createUserDTO.getPhoneNumber(), createUserDTO.getEmailAddress(), createUserDTO.isActive(), createUserDTO.getLocalOffices(), createUserDTO.getRoles(),
         createUserDTO.getAssociatedTrusts(), knownTrusts);
     heeUserDTO.setPassword(createUserDTO.getPassword());
     heeUserDTO.setTemporaryPassword(createUserDTO.getTempPassword());
@@ -55,7 +55,7 @@ public class HeeUserMapper {
   }
 
   private HeeUserDTO mapUserAttributes(String name, String firstName, String lastName, String gmcId, String phoneNumber,
-                                       String emailAddress, Set<String> localOffices, Set<String> roles, Set<String> associatedTrusts,
+                                       String emailAddress, boolean active, Set<String> localOffices, Set<String> roles, Set<String> associatedTrusts,
                                        List<TrustDTO> knownTrusts) {
     HeeUserDTO heeUserDTO = new HeeUserDTO();
     heeUserDTO.setName(name);
@@ -64,6 +64,7 @@ public class HeeUserMapper {
     heeUserDTO.setGmcId(gmcId);
     heeUserDTO.setPhoneNumber(phoneNumber);
     heeUserDTO.setEmailAddress(emailAddress);
+    heeUserDTO.setActive(active);
     heeUserDTO.setDesignatedBodyCodes(localOffices);
 
     if (CollectionUtils.isNotEmpty(roles)) {
