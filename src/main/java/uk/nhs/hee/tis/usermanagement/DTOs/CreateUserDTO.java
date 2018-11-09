@@ -18,6 +18,7 @@ public class CreateUserDTO implements Serializable {
   private Set<String> roles = new HashSet<>();
   private Set<String> localOffices = new HashSet<>();
   private Set<String> associatedTrusts = new HashSet<>();
+  private Set<String> associatedProgrammes = new HashSet<>();
 
   public String getName() {
     return name;
@@ -121,5 +122,13 @@ public class CreateUserDTO implements Serializable {
 
   public void setAssociatedTrusts(Set<String> associatedTrusts) {
     this.associatedTrusts = associatedTrusts;
+  }
+
+  public Set<String> getAssociatedProgrammes() {
+    return associatedProgrammes;
+  }
+
+  public void setAssociatedProgrammes(Set<String> associatedProgrammes) {
+    this.associatedProgrammes = associatedProgrammes;
   }
 }
