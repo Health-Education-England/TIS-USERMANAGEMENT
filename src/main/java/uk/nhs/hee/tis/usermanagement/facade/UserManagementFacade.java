@@ -78,7 +78,8 @@ public class UserManagementFacade {
     User originalUser = optionalOriginalUser.orElseThrow(() -> new UserNotFoundException(userDTO.getName(), "KC"));
     boolean success = keyCloakAdminClientService.updateUser(userDTO);
     if (success) {
-      Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO, referenceService.getAllTrusts(), tcsService.getAllProgrammes() ));
+      //                                                                                 user will be updated against the current trusts
+      Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO, referenceService.getAllCurrentTrusts(), tcsService.getAllProgrammes() ));
       if (!optionalHeeUserDTO.isPresent()) {
         //revert KC changes
         if (!keyCloakAdminClientService.updateUser(originalUser)) {
@@ -99,7 +100,8 @@ public class UserManagementFacade {
   public void createUser(CreateUserDTO userDTO) {
     Optional<User> optionalKcUser = keyCloakAdminClientService.createUser(userDTO);
     User kcUser = optionalKcUser.orElseThrow(() -> new UserCreationException("Could not create user in KC"));
-    Optional<HeeUserDTO> optionalHeeUserDTO = profileService.createUser(heeUserMapper.convert(userDTO, referenceService.getAllTrusts(), tcsService.getAllProgrammes()));
+    //                                                                                 user will be created against the current trusts not any INACTIVE trusts
+    Optional<HeeUserDTO> optionalHeeUserDTO = profileService.createUser(heeUserMapper.convert(userDTO, referenceService.getAllCurrentTrusts(), tcsService.getAllProgrammes()));
     if (!optionalHeeUserDTO.isPresent()) {
       LOG.warn("Attempting to revert creation of user in KC");
       if (!keyCloakAdminClientService.deleteUser(kcUser)) {
@@ -130,6 +132,10 @@ public class UserManagementFacade {
 
   public List<TrustDTO> getAllTrusts() {
     return new ArrayList<>(referenceService.getAllTrusts());
+  }
+
+  public List<TrustDTO> getAllCurrentTrusts(){
+    return  new ArrayList<>(referenceService.getAllCurrentTrusts());
   }
 
   public List<ProgrammeDTO> getAllProgrammes() {

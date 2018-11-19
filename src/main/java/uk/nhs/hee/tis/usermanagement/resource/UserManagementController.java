@@ -46,12 +46,13 @@ public class UserManagementController {
 
     List<String> allRoles = userManagementFacade.getAllRoles();
     List<DBCDTO> allDBCs = userManagementFacade.getAllDBCs();
-    List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
+    //List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
+    List<TrustDTO> allCurrentTrusts = userManagementFacade.getAllCurrentTrusts();
     List<ProgrammeDTO> allProgrammes = userManagementFacade.getAllProgrammes();
 
     model.addAttribute("roles", allRoles);
     model.addAttribute("designatedBodyCodes", allDBCs);
-    model.addAttribute("trusts", allTrusts);
+    model.addAttribute("trusts", allCurrentTrusts);
     model.addAttribute("programmes", allProgrammes);
     return "userEdit";
   }
@@ -77,12 +78,13 @@ public class UserManagementController {
 
     List<String> allRoles = userManagementFacade.getAllRoles();
     List<DBCDTO> allDBCs = userManagementFacade.getAllDBCs();
-    List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
+    //List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
+    List<TrustDTO> allCurrentTrusts = userManagementFacade.getAllCurrentTrusts();
     List<ProgrammeDTO> allProgrammes = userManagementFacade.getAllProgrammes();
 
     model.addAttribute("roles", allRoles);
     model.addAttribute("designatedBodyCodes", allDBCs);
-    model.addAttribute("trusts", allTrusts);
+    model.addAttribute("trusts", allCurrentTrusts);
     model.addAttribute("programmes", allProgrammes);
 
     return "createUser";

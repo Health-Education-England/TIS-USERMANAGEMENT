@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import uk.nhs.hee.tis.usermanagement.command.reference.GetAllCurrentTrustsCommand;
 import uk.nhs.hee.tis.usermanagement.command.reference.GetAllDesignatedBodyCodesCommand;
 import uk.nhs.hee.tis.usermanagement.command.reference.GetAllTrustsCommand;
 
@@ -52,6 +53,25 @@ public class ReferenceService {
         }
       }
 
+      dumbTrustCache.sort((o1, o2) -> StringUtils.compare(o1.getCode(), o2.getCode()));
+    }
+    return dumbTrustCache;
+  }
+  public List<TrustDTO> getAllCurrentTrusts() {
+    if (CollectionUtils.isEmpty(dumbTrustCache)) {
+      boolean hasNext = true;
+      dumbTrustCache = new ArrayList<>();
+      int page = 0;
+      while (hasNext) {
+        GetAllCurrentTrustsCommand getAllCurrentTrustsCommand = new GetAllCurrentTrustsCommand(referenceRestTemplate, serviceUrl, page, PAGE_SIZE);
+        List<TrustDTO> result = getAllCurrentTrustsCommand.execute();
+        dumbTrustCache.addAll(result);
+        if (CollectionUtils.isNotEmpty(result)) {
+          page++;
+        } else {
+          hasNext = false;
+        }
+      }
       dumbTrustCache.sort((o1, o2) -> StringUtils.compare(o1.getCode(), o2.getCode()));
     }
     return dumbTrustCache;

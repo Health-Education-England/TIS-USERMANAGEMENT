@@ -104,4 +104,19 @@ public class ReferenceServiceTest {
 
     Assert.assertEquals(trusts.size(), allTrusts.size());
   }
+  @Test
+  public void getAllCurrentTrustsShouldGetAllCurrentTrustsByMakingMultipleRequests() {
+    ArrayList<TrustDTO> trusts = Lists.newArrayList();
+    for (int i = 0; i < 700; i++) {
+      TrustDTO trustDTO = new TrustDTO();
+      trustDTO.setId((long)i);
+      trusts.add(trustDTO);
+    }
+    ReflectionTestUtils.setField(testObj, "serviceUrl", "http://reference.com");
+    when(referenceRestTemplateMock.exchange(eq("http://reference.com/api/current/trusts?page=0&size=500"), eq(HttpMethod.GET), eq(null), parameterizedTypeReferenceArgumentCaptor.capture())).thenReturn(ResponseEntity.ok(trusts.subList(0, 500)));
+    when(referenceRestTemplateMock.exchange(eq("http://reference.com/api/current/trusts?page=1&size=500"), eq(HttpMethod.GET), eq(null), parameterizedTypeReferenceArgumentCaptor.capture())).thenReturn(ResponseEntity.ok(trusts.subList(500, 700)));
+    when(referenceRestTemplateMock.exchange(eq("http://reference.com/api/current/trusts?page=2&size=500"), eq(HttpMethod.GET), eq(null), parameterizedTypeReferenceArgumentCaptor.capture())).thenReturn(ResponseEntity.ok(Lists.newArrayList()));
+    List<TrustDTO> allCurrentTrusts = testObj.getAllCurrentTrusts();
+    Assert.assertEquals(trusts.size(), allCurrentTrusts.size());
+  }
 }
