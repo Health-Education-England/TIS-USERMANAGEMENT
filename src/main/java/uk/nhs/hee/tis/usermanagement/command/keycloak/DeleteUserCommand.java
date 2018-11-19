@@ -28,7 +28,7 @@ public class DeleteUserCommand extends KeycloakHystrixCommand<Boolean> {
 
   @Override
   protected Boolean getFallback() {
-    LOG.warn("Could not delete user from KC, running fallback method");
+    LOG.warn("Could not delete user [{}] from KC, running fallback method", userToDelete.getEmail());
     LOG.debug("Data sent in request realm: [{}] user: [{}]", this.realm, GSON.toJson(this.userToDelete));
     LOG.debug("Exception if any: [{}]", throwable != null ? ExceptionUtils.getStackTrace(throwable) : StringUtils.EMPTY);
     return false;

@@ -26,7 +26,7 @@ public class UpdateUserCommand extends KeycloakHystrixCommand<Boolean> {
 
   @Override
   protected Boolean getFallback() {
-    LOG.warn("An error occurred while updating a KC user, running fallback method");
+    LOG.warn("An error occurred while updating a KC user [{}], running fallback method", userToUpdate.getEmail());
     LOG.debug("Data used for update, realm: [{}], userId: [{}], userToUpdate [{}]", realm, userId, GSON.toJson(userToUpdate));
     return false;
   }

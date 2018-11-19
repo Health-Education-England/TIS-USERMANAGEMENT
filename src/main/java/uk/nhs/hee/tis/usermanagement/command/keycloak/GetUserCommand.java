@@ -24,7 +24,7 @@ public class GetUserCommand extends KeycloakHystrixCommand<Optional<User>> {
 
   @Override
   protected Optional<User> getFallback() {
-    LOG.warn("An error occurred while finding a KC user by username, returning empty optional...");
+    LOG.warn("An error occurred while finding a KC user [{}] by username, returning empty optional...", username);
     LOG.debug("Data used for search, username: [{}], realm: [{}]", username, realm);
     return Optional.empty();
   }

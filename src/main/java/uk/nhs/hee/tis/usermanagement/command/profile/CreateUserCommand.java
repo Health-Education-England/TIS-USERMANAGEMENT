@@ -26,7 +26,7 @@ public class CreateUserCommand extends ProfileHystrixCommand<Optional<HeeUserDTO
 
   @Override
   protected Optional<HeeUserDTO> getFallback() {
-    LOG.warn("An occurred while attempting to create a hee user in Profile service, returning an empty optional as fallback");
+    LOG.warn("An occurred while attempting to create a hee user [{}] in Profile service, returning an empty optional as fallback", userToCreateDTO.getEmailAddress());
     LOG.debug("Data that was sent: [{}]", GSON.toJson(userToCreateDTO));
     LOG.warn("Exception: [{}]", ExceptionUtils.getStackTrace(throwable));
     return Optional.empty();

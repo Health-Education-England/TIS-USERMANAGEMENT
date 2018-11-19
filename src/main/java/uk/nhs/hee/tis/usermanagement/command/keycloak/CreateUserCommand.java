@@ -30,7 +30,7 @@ public class CreateUserCommand extends KeycloakHystrixCommand<Optional<User>> {
 
   @Override
   protected Optional<User> getFallback() {
-    LOG.warn("An error occurred while attempting to create a user in KC, running fallback method");
+    LOG.warn("An error occurred while attempting to create a user [{}] in KC, running fallback method", userToCreate.getEmail());
     LOG.debug("Data used to make call, realm: [{}], userToCreate: [{}]", realm, GSON.toJson(userToCreate));
     return Optional.empty();
   }

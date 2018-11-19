@@ -25,7 +25,7 @@ public class GetUserAttributesCommand extends KeycloakHystrixCommand<Map<String,
 
   @Override
   protected Map<String, List<String>> getFallback() {
-    LOG.warn("An error occurred while attempting to get attributes for a user in KC, returning empty map");
+    LOG.warn("An error occurred while attempting to get attributes for a user [{}] in KC, returning empty map", username);
     LOG.debug("Data used to make call, realm: [{}], username: [{}]", realm, username);
     return Collections.EMPTY_MAP;
   }
