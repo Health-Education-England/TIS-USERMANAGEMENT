@@ -1,6 +1,7 @@
 package uk.nhs.hee.tis.usermanagement.command.tcs;
 
 import com.google.common.collect.Lists;
+import com.google.gson.Gson;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
@@ -18,7 +19,7 @@ import java.util.List;
 public class GetAllProgrammesCommand extends TcsHystrixCommand<List<ProgrammeDTO>> {
 
   private static final Logger LOG = LoggerFactory.getLogger(GetAllProgrammesCommand.class);
-
+  private static final String CURRENT_FILTER = "{\"status\":[\"CURRENT\"]}";
   private RestTemplate tcsRestTemplate;
   private String serviceUrl;
   private int page;
@@ -48,7 +49,8 @@ public class GetAllProgrammesCommand extends TcsHystrixCommand<List<ProgrammeDTO
 
       UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serviceUrl + "/api/programmes")
           .queryParam("page", page)
-          .queryParam("size", size);
+          .queryParam("size", size)
+          .queryParam("columnFilters", CURRENT_FILTER);
       ResponseEntity<List<ProgrammeDTO>> result = tcsRestTemplate.exchange(builder.toUriString(), HttpMethod.GET, null, trustDtoListType);
 
       return result.getBody();
