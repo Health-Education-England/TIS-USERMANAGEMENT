@@ -16,7 +16,8 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
     {
         "classpath:/application.properties",
         "classpath:/config/profileclientapplication.properties",
-        "classpath:/config/referenceclientapplication.properties"
+        "classpath:/config/referenceclientapplication.properties",
+        "classpath:/config/tcsclientapplication.properties"
     }
 )
 public class UserManagementApplication {

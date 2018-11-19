@@ -21,6 +21,8 @@ import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
 import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
 import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
+import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
+
 
 import java.util.List;
 
@@ -45,10 +47,12 @@ public class UserManagementController {
     List<String> allRoles = userManagementFacade.getAllRoles();
     List<DBCDTO> allDBCs = userManagementFacade.getAllDBCs();
     List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
+    List<ProgrammeDTO> allProgrammes = userManagementFacade.getAllProgrammes();
 
     model.addAttribute("roles", allRoles);
     model.addAttribute("designatedBodyCodes", allDBCs);
     model.addAttribute("trusts", allTrusts);
+    model.addAttribute("programmes", allProgrammes);
     return "userEdit";
   }
 
@@ -74,10 +78,12 @@ public class UserManagementController {
     List<String> allRoles = userManagementFacade.getAllRoles();
     List<DBCDTO> allDBCs = userManagementFacade.getAllDBCs();
     List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
+    List<ProgrammeDTO> allProgrammes = userManagementFacade.getAllProgrammes();
 
     model.addAttribute("roles", allRoles);
     model.addAttribute("designatedBodyCodes", allDBCs);
     model.addAttribute("trusts", allTrusts);
+    model.addAttribute("programmes", allProgrammes);
 
     return "createUser";
   }
