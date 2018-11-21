@@ -96,9 +96,9 @@ public class ReferenceServiceTest {
 
     ReflectionTestUtils.setField(testObj, "serviceUrl", "http://reference.com");
 
-    when(referenceRestTemplateMock.exchange(eq("http://reference.com/api/trusts?page=0&size=500"), eq(HttpMethod.GET), eq(null), parameterizedTypeReferenceArgumentCaptor.capture())).thenReturn(ResponseEntity.ok(trusts.subList(0, 500)));
-    when(referenceRestTemplateMock.exchange(eq("http://reference.com/api/trusts?page=1&size=500"), eq(HttpMethod.GET), eq(null), parameterizedTypeReferenceArgumentCaptor.capture())).thenReturn(ResponseEntity.ok(trusts.subList(500, 700)));
-    when(referenceRestTemplateMock.exchange(eq("http://reference.com/api/trusts?page=2&size=500"), eq(HttpMethod.GET), eq(null), parameterizedTypeReferenceArgumentCaptor.capture())).thenReturn(ResponseEntity.ok(Lists.newArrayList()));
+    when(referenceRestTemplateMock.exchange(eq("http://reference.com/api/current/trusts?page=0&size=500"), eq(HttpMethod.GET), eq(null), parameterizedTypeReferenceArgumentCaptor.capture())).thenReturn(ResponseEntity.ok(trusts.subList(0, 500)));
+    when(referenceRestTemplateMock.exchange(eq("http://reference.com/api/current/trusts?page=1&size=500"), eq(HttpMethod.GET), eq(null), parameterizedTypeReferenceArgumentCaptor.capture())).thenReturn(ResponseEntity.ok(trusts.subList(500, 700)));
+    when(referenceRestTemplateMock.exchange(eq("http://reference.com/api/current/trusts?page=2&size=500"), eq(HttpMethod.GET), eq(null), parameterizedTypeReferenceArgumentCaptor.capture())).thenReturn(ResponseEntity.ok(Lists.newArrayList()));
 
     List<TrustDTO> allTrusts = testObj.getAllTrusts();
 
