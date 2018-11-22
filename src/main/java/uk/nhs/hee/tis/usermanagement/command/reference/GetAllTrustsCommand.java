@@ -44,8 +44,8 @@ public class GetAllTrustsCommand extends ReferenceHystrixCommand<List<TrustDTO>>
       ParameterizedTypeReference<List<TrustDTO>> trustDtoListType = new ParameterizedTypeReference<List<TrustDTO>>() {
       };
 
-
-      UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serviceUrl + "/api/trusts")
+      //We are calling the REST end point /api/current/trusts instead of /api/trusts to get the current trusts
+      UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serviceUrl + "/api/current/trusts")
           .queryParam("page", page)
           .queryParam("size", size);
       ResponseEntity<List<TrustDTO>> result = referenceRestTemplate.exchange(builder.toUriString(), HttpMethod.GET, null, trustDtoListType);

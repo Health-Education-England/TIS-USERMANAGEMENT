@@ -34,7 +34,7 @@ public class ReferenceService {
     GetAllDesignatedBodyCodesCommand getAllDesignatedBodyCodesCommand = new GetAllDesignatedBodyCodesCommand(remoteReferenceService);
     return getAllDesignatedBodyCodesCommand.execute();
   }
-
+  // This method will bring all the current trusts, although the name is getAllTrusts. It will not pull any inactive trusts.
   public List<TrustDTO> getAllTrusts() {
     if (CollectionUtils.isEmpty(dumbTrustCache)) {
       boolean hasNext = true;
