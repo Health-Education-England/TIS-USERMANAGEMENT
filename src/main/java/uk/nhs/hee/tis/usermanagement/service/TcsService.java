@@ -25,6 +25,7 @@ public class TcsService {
 
   @Autowired
   private RestTemplate tcsRestTemplate;
+
   @Value("${tcs.service.url}")
   private String serviceUrl;
 

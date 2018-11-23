@@ -156,6 +156,13 @@ public class HeeUserMapper {
             .collect(Collectors.toSet());
         userDTO.setAssociatedTrusts(trustIds);
       }
+
+      Set<UserProgrammeDTO> associatedProgrammes = heeUserDTO.getAssociatedProgrammes();
+      if(CollectionUtils.isNotEmpty(associatedProgrammes)) {
+        Set<String> programmeIds = associatedProgrammes.stream().map(UserProgrammeDTO::getProgrammeId).map(Object::toString)
+            .collect(Collectors.toSet());
+        userDTO.setAssociatedProgrammes(programmeIds);
+      }
     }
     return userDTO;
   }
