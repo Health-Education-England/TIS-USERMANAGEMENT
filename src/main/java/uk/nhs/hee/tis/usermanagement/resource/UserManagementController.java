@@ -2,6 +2,7 @@ package uk.nhs.hee.tis.usermanagement.resource;
 
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
+import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.thymeleaf.util.StringUtils;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
@@ -21,8 +21,6 @@ import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
 import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
 import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
-import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
-
 
 import java.util.List;
 
@@ -96,8 +94,9 @@ public class UserManagementController {
     } else if (StringUtils.isEmpty(user.getPassword()) || user.getPassword().length() < REQUIRED_PASSWORD_LENGTH) {
       throw new UserCreationException("Cannot create user, password needs to be at least 8 chars long");
     }
-    userManagementFacade.createUser(user);
-    model.addAttribute("message","The user " + user.getFirstName() + " " + user.getLastName() + " (" + user.getName() + ") has been created");
+    userManagementFacade.publishUserCreationRequestedEvent(user);
+    model.addAttribute("message", "A request for user " + user.getFirstName() + " " + user.getLastName() + " (" +
+        user.getName() + ") has been made. It may take a little while before you'll be able to see the new user");
     return "success";
   }
 
@@ -125,9 +124,9 @@ public class UserManagementController {
   @PreAuthorize("hasAuthority('heeuser:delete')")
   @PostMapping("/deleteUser")
   public String deleteUser(@ModelAttribute UserDTO user, Model model) {
-    userManagementFacade.deleteUser(user.getName());
+    userManagementFacade.publishDeleteKeycloakUserRequestedEvent(user.getName());
     model.addAttribute("message",
-        "The user " + user.getName() + " has been deleted");
+        "The user " + user.getName() + " has been deleted. This may take a while to show up on the system");
     return "success";
   }
 }

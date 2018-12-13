@@ -3,21 +3,25 @@ package uk.nhs.hee.tis.usermanagement.service;
 import com.google.common.base.Preconditions;
 import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import uk.nhs.hee.tis.usermanagement.command.profile.CreateUserCommand;
-import uk.nhs.hee.tis.usermanagement.command.profile.DeleteUserCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.GetAllRolesCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.GetPaginatedUsersCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.GetUserByUsernameCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.UpdateUserCommand;
+import uk.nhs.hee.tis.usermanagement.event.CreateProfileUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.DeleteKeycloakUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.DeleteProfileUserRequestEvent;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +36,8 @@ public class ProfileService {
   private ProfileServiceImpl profileServiceImpl;
   @Autowired
   private RestTemplate profileRestTemplate;
+  @Autowired
+  private ApplicationEventPublisher applicationEventPublisher;
   @Value("${profile.service.url}")
   private String serviceUrl;
 
@@ -65,14 +71,21 @@ public class ProfileService {
   /**
    * Create a user in the profile service
    *
-   * @param userToCreateDTO the new user details
+   * @param event the new user details
    * @return an optional HeeUserDTO that represents the user in the profile service
    */
-  public Optional<HeeUserDTO> createUser(HeeUserDTO userToCreateDTO) {
-    Preconditions.checkNotNull(userToCreateDTO, "Cannot create user if user is null");
-
-    CreateUserCommand createUserCommand = new CreateUserCommand(profileServiceImpl, userToCreateDTO);
-    return createUserCommand.execute();
+  @EventListener
+  public void createProfileUserEventListener(CreateProfileUserRequestedEvent event) {
+    Preconditions.checkNotNull(event.getHeeUserDTO(), "Cannot create user if user is null");
+    try {
+      LOG.info("Received CreateProfileUserEvent for user [{}]", event.getHeeUserDTO().getEmailAddress());
+      profileServiceImpl.createDto(event.getHeeUserDTO(), HEE_USERS_ENDPOINT, HeeUserDTO.class);
+    } catch (Exception e) {
+      LOG.info(ExceptionUtils.getStackTrace(e));
+      // reverse call to kc
+      LOG.info("Publishing event to reverse the kc user create for user [{}]", event.getKcUser().getEmail());
+      applicationEventPublisher.publishEvent(new DeleteKeycloakUserRequestedEvent(event.getKcUser(), false));
+    }
   }
 
   /**
@@ -98,9 +111,11 @@ public class ProfileService {
     return getAllRolesCommand.execute();
   }
 
-  public boolean deleteUser(String username) {
-    DeleteUserCommand deleteUserCommand = new DeleteUserCommand(profileServiceImpl, username);
-    return deleteUserCommand.execute();
+  @EventListener
+  public void deleteUserEventListener(DeleteProfileUserRequestEvent event) {
+    LOG.info("Received DeleteProfileUserEvent for user [{}]", event.getUsername());
+    profileServiceImpl.deleteUser(event.getUsername());
   }
+
 
 }

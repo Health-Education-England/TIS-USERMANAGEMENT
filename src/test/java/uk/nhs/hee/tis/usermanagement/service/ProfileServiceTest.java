@@ -24,6 +24,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
+import uk.nhs.hee.tis.usermanagement.event.CreateProfileUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.DeleteProfileUserRequestEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -152,9 +154,9 @@ public class ProfileServiceTest {
   }
 
   @Test(expected = NullPointerException.class)
-  public void createUserShouldThrowExceptionWhenUserIsNull() {
+  public void createProfileUserEventListenerShouldThrowExceptionWhenUserIsNull() {
     try {
-      testObj.createUser(null);
+      testObj.createProfileUserEventListener(null);
     } finally {
       verifyZeroInteractions(profileServiceImplMock);
     }
@@ -162,49 +164,13 @@ public class ProfileServiceTest {
 
 
   @Test
-  public void createUserShouldReturnEmptyOptionalWhenProfileServiceErrors() {
-    HeeUserDTO userToCreateDTO = createHeeUserDto();
-
-    doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
-    Optional<HeeUserDTO> result = testObj.createUser(userToCreateDTO);
-
-    Assert.assertFalse(result.isPresent());
-    verify(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
-  }
-
-  @Test
-  public void createUserShouldReturnEmptyOptionalWhenProfileServiceIsDown() {
-    HeeUserDTO userToCreateDTO = createHeeUserDto();
-
-    doThrow(new HttpServerErrorException(HttpStatus.SERVICE_UNAVAILABLE)).when(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
-    Optional<HeeUserDTO> result = testObj.createUser(userToCreateDTO);
-
-    Assert.assertFalse(result.isPresent());
-    verify(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
-  }
-
-  @Test
-  public void createUserShouldReturnEmptyOptionalWhenRequestFailsValidation() {
-    HeeUserDTO userToCreateDTO = createHeeUserDto();
-
-    doThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST)).when(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
-    Optional<HeeUserDTO> result = testObj.createUser(userToCreateDTO);
-
-    Assert.assertFalse(result.isPresent());
-    verify(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
-  }
-
-  @Test
   public void createUserShouldCallProfileServiceToCreateUser() {
     HeeUserDTO userToCreateDTO = createHeeUserDto();
     when(profileServiceImplMock.createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class)).thenReturn(userToCreateDTO);
 
-    Optional<HeeUserDTO> result = testObj.createUser(userToCreateDTO);
+    testObj.createProfileUserEventListener(new CreateProfileUserRequestedEvent(userToCreateDTO, null));
 
     verify(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
-
-    Assert.assertTrue(result.isPresent());
-    Assert.assertSame(userToCreateDTO, result.get());
   }
 
 
@@ -308,22 +274,14 @@ public class ProfileServiceTest {
     Assert.assertEquals(0, result.size());
   }
 
-  @Test
-  public void deleteShouldReturnFalseWhenItFails() {
-    when(profileServiceImplMock.deleteUser(USERNAME)).thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
-
-    boolean result = testObj.deleteUser(USERNAME);
-
-    Assert.assertFalse(result);
-  }
 
   @Test
-  public void deleteShouldReturnTrueWhenDeletionSucceeds() {
+  public void deleteUserEventListenerShouldDeleteUserWhenEventTriggered() {
     when(profileServiceImplMock.deleteUser(USERNAME)).thenReturn(true);
 
-    boolean result = testObj.deleteUser(USERNAME);
+    testObj.deleteUserEventListener(new DeleteProfileUserRequestEvent(USERNAME));
 
-    Assert.assertTrue(result);
+    verify(profileServiceImplMock).deleteUser(USERNAME);
   }
 
   private HeeUserDTO createHeeUserDto() {

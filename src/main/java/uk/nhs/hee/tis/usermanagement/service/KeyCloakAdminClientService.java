@@ -4,16 +4,22 @@ import com.google.common.base.Preconditions;
 import com.transform.hee.tis.keycloak.KeycloakAdminClient;
 import com.transform.hee.tis.keycloak.User;
 import org.keycloak.representations.idm.GroupRepresentation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
-import uk.nhs.hee.tis.usermanagement.command.keycloak.CreateUserCommand;
-import uk.nhs.hee.tis.usermanagement.command.keycloak.DeleteUserCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserAttributesCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserGroupsCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.UpdateUserCommand;
+import uk.nhs.hee.tis.usermanagement.event.CreateKeycloakUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.CreateProfileUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.DeleteKeycloakUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.DeleteProfileUserRequestEvent;
 import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 
@@ -27,8 +33,13 @@ import java.util.Optional;
 public class KeyCloakAdminClientService {
   static final String REALM_LIN = "lin";
 
+  private static final Logger LOG = LoggerFactory.getLogger(KeyCloakAdminClientService.class);
+
   @Autowired
   private KeycloakAdminClient keycloakAdminClient;
+
+  @Autowired
+  private ApplicationEventPublisher applicationEventPublisher;
 
   public Optional<User> getUser(String username) {
     Preconditions.checkNotNull(username, "Cannot get user if username is null");
@@ -38,15 +49,17 @@ public class KeyCloakAdminClientService {
   }
 
   /**
-   * Create user in Keycloak
+   * Create user in Keycloak and
    *
-   * @param createUserDTO the user to create
+   * @param event the user to create
    */
-  public Optional<User> createUser(CreateUserDTO createUserDTO) {
+  @EventListener
+  public void createUserEventListener(CreateKeycloakUserRequestedEvent event) {
     // create user in KeyCloak
-    User userToCreate = heeUserToKeycloakUser(createUserDTO);
-    CreateUserCommand createUserCommand = new CreateUserCommand(keycloakAdminClient, REALM_LIN, userToCreate);
-    return createUserCommand.execute();
+    LOG.info("Received CreateKeycloakUserEvent for user [{}]", event.getUserDTO().getEmailAddress());
+    User userToCreate = heeUserToKeycloakUser(event.getUserDTO());
+    User kcUser = keycloakAdminClient.createUser(REALM_LIN, userToCreate);
+    applicationEventPublisher.publishEvent(new CreateProfileUserRequestedEvent(event.getUserToCreateInProfileService(), kcUser));
   }
 
 
@@ -130,8 +143,12 @@ public class KeyCloakAdminClientService {
         createUserDTO.getEmailAddress(), createUserDTO.getPassword(), createUserDTO.getTempPassword(), attributes, createUserDTO.isActive());
   }
 
-  public boolean deleteUser(User user) {
-    DeleteUserCommand deleteUserCommand = new DeleteUserCommand(REALM_LIN, user, keycloakAdminClient);
-    return deleteUserCommand.execute();
+  @EventListener
+  public void deleteKeycloakUserEventListener(DeleteKeycloakUserRequestedEvent event) {
+    LOG.info("Received DeleteKeycloakUserEvent for user [{}]", event.getKcUser().getUsername());
+    keycloakAdminClient.removeUser(REALM_LIN, event.getKcUser());
+    if (event.isPublishDeleteProfileUserEvent()) {
+      applicationEventPublisher.publishEvent(new DeleteProfileUserRequestEvent(event.getKcUser().getUsername()));
+    }
   }
 }

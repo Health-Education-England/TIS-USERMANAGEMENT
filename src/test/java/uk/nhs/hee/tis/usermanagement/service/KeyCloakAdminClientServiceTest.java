@@ -3,6 +3,7 @@ package uk.nhs.hee.tis.usermanagement.service;
 import com.google.common.collect.Maps;
 import com.transform.hee.tis.keycloak.KeycloakAdminClient;
 import com.transform.hee.tis.keycloak.User;
+import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,8 +14,10 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.context.ApplicationEventPublisher;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
+import uk.nhs.hee.tis.usermanagement.event.CreateKeycloakUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 
@@ -54,6 +57,9 @@ public class KeyCloakAdminClientServiceTest {
   @Captor
   private ArgumentCaptor<User> userArgumentCaptor;
 
+  @Mock
+  private ApplicationEventPublisher applicationEventPublisherMock;
+
 
   private UserDTO createUserDTO() {
     UserDTO userDTO = new UserDTO();
@@ -80,22 +86,22 @@ public class KeyCloakAdminClientServiceTest {
   }
 
   @Test(expected = NullPointerException.class)
-  public void createUserShouldReturnExceptionWhenUserIsNull() {
+  public void createUserEventListenerShouldReturnExceptionWhenUserIsNull() {
     try {
-      testObj.createUser(null);
+      testObj.createUserEventListener(null);
     } finally {
       verifyZeroInteractions(keycloakAdminClientMock);
     }
   }
 
   @Test
-  public void createUserShouldCreateUserUsingKeyCloakAdminClient() {
+  public void createUserEventListenerShouldCreateUserUsingKeyCloakAdminClient() {
     CreateUserDTO createUserDTO = createCreateUserDTO();
     User expectedCreatedUser = User.create("ID", FIRST_NAME, LAST_NAME, NAME, EMAIL_ADDRESS, PASSWORD, TEMPORARY_PASSWORD, Maps.newHashMap(), ACTIVE);
 
     when(keycloakAdminClientMock.createUser(eq(REALM_LIN), userArgumentCaptor.capture())).thenReturn(expectedCreatedUser);
 
-    testObj.createUser(createUserDTO);
+    testObj.createUserEventListener(new CreateKeycloakUserRequestedEvent(createUserDTO, new HeeUserDTO()));
 
     User capturedUser = userArgumentCaptor.getValue();
     Assert.assertEquals(FIRST_NAME, capturedUser.getFirstname());

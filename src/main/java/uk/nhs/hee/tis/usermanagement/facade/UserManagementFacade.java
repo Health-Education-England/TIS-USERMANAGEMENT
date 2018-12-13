@@ -5,25 +5,26 @@ import com.transformuk.hee.tis.profile.client.service.impl.CustomPageable;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
+import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
+import uk.nhs.hee.tis.usermanagement.event.CreateKeycloakUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.DeleteKeycloakUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.exception.UpdateUserException;
-import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
-import uk.nhs.hee.tis.usermanagement.exception.UserDeletionException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.mapper.HeeUserMapper;
 import uk.nhs.hee.tis.usermanagement.service.KeyCloakAdminClientService;
 import uk.nhs.hee.tis.usermanagement.service.ProfileService;
 import uk.nhs.hee.tis.usermanagement.service.ReferenceService;
 import uk.nhs.hee.tis.usermanagement.service.TcsService;
-import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +50,9 @@ public class UserManagementFacade {
 
   @Autowired
   private ReferenceService referenceService;
+
+  @Autowired
+  private ApplicationEventPublisher applicationEventPublisher;
 
   public UserDTO getCompleteUser(String username) {
     Optional<HeeUserDTO> optionalHeeUserDTO = profileService.getUserByUsername(username);
@@ -78,7 +82,7 @@ public class UserManagementFacade {
     User originalUser = optionalOriginalUser.orElseThrow(() -> new UserNotFoundException(userDTO.getName(), "KC"));
     boolean success = keyCloakAdminClientService.updateUser(userDTO);
     if (success) {
-      Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO, referenceService.getAllTrusts(), tcsService.getAllProgrammes() ));
+      Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO, referenceService.getAllTrusts(), tcsService.getAllProgrammes()));
       if (!optionalHeeUserDTO.isPresent()) {
         //revert KC changes
         if (!keyCloakAdminClientService.updateUser(originalUser)) {
@@ -92,32 +96,17 @@ public class UserManagementFacade {
   }
 
   /**
-   * Create a user in both KC and Profile service.
-   *
-   * @param userDTO the DTO that contains the details to create
+   * Publish an event that will kick off the creation of a user
    */
-  public void createUser(CreateUserDTO userDTO) {
-    Optional<User> optionalKcUser = keyCloakAdminClientService.createUser(userDTO);
-    User kcUser = optionalKcUser.orElseThrow(() -> new UserCreationException("Could not create user in KC"));
-    Optional<HeeUserDTO> optionalHeeUserDTO = profileService.createUser(heeUserMapper.convert(userDTO, referenceService.getAllTrusts(), tcsService.getAllProgrammes()));
-    if (!optionalHeeUserDTO.isPresent()) {
-      LOG.warn("Attempting to revert creation of user in KC");
-      if (!keyCloakAdminClientService.deleteUser(kcUser)) {
-        LOG.error("Could not revert KC changes back to previous version create creating user in Profile failed. There may be more users in KC now than Profile user [{}]", userDTO.getName());
-      }
-      throw new UserCreationException("Could not create user " + userDTO.getName() + " in Profile service");
-    }
+  public void publishUserCreationRequestedEvent(CreateUserDTO userDTO) {
+    HeeUserDTO userToCreateInProfileService = heeUserMapper.convert(userDTO, referenceService.getAllTrusts(), tcsService.getAllProgrammes());
+    applicationEventPublisher.publishEvent(new CreateKeycloakUserRequestedEvent(userDTO, userToCreateInProfileService));
   }
 
-  public void deleteUser(String username) {
+  public void publishDeleteKeycloakUserRequestedEvent(String username) {
     Optional<User> optionalUser = keyCloakAdminClientService.getUser(username);
     User kcUser = optionalUser.orElseThrow(() -> new UserNotFoundException(username, "Keycloak"));
-    boolean success = keyCloakAdminClientService.deleteUser(kcUser);
-    if (success) {
-      profileService.deleteUser(username);
-    } else {
-      throw new UserDeletionException(username);
-    }
+    applicationEventPublisher.publishEvent(new DeleteKeycloakUserRequestedEvent(kcUser, true));
   }
 
   public List<String> getAllRoles() {
