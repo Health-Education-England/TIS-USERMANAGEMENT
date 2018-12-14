@@ -10,6 +10,7 @@ import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.security.task.DelegatingSecurityContextAsyncTaskExecutor;
 
 @Configuration
 @EnableAsync
@@ -23,10 +24,12 @@ public class AsyncConfiguration implements AsyncConfigurer {
    *
    * @return
    */
-//  @Bean(name = "applicationEventMulticaster")
-//  public ApplicationEventMulticaster simpleApplicationEventMulticaster() {
-//    SimpleApplicationEventMulticaster eventMulticaster = new SimpleApplicationEventMulticaster();
-//    eventMulticaster.setTaskExecutor(new SimpleAsyncTaskExecutor());
-//    return eventMulticaster;
-//  }
+  @Bean(name = "applicationEventMulticaster")
+  public ApplicationEventMulticaster simpleApplicationEventMulticaster() {
+    SimpleApplicationEventMulticaster eventMulticaster = new SimpleApplicationEventMulticaster();
+    SimpleAsyncTaskExecutor simpleAsyncTaskExecutor = new SimpleAsyncTaskExecutor();
+    simpleAsyncTaskExecutor.setThreadNamePrefix("Evnts-exectr");
+    eventMulticaster.setTaskExecutor(new DelegatingSecurityContextAsyncTaskExecutor(simpleAsyncTaskExecutor));
+    return eventMulticaster;
+  }
 }

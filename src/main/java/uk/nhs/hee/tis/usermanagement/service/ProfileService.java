@@ -80,6 +80,7 @@ public class ProfileService {
     try {
       LOG.info("Received CreateProfileUserEvent for user [{}]", event.getHeeUserDTO().getEmailAddress());
       profileServiceImpl.createDto(event.getHeeUserDTO(), HEE_USERS_ENDPOINT, HeeUserDTO.class);
+      LOG.info("Create complete for user [{}]", event.getHeeUserDTO().getEmailAddress());
     } catch (Exception e) {
       LOG.info(ExceptionUtils.getStackTrace(e));
       // reverse call to kc
