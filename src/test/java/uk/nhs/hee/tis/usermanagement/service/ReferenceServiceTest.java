@@ -25,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -91,6 +92,7 @@ public class ReferenceServiceTest {
     for (int i = 0; i < 700; i++) {
       TrustDTO trustDTO = new TrustDTO();
       trustDTO.setId((long)i);
+      trustDTO.setCode(UUID.randomUUID().toString());
       trusts.add(trustDTO);
     }
 
