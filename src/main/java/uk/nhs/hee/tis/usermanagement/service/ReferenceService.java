@@ -14,7 +14,9 @@ import uk.nhs.hee.tis.usermanagement.command.reference.GetAllTrustsCommand;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ReferenceService {
@@ -44,6 +46,15 @@ public class ReferenceService {
 
         GetAllTrustsCommand getAllTrustsCommand = new GetAllTrustsCommand(referenceRestTemplate, serviceUrl, page, PAGE_SIZE);
         List<TrustDTO> result = getAllTrustsCommand.execute();
+
+        //remove any trusts that have a null id
+        result = result.stream()
+            .filter(Objects::nonNull)
+            .filter(t -> t.getId() != null)
+            .filter(t -> t.getCode() != null)
+            .filter(t -> !StringUtils.equals(t.getCode(), "null"))
+            .collect(Collectors.toList());
+
         dumbTrustCache.addAll(result);
         if (CollectionUtils.isNotEmpty(result)) {
           page++;
