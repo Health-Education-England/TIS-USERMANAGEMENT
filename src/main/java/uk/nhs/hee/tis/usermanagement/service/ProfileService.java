@@ -1,6 +1,7 @@
 package uk.nhs.hee.tis.usermanagement.service;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
 import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -82,6 +83,7 @@ public class ProfileService {
       profileServiceImpl.createDto(event.getHeeUserDTO(), HEE_USERS_ENDPOINT, HeeUserDTO.class);
       LOG.info("Create complete for user [{}]", event.getHeeUserDTO().getEmailAddress());
     } catch (Exception e) {
+      LOG.info("Error occurred while creating user in Profile service with the following data: [{}]", new Gson().toJson(event.getHeeUserDTO()));
       LOG.info(ExceptionUtils.getStackTrace(e));
       // reverse call to kc
       LOG.info("Publishing event to reverse the kc user create for user [{}]", event.getKcUser().getEmail());
