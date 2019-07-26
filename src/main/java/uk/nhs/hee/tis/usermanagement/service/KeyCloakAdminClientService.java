@@ -31,9 +31,12 @@ import java.util.Optional;
 
 @Service
 public class KeyCloakAdminClientService {
+  
   static final String REALM_LIN = "lin";
 
   private static final Logger LOG = LoggerFactory.getLogger(KeyCloakAdminClientService.class);
+
+  public static final String NAME = "Keycloak";
 
   @Autowired
   private KeycloakAdminClient keycloakAdminClient;
@@ -120,7 +123,7 @@ public class KeyCloakAdminClientService {
     Preconditions.checkNotNull(username, "Cannot get groups of user if username is null");
 
     Optional<User> optionalUser = getUser(username);
-    User user = optionalUser.orElseThrow(() -> new UserNotFoundException(username, "keycloak"));
+    User user = optionalUser.orElseThrow(() -> new UserNotFoundException(username, NAME));
 
     GetUserGroupsCommand getUserGroupsCommand = new GetUserGroupsCommand(keycloakAdminClient, REALM_LIN, user);
     return getUserGroupsCommand.execute();

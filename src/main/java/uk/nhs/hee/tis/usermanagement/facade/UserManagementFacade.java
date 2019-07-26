@@ -1,5 +1,6 @@
 package uk.nhs.hee.tis.usermanagement.facade;
 
+import com.google.common.collect.Sets;
 import com.transform.hee.tis.keycloak.User;
 import com.transformuk.hee.tis.profile.client.service.impl.CustomPageable;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
@@ -27,6 +28,8 @@ import uk.nhs.hee.tis.usermanagement.service.ReferenceService;
 import uk.nhs.hee.tis.usermanagement.service.TcsService;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -35,6 +38,8 @@ import java.util.Set;
 public class UserManagementFacade {
 
   private static final Logger LOG = LoggerFactory.getLogger(UserManagementFacade.class);
+  
+  private static Collection<String> restrictedRoles = Collections.unmodifiableSet(Sets.newHashSet("RVOfficer"));
 
   @Autowired
   private ProfileService profileService;
@@ -58,8 +63,8 @@ public class UserManagementFacade {
     Optional<HeeUserDTO> optionalHeeUserDTO = profileService.getUserByUsername(username);
     Optional<User> optionalKeycloakUser = keyCloakAdminClientService.getUser(username);
 
-    HeeUserDTO heeUserDTO = optionalHeeUserDTO.orElseThrow(() -> new UserNotFoundException(username, "Profile"));
-    User kcUser = optionalKeycloakUser.orElseThrow(() -> new UserNotFoundException(username, "KC"));
+    HeeUserDTO heeUserDTO = optionalHeeUserDTO.orElseThrow(() -> new UserNotFoundException(username, ProfileService.NAME));
+    User kcUser = optionalKeycloakUser.orElseThrow(() -> new UserNotFoundException(username, KeyCloakAdminClientService.NAME));
     Set<DBCDTO> dbcdtos = referenceService.getAllDBCs();
     return heeUserMapper.convert(heeUserDTO, kcUser, dbcdtos);
   }
@@ -79,19 +84,25 @@ public class UserManagementFacade {
    */
   public void updateSingleUser(UserDTO userDTO) {
     Optional<User> optionalOriginalUser = keyCloakAdminClientService.getUser(userDTO.getName());
-    User originalUser = optionalOriginalUser.orElseThrow(() -> new UserNotFoundException(userDTO.getName(), "KC"));
+    User originalUser = optionalOriginalUser.orElseThrow(() -> new UserNotFoundException(userDTO.getName(), KeyCloakAdminClientService.NAME));
+
+    Optional<HeeUserDTO> optionalOriginalHeeUser = profileService.getUserByUsername(userDTO.getName());
     boolean success = keyCloakAdminClientService.updateUser(userDTO);
     if (success) {
+      HeeUserDTO originalHeeUser = optionalOriginalHeeUser.orElseThrow(() -> new UserNotFoundException(userDTO.getName(), ProfileService.NAME));
+      originalHeeUser.getRoles().stream()
+          .filter(r -> restrictedRoles.contains(r.getName()))
+          .forEach(r -> userDTO.getRoles().add(r.getName()));
       Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO, referenceService.getAllTrusts(), tcsService.getAllProgrammes()));
       if (!optionalHeeUserDTO.isPresent()) {
         //revert KC changes
         if (!keyCloakAdminClientService.updateUser(originalUser)) {
           LOG.error("Could not revert KC changes back to previous version after profile update failed! Its possible that KC user [{}] is out of sync", userDTO.getName());
         }
-        throw new UpdateUserException(userDTO.getName(), "Profile");
+        throw new UpdateUserException(userDTO.getName(), ProfileService.NAME);
       }
     } else {
-      throw new UpdateUserException(userDTO.getName(), "KC");
+      throw new UpdateUserException(userDTO.getName(), KeyCloakAdminClientService.NAME);
     }
   }
 
@@ -105,12 +116,19 @@ public class UserManagementFacade {
 
   public void publishDeleteKeycloakUserRequestedEvent(String username) {
     Optional<User> optionalUser = keyCloakAdminClientService.getUser(username);
-    User kcUser = optionalUser.orElseThrow(() -> new UserNotFoundException(username, "Keycloak"));
+    User kcUser = optionalUser.orElseThrow(() -> new UserNotFoundException(username, KeyCloakAdminClientService.NAME));
     applicationEventPublisher.publishEvent(new DeleteKeycloakUserRequestedEvent(kcUser, true));
   }
 
-  public List<String> getAllRoles() {
-    return profileService.getAllRoles();
+  /**
+   * Get a list of roles managed via the web user interface
+   * 
+   * @return roles - A list of roles that can be assigned from the web application
+   */
+  public List<String> getAllAssignableRoles() {
+    List<String> roles = profileService.getAllRoles();
+    roles.removeAll(restrictedRoles);
+    return roles;
   }
 
   public List<DBCDTO> getAllDBCs() {

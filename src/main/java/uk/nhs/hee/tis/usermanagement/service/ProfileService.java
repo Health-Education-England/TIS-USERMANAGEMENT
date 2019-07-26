@@ -33,6 +33,8 @@ public class ProfileService {
   private static final Logger LOG = LoggerFactory.getLogger(ProfileService.class);
   protected static final String HEE_USERS_ENDPOINT = "/api/hee-users";
 
+  public static final String NAME = "Profile";
+
   @Autowired
   private ProfileServiceImpl profileServiceImpl;
   @Autowired
