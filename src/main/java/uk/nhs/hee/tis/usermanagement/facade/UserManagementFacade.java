@@ -1,6 +1,5 @@
 package uk.nhs.hee.tis.usermanagement.facade;
 
-import com.google.common.collect.Sets;
 import com.transform.hee.tis.keycloak.User;
 import com.transformuk.hee.tis.profile.client.service.impl.CustomPageable;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
@@ -26,7 +25,6 @@ import uk.nhs.hee.tis.usermanagement.service.KeyCloakAdminClientService;
 import uk.nhs.hee.tis.usermanagement.service.ProfileService;
 import uk.nhs.hee.tis.usermanagement.service.ReferenceService;
 import uk.nhs.hee.tis.usermanagement.service.TcsService;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,7 +37,7 @@ public class UserManagementFacade {
 
   private static final Logger LOG = LoggerFactory.getLogger(UserManagementFacade.class);
   
-  private static Collection<String> restrictedRoles = Collections.unmodifiableSet(Sets.newHashSet("RVOfficer"));
+  private static Collection<String> restrictedRoles = Collections.unmodifiableSet(Collections.singleton("RVOfficer"));
 
   @Autowired
   private ProfileService profileService;
