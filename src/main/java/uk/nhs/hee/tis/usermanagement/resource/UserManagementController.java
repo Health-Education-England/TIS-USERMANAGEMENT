@@ -42,7 +42,7 @@ public class UserManagementController {
     userPasswordDTO.setKcId(completeUserDTO.getKcId());
     model.addAttribute("userPassword", userPasswordDTO);
 
-    List<String> allRoles = userManagementFacade.getAllRoles();
+    List<String> allRoles = userManagementFacade.getAllAssignableRoles();
     List<DBCDTO> allDBCs = userManagementFacade.getAllDBCs();
     List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
     List<ProgrammeDTO> allProgrammes = userManagementFacade.getAllProgrammes();
@@ -73,7 +73,7 @@ public class UserManagementController {
   public String viewCreateUser(Model model) {
     model.addAttribute("user", new CreateUserDTO());
 
-    List<String> allRoles = userManagementFacade.getAllRoles();
+    List<String> allRoles = userManagementFacade.getAllAssignableRoles();
     List<DBCDTO> allDBCs = userManagementFacade.getAllDBCs();
     List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
     List<ProgrammeDTO> allProgrammes = userManagementFacade.getAllProgrammes();
