@@ -25,19 +25,15 @@ import uk.nhs.hee.tis.usermanagement.service.KeyCloakAdminClientService;
 import uk.nhs.hee.tis.usermanagement.service.ProfileService;
 import uk.nhs.hee.tis.usermanagement.service.ReferenceService;
 import uk.nhs.hee.tis.usermanagement.service.TcsService;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+
+import java.util.*;
 
 @Component
 public class UserManagementFacade {
 
   private static final Logger LOG = LoggerFactory.getLogger(UserManagementFacade.class);
-  
-  private static Collection<String> restrictedRoles = Collections.unmodifiableSet(Collections.singleton("RVOfficer"));
+
+  private static Collection<String> restrictedRoles = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("RVOfficer", "Machine User")));
 
   @Autowired
   private ProfileService profileService;
