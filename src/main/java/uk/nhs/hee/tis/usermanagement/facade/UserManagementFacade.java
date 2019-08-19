@@ -6,6 +6,7 @@ import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
 import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class UserManagementFacade {
@@ -110,7 +112,10 @@ public class UserManagementFacade {
   }
 
   public List<String> getAllRoles() {
-    return profileService.getAllRoles();
+    return profileService.getAllRoles()
+        .stream()
+        .filter(role-> !StringUtils.equals(role, "Machine User")) // "Machine User" is designed for developers, should be hidden
+        .collect(Collectors.toList());
   }
 
   public List<DBCDTO> getAllDBCs() {
