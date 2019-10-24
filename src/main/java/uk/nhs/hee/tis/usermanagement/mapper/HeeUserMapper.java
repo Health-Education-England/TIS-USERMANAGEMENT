@@ -1,6 +1,7 @@
 package uk.nhs.hee.tis.usermanagement.mapper;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import com.transform.hee.tis.keycloak.User;
 import com.transformuk.hee.tis.profile.dto.RoleDTO;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
@@ -105,7 +106,7 @@ public class HeeUserMapper {
   private Set<UserProgrammeDTO> mapUserProgramme(Set<String> associatedProgrammes, List<ProgrammeDTO> knownProgrammes) {
     Set<UserProgrammeDTO> programmes = Collections.EMPTY_SET;
     if (CollectionUtils.isNotEmpty(knownProgrammes)) {
-      Map<Long, ProgrammeDTO> idsToProgramme = knownProgrammes.stream()
+      Map<Long, ProgrammeDTO> idsToProgramme = Sets.newHashSet(knownProgrammes).stream()
           .collect(Collectors.toMap((ProgrammeDTO::getId), (programme) -> programme));
 
       programmes = associatedProgrammes.stream().map(Long::parseLong).map(idsToProgramme::get).map(programmeDTO -> {
