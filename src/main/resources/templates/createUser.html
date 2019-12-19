@@ -12,38 +12,55 @@
               crossorigin="anonymous">
 
         <!--[if lte IE 8]>
-    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-old-ie-min.css">
-    <![endif]-->
-        <!--[if gt IE 8]><!-->
-        <link rel="stylesheet"
-              href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css">
-        <!--<![endif]-->
+        <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-old-ie-min.css">
+        <![endif]-->
+            <!--[if gt IE 8]><!-->
+            <link rel="stylesheet"
+                  href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css">
+            <!--<![endif]-->
 
-        <title>Create User</title>
-        <style>
-            .main-form, .delete-form {
-            display: block;
-        }
+            <title>Create User</title>
+            <style>
+                .main-form, .delete-form {
+                display: block;
+            }
 
-        .delete-form button {
-            position: absolute;
-            margin-left: 370px;
-            margin-top: -50px;
-        }
+            .delete-form button {
+                position: absolute;
+                margin-left: 370px;
+                margin-top: -50px;
+            }
 
-        fieldset {
-            border-style: hidden;
-        }
+            fieldset {
+                border-style: hidden;
+            }
 
-        .delete-form {
-            margin-left: -100px;
-        }
+            .delete-form {
+                margin-left: -100px;
+            }
 
-        #trusts {
-            max-width: 500px;
-        }
+            #trusts {
+                max-width: 500px;
+            }
 
-    </style>
+            #prompt {
+                color: red;
+            }
+
+        </style>
+        <script type="text/javascript">
+            function validateUsername(e) {
+                var username = e.value;
+                var pattern = /\s/;
+                if (pattern.test(username)) {
+                    document.getElementById("prompt").innerHTML = "should not contain any white spaces";
+                    document.getElementById("submitBtn").disabled = true;
+                } else {
+                    document.getElementById("prompt").innerHTML = "";
+                    document.getElementById("submitBtn").disabled = false;
+                }
+            }
+        </script>
     </head>
 
     <body>
@@ -74,7 +91,10 @@
                                    name="username"
                                    type="text"
                                    required
-                                   th:field="${user.name}">
+                                   th:field="${user.name}"
+                                   onkeyup="validateUsername(this)"
+                            >
+                            <span id="prompt"></span>
                         </div>
                         <div class="pure-control-group">
                             <label for="forenames">Forenames</label>
@@ -201,6 +221,7 @@
 
                         <div class="pure-controls">
                             <button type="submit"
+                                    id="submitBtn"
                                     class="pure-button pure-button-primary">Submit</button>
                         </div>
                     </fieldset>
