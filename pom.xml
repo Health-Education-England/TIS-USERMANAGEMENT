@@ -5,7 +5,7 @@
 
   <groupId>uk.nhs.hee.tis</groupId>
   <artifactId>usermanagement</artifactId>
-  <version>0.0.35</version>
+  <version>0.0.36</version>
   <packaging>jar</packaging>
 
   <name>usermanagement</name>
