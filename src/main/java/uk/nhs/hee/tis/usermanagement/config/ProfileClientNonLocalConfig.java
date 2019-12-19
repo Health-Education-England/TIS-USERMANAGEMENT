@@ -11,7 +11,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
-@Profile(value = {"uidev", "uat", "dev", "stage", "prod"})
+//@Profile(value = {"uidev", "uat", "dev", "stage", "prod"})
 public class ProfileClientNonLocalConfig extends com.transformuk.hee.tis.profile.client.config.ProfileClientConfig {
 
   @Bean

@@ -6,11 +6,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
-@Profile("local")
+//@Profile("local")
 public class ReferenceClientLocalConfig extends com.transformuk.hee.tis.reference.client.config.ReferenceClientConfig {
 
-  @Bean
-  public RestTemplate referenceRestTemplate() {
-    return super.defaultReferenceRestTemplate();
-  }
+//  @Bean
+//  public RestTemplate referenceRestTemplate() {
+//    return super.defaultReferenceRestTemplate();
+//  }
 }
