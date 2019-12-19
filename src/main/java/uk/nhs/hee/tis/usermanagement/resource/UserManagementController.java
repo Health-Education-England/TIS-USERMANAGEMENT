@@ -94,6 +94,14 @@ public class UserManagementController {
     } else if (StringUtils.isEmpty(user.getPassword()) || user.getPassword().length() < REQUIRED_PASSWORD_LENGTH) {
       throw new UserCreationException("Cannot create user, password needs to be at least 8 chars long");
     }
+    // validate if whitespace exists
+    if (org.apache.commons.lang3.StringUtils.containsWhitespace(user.getName())) {
+      throw new UserCreationException("Cannot create user, username shouldn't contain white spaces");
+    }
+    if (org.apache.commons.lang3.StringUtils.containsWhitespace(user.getEmailAddress())) {
+      throw new UserCreationException("Cannot create user, email address shouldn't contain white spaces");
+    }
+
     userManagementFacade.publishUserCreationRequestedEvent(user);
     model.addAttribute("message", "A request for user " + user.getFirstName() + " " + user.getLastName() + " (" +
         user.getName() + ") has been made. It may take a little while before you'll be able to see the new user");
