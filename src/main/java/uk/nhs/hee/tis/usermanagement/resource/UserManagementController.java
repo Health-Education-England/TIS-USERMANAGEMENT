@@ -3,6 +3,7 @@ package uk.nhs.hee.tis.usermanagement.resource;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
 import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.thymeleaf.util.StringUtils;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
@@ -95,10 +95,10 @@ public class UserManagementController {
       throw new UserCreationException("Cannot create user, password needs to be at least 8 chars long");
     }
     // validate if whitespace exists
-    if (org.apache.commons.lang3.StringUtils.containsWhitespace(user.getName())) {
+    if (StringUtils.containsWhitespace(user.getName())) {
       throw new UserCreationException("Cannot create user, username shouldn't contain white spaces");
     }
-    if (org.apache.commons.lang3.StringUtils.containsWhitespace(user.getEmailAddress())) {
+    if (StringUtils.containsWhitespace(user.getEmailAddress())) {
       throw new UserCreationException("Cannot create user, email address shouldn't contain white spaces");
     }
 
