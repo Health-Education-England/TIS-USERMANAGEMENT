@@ -102,10 +102,9 @@ public class UserManagementController {
       throw new UserCreationException("Cannot create user, email address shouldn't contain white spaces");
     }
 
-    // validate if username exists in Profile/Auth database regardless of the case
-    Pageable pageable = PageRequest.of(0, 20); // set a default value to send the case insensitive query
-    Page<UserDTO> userDTOS = userManagementFacade.getAllUsers(pageable, user.getName());
-    if (userDTOS != null && userDTOS.hasContent()) {
+    // validate if username exists in Profile/Auth database ignore case
+    UserDTO userDTO = userManagementFacade.getUserByNameIgnoreCase(user.getName());
+    if (userDTO != null) {
       throw new UserCreationException("Cannot create user, the username has already existed");
     }
 
