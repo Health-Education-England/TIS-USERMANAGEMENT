@@ -102,6 +102,12 @@ public class UserManagementController {
       throw new UserCreationException("Cannot create user, email address shouldn't contain white spaces");
     }
 
+    // validate if username exists in Profile/Auth database ignore case
+    UserDTO userDTO = userManagementFacade.getUserByNameIgnoreCase(user.getName());
+    if (userDTO != null) {
+      throw new UserCreationException("Cannot create user, the username has already existed");
+    }
+
     userManagementFacade.publishUserCreationRequestedEvent(user);
     model.addAttribute("message", "A request for user " + user.getFirstName() + " " + user.getLastName() + " (" +
         user.getName() + ") has been made. It may take a little while before you'll be able to see the new user");

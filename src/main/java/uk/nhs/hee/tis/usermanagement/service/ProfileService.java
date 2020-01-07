@@ -67,7 +67,14 @@ public class ProfileService {
   public Optional<HeeUserDTO> getUserByUsername(String username) {
     Preconditions.checkNotNull(username, "Username cannot be null when searching for a user by username");
 
-    GetUserByUsernameCommand getUserByUsernameCommand = new GetUserByUsernameCommand(profileServiceImpl, username);
+    GetUserByUsernameCommand getUserByUsernameCommand = new GetUserByUsernameCommand(profileServiceImpl, username, false);
+    return getUserByUsernameCommand.execute();
+  }
+
+  public Optional<HeeUserDTO> getUserByUsernameIgnoreCase(String username) {
+    Preconditions.checkNotNull(username, "Username cannot be null when searching for a user by username");
+
+    GetUserByUsernameCommand getUserByUsernameCommand = new GetUserByUsernameCommand(profileServiceImpl, username, true);
     return getUserByUsernameCommand.execute();
   }
 

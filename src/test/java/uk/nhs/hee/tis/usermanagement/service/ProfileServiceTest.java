@@ -1,9 +1,19 @@
 package uk.nhs.hee.tis.usermanagement.service;
 
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.usermanagement.service.ProfileService.HEE_USERS_ENDPOINT;
+
 import com.google.common.collect.Sets;
 import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
 import com.transformuk.hee.tis.profile.dto.RoleDTO;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,17 +36,6 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import uk.nhs.hee.tis.usermanagement.event.CreateProfileUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.DeleteProfileUserRequestEvent;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
-import static uk.nhs.hee.tis.usermanagement.service.ProfileService.HEE_USERS_ENDPOINT;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ProfileServiceTest {
@@ -83,7 +82,8 @@ public class ProfileServiceTest {
   public void getAllUsersShouldReturnEmptyPageWhenProfileServiceIsDown() {
     PageRequest pageRequest = PageRequest.of(0, 10);
 
-    doThrow(new HttpServerErrorException(HttpStatus.SERVICE_UNAVAILABLE)).when(profileServiceImplMock).getAllAdminUsers(pageRequest, USERNAME);
+    doThrow(new HttpServerErrorException(HttpStatus.SERVICE_UNAVAILABLE))
+        .when(profileServiceImplMock).getAllAdminUsers(pageRequest, USERNAME);
 
     Page<HeeUserDTO> result = testObj.getAllUsers(pageRequest, USERNAME);
 
@@ -94,7 +94,8 @@ public class ProfileServiceTest {
   public void getAllUsersShouldReturnEmptyPageWhenProfileServiceThrowsAnException() {
     PageRequest pageRequest = PageRequest.of(0, 10);
 
-    doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(profileServiceImplMock).getAllAdminUsers(pageRequest, USERNAME);
+    doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
+        .when(profileServiceImplMock).getAllAdminUsers(pageRequest, USERNAME);
 
     Page<HeeUserDTO> result = testObj.getAllUsers(pageRequest, USERNAME);
 
@@ -127,7 +128,8 @@ public class ProfileServiceTest {
 
   @Test
   public void getUsernameShouldReturnEmptyOptionalWhenUserNotFound() {
-    doThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND)).when(profileServiceImplMock).getSingleAdminUser(NON_EXISTING_USER);
+    doThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND)).when(profileServiceImplMock)
+        .getSingleAdminUser(NON_EXISTING_USER);
 
     Optional<HeeUserDTO> result = testObj.getUserByUsername(NON_EXISTING_USER);
 
@@ -136,7 +138,8 @@ public class ProfileServiceTest {
 
   @Test
   public void getUsernameShouldReturnEmptyOptionalWhenServerSideErrorOccurs() {
-    doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(profileServiceImplMock).getSingleAdminUser(USERNAME);
+    doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
+        .when(profileServiceImplMock).getSingleAdminUser(USERNAME);
 
     Optional<HeeUserDTO> result = testObj.getUserByUsername(USERNAME);
 
@@ -166,9 +169,11 @@ public class ProfileServiceTest {
   @Test
   public void createUserShouldCallProfileServiceToCreateUser() {
     HeeUserDTO userToCreateDTO = createHeeUserDto();
-    when(profileServiceImplMock.createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class)).thenReturn(userToCreateDTO);
+    when(profileServiceImplMock.createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class))
+        .thenReturn(userToCreateDTO);
 
-    testObj.createProfileUserEventListener(new CreateProfileUserRequestedEvent(userToCreateDTO, null));
+    testObj
+        .createProfileUserEventListener(new CreateProfileUserRequestedEvent(userToCreateDTO, null));
 
     verify(profileServiceImplMock).createDto(userToCreateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
   }
@@ -187,7 +192,8 @@ public class ProfileServiceTest {
   @Test
   public void updateUserShouldReturnNewUserWhenUserDoesNotExist() {
     HeeUserDTO userToUpdateDTO = createHeeUserDto();
-    when(profileServiceImplMock.updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class)).thenReturn(userToUpdateDTO);
+    when(profileServiceImplMock.updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class))
+        .thenReturn(userToUpdateDTO);
 
     Optional<HeeUserDTO> result = testObj.updateUser(userToUpdateDTO);
 
@@ -200,7 +206,9 @@ public class ProfileServiceTest {
   public void updateUserShouldReturnEmptyOptionalWhenServiceIsDown() {
     HeeUserDTO userToUpdateDTO = createHeeUserDto();
 
-    doThrow(new HttpServerErrorException(HttpStatus.SERVICE_UNAVAILABLE)).when(profileServiceImplMock).updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
+    doThrow(new HttpServerErrorException(HttpStatus.SERVICE_UNAVAILABLE))
+        .when(profileServiceImplMock)
+        .updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
     Optional<HeeUserDTO> result = testObj.updateUser(userToUpdateDTO);
 
     Assert.assertFalse(result.isPresent());
@@ -211,7 +219,9 @@ public class ProfileServiceTest {
   public void updateUserShouldReturnEmptyOptionalWhenServiceErrors() {
     HeeUserDTO userToUpdateDTO = createHeeUserDto();
 
-    doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(profileServiceImplMock).updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
+    doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
+        .when(profileServiceImplMock)
+        .updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
     Optional<HeeUserDTO> result = testObj.updateUser(userToUpdateDTO);
 
     Assert.assertFalse(result.isPresent());
@@ -222,7 +232,8 @@ public class ProfileServiceTest {
   public void updateUserShouldReturnEmptyOptionalWhenFailsValidation() {
     HeeUserDTO userToUpdateDTO = createHeeUserDto();
 
-    doThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST)).when(profileServiceImplMock).updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
+    doThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST)).when(profileServiceImplMock)
+        .updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class);
     Optional<HeeUserDTO> result = testObj.updateUser(userToUpdateDTO);
 
     Assert.assertFalse(result.isPresent());
@@ -233,7 +244,8 @@ public class ProfileServiceTest {
   public void updateUserShouldReturnUpdatedModelOfUserAfterUpdate() {
     HeeUserDTO userToUpdateDTO = createHeeUserDto();
 
-    when(profileServiceImplMock.updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class)).thenReturn(userToUpdateDTO);
+    when(profileServiceImplMock.updateDto(userToUpdateDTO, HEE_USERS_ENDPOINT, HeeUserDTO.class))
+        .thenReturn(userToUpdateDTO);
 
     Optional<HeeUserDTO> result = testObj.updateUser(userToUpdateDTO);
 
@@ -254,18 +266,21 @@ public class ProfileServiceTest {
     roleDTO3.setPermissions(Sets.newHashSet());
     ArrayList<RoleDTO> rolesList = Lists.newArrayList(roleDTO1, roleDTO2, roleDTO3);
 
-    when(profileRestTemplateMock.exchange(urlArgumentCaptor.capture(), eq(HttpMethod.GET), eq(null), typeReferenceArgumentCaptor.capture())).thenReturn(ResponseEntity.ok(rolesList));
+    when(profileRestTemplateMock.exchange(urlArgumentCaptor.capture(), eq(HttpMethod.GET), eq(null),
+        typeReferenceArgumentCaptor.capture())).thenReturn(ResponseEntity.ok(rolesList));
     ReflectionTestUtils.setField(testObj, "serviceUrl", "http://profileUrl.com");
 
     List<String> result = testObj.getAllRoles();
 
     Assert.assertEquals(3, result.size());
-    Assert.assertTrue(result.containsAll(Lists.newArrayList(ROLE_NAME_1, ROLE_NAME_2, ROLE_NAME_3)));
+    Assert
+        .assertTrue(result.containsAll(Lists.newArrayList(ROLE_NAME_1, ROLE_NAME_2, ROLE_NAME_3)));
   }
 
   @Test
   public void getAllRolesShouldReturnNoRolesFromProfileServiceWhenProfileFails() {
-    when(profileRestTemplateMock.exchange(urlArgumentCaptor.capture(), eq(HttpMethod.GET), eq(null), typeReferenceArgumentCaptor.capture()))
+    when(profileRestTemplateMock.exchange(urlArgumentCaptor.capture(), eq(HttpMethod.GET), eq(null),
+        typeReferenceArgumentCaptor.capture()))
         .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
     ReflectionTestUtils.setField(testObj, "serviceUrl", "http://profileUrl.com");
 
@@ -282,6 +297,15 @@ public class ProfileServiceTest {
     testObj.deleteUserEventListener(new DeleteProfileUserRequestEvent(USERNAME));
 
     verify(profileServiceImplMock).deleteUser(USERNAME);
+  }
+
+  /**
+   * Test that a NullPointerException is thrown when the username is null.
+   */
+  @Test(expected = NullPointerException.class)
+  public void testGetUserByUsernameIgnoreCase_null_nullPointerException() {
+    // Call the code under test.
+    testObj.getUserByUsernameIgnoreCase(null);
   }
 
   private HeeUserDTO createHeeUserDto() {

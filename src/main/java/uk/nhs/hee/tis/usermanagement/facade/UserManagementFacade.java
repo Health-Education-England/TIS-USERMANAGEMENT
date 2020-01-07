@@ -63,6 +63,16 @@ public class UserManagementFacade {
     return heeUserMapper.convert(heeUserDTO, kcUser, dbcdtos);
   }
 
+  public UserDTO getUserByNameIgnoreCase(String username) {
+    Optional<HeeUserDTO> optionalHeeUserDTO = profileService.getUserByUsernameIgnoreCase(username);
+    if (!optionalHeeUserDTO.isPresent()) {
+      return null;
+    } else {
+      HeeUserDTO heeUserDTO = optionalHeeUserDTO.get();
+      return heeUserMapper.convert(heeUserDTO);
+    }
+  }
+
   public Page<UserDTO> getAllUsers(Pageable pageable, String search) {
     Page<HeeUserDTO> heeUserDTOS = profileService.getAllUsers(pageable, search);
     List<UserDTO> userDTOS = heeUserMapper.convertAll(heeUserDTOS.getContent());
