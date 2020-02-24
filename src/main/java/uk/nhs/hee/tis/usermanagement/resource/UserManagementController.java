@@ -2,6 +2,7 @@ package uk.nhs.hee.tis.usermanagement.resource;
 
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
+import com.transformuk.hee.tis.reference.api.dto.validation.OrganisationalEntityDTO;
 import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,11 +44,13 @@ public class UserManagementController {
     model.addAttribute("userPassword", userPasswordDTO);
 
     List<String> allRoles = userManagementFacade.getAllAssignableRoles();
+    List<OrganisationalEntityDTO> allEntities = userManagementFacade.getAllEntities();
     List<DBCDTO> allDBCs = userManagementFacade.getAllDBCs();
     List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
     List<ProgrammeDTO> allProgrammes = userManagementFacade.getAllProgrammes();
 
     model.addAttribute("roles", allRoles);
+    model.addAttribute("entities", allEntities);
     model.addAttribute("designatedBodyCodes", allDBCs);
     model.addAttribute("trusts", allTrusts);
     model.addAttribute("programmes", allProgrammes);
@@ -74,11 +77,13 @@ public class UserManagementController {
     model.addAttribute("user", new CreateUserDTO());
 
     List<String> allRoles = userManagementFacade.getAllAssignableRoles();
+    List<OrganisationalEntityDTO> allEntities = userManagementFacade.getAllEntities();
     List<DBCDTO> allDBCs = userManagementFacade.getAllDBCs();
     List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
     List<ProgrammeDTO> allProgrammes = userManagementFacade.getAllProgrammes();
 
     model.addAttribute("roles", allRoles);
+    model.addAttribute("entities", allEntities);
     model.addAttribute("designatedBodyCodes", allDBCs);
     model.addAttribute("trusts", allTrusts);
     model.addAttribute("programmes", allProgrammes);

@@ -43,10 +43,30 @@
          max-width: 500px;
       }
 
+      #entities {
+         min-width: 200px;
+      }
    </style>
+        <script type="text/javascript">
+            function filterDBCs() {
+                const selectedEntities = document.querySelectorAll('#entities option:checked');
+                const selectedEntityValues = Array.from(selectedEntities).map(el => el.value);
+
+                var designatedBodyCodes = document.querySelector("#designatedBodyCodes");
+                var designatedBodyCodeGroups = designatedBodyCodes.querySelectorAll("optgroup");
+                Array.prototype.forEach.call(designatedBodyCodeGroups, element => {
+                    element.style.display = "none";
+                });
+
+                Array.prototype.forEach.call(selectedEntityValues, value => {
+                    var getByLabel = designatedBodyCodes.querySelector('[value="'+value+'"]');
+                    getByLabel.style.display = "block";
+                });
+            }
+        </script>
     </head>
 
-    <body>
+    <body onload="filterDBCs()">
         <div class="pure-g">
             <div class="pure-u-1-5"></div>
             <div class="pure-u-3-5">
@@ -128,15 +148,37 @@
                         </div>
 
                         <div class="pure-control-group">
+                            <label for="entities">Entities</label>
+                            <select
+                                    id="entities"
+                                    name="entities"
+                                    onchange="filterDBCs()"
+                                    size="3">
+                                <option th:each="entity : ${entities}"
+                                        th:value="${entity.id}"
+                                        th:text="${entity.name}"
+                                        th:selected="${#lists.contains(user.entities, entity.id)}"></option>
+                            </select>
+                        </div>
+
+                        <div class="pure-control-group">
                             <label for="designatedBodyCodes">Designated Body Codes</label>
                             <select multiple
                                     id="designatedBodyCodes"
                                     name="localOffices"
                                     size="10">
-                                <option th:each="dbc : ${designatedBodyCodes}"
-                                        th:value="${dbc.dbc}"
-                                        th:text="${dbc.name} + ' - ' + ${dbc.abbr}"
-                                        th:selected="${#lists.contains(user.localOffices, dbc.dbc)}"></option>
+                                <optgroup label="HEE" value="1" th:if="${not designatedBodyCodes.?[entityId==1].isEmpty()}">
+                                    <option th:each="dbc : ${designatedBodyCodes.?[entityId==1]}"
+                                            th:value="${dbc.dbc}"
+                                            th:text="${dbc.name} + ' - ' + ${dbc.abbr}"
+                                            th:selected="${#lists.contains(user.localOffices, dbc.dbc)}"></option>
+                                </optgroup>
+                                <optgroup label="NI" value="2" th:if="${not designatedBodyCodes.?[entityId==2].isEmpty()}">
+                                    <option th:each="dbc : ${designatedBodyCodes.?[entityId==2]}"
+                                            th:value="${dbc.dbc}"
+                                            th:text="${dbc.name} + ' - ' + ${dbc.abbr}"
+                                            th:selected="${#lists.contains(user.localOffices, dbc.dbc)}"></option>
+                                </optgroup>
                             </select>
                         </div>
 

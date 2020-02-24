@@ -5,6 +5,7 @@ import com.transformuk.hee.tis.profile.client.service.impl.CustomPageable;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
+import com.transformuk.hee.tis.reference.api.dto.validation.OrganisationalEntityDTO;
 import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,8 +60,7 @@ public class UserManagementFacade {
 
     HeeUserDTO heeUserDTO = optionalHeeUserDTO.orElseThrow(() -> new UserNotFoundException(username, ProfileService.NAME));
     User kcUser = optionalKeycloakUser.orElseThrow(() -> new UserNotFoundException(username, KeyCloakAdminClientService.NAME));
-    Set<DBCDTO> dbcdtos = referenceService.getAllDBCs();
-    return heeUserMapper.convert(heeUserDTO, kcUser, dbcdtos);
+    return heeUserMapper.convert(heeUserDTO, kcUser);
   }
 
   public UserDTO getUserByNameIgnoreCase(String username) {
@@ -97,7 +97,7 @@ public class UserManagementFacade {
       originalHeeUser.getRoles().stream()
           .filter(r -> restrictedRoles.contains(r.getName()))
           .forEach(r -> userDTO.getRoles().add(r.getName()));
-      Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO, referenceService.getAllTrusts(), tcsService.getAllProgrammes()));
+      Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(heeUserMapper.convert(userDTO, referenceService.getAllTrusts(), tcsService.getAllProgrammes(), referenceService.getAllEntities()));
       if (!optionalHeeUserDTO.isPresent()) {
         //revert KC changes
         if (!keyCloakAdminClientService.updateUser(originalUser)) {
@@ -114,7 +114,7 @@ public class UserManagementFacade {
    * Publish an event that will kick off the creation of a user
    */
   public void publishUserCreationRequestedEvent(CreateUserDTO userDTO) {
-    HeeUserDTO userToCreateInProfileService = heeUserMapper.convert(userDTO, referenceService.getAllTrusts(), tcsService.getAllProgrammes());
+    HeeUserDTO userToCreateInProfileService = heeUserMapper.convert(userDTO, referenceService.getAllTrusts(), tcsService.getAllProgrammes(), referenceService.getAllEntities());
     applicationEventPublisher.publishEvent(new CreateKeycloakUserRequestedEvent(userDTO, userToCreateInProfileService));
   }
 
@@ -133,6 +133,10 @@ public class UserManagementFacade {
     List<String> roles = profileService.getAllRoles();
     roles.removeAll(restrictedRoles);
     return roles;
+  }
+
+  public List<OrganisationalEntityDTO> getAllEntities(){
+    return referenceService.getAllEntities();
   }
 
   public List<DBCDTO> getAllDBCs() {

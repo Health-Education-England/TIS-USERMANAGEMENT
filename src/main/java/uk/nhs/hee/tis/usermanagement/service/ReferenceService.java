@@ -2,6 +2,7 @@ package uk.nhs.hee.tis.usermanagement.service;
 
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
+import com.transformuk.hee.tis.reference.api.dto.validation.OrganisationalEntityDTO;
 import com.transformuk.hee.tis.reference.client.impl.ReferenceServiceImpl;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import uk.nhs.hee.tis.usermanagement.command.reference.GetAllEntitiesCommand;
 import uk.nhs.hee.tis.usermanagement.command.reference.GetAllDesignatedBodyCodesCommand;
 import uk.nhs.hee.tis.usermanagement.command.reference.GetAllTrustsCommand;
 
@@ -66,6 +68,11 @@ public class ReferenceService {
       dumbTrustCache.sort((o1, o2) -> StringUtils.compare(o1.getCode(), o2.getCode()));
     }
     return dumbTrustCache;
+  }
+
+  public List<OrganisationalEntityDTO> getAllEntities() {
+    GetAllEntitiesCommand getAllEntitiesCommand = new GetAllEntitiesCommand(referenceRestTemplate, serviceUrl);
+    return getAllEntitiesCommand.execute();
   }
 
   public List<TrustDTO> getDumbTrustCache() {

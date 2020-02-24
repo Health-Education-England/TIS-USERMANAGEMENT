@@ -14,6 +14,7 @@ import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Test;

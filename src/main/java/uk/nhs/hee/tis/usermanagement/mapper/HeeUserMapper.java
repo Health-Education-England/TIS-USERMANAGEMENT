@@ -5,9 +5,11 @@ import com.google.common.collect.Sets;
 import com.transform.hee.tis.keycloak.User;
 import com.transformuk.hee.tis.profile.dto.RoleDTO;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
+import com.transformuk.hee.tis.profile.service.dto.UserOrganisationalEntityDTO;
 import com.transformuk.hee.tis.profile.service.dto.UserTrustDTO;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
+import com.transformuk.hee.tis.reference.api.dto.validation.OrganisationalEntityDTO;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
@@ -40,19 +42,21 @@ public class HeeUserMapper {
     return mapHeeUserAttributes(userDTO, heeUserDTO);
   }
 
-  public HeeUserDTO convert(UserDTO userDTO, List<TrustDTO> knownTrusts, List<ProgrammeDTO> knownProgrammes) {
+  public HeeUserDTO convert(UserDTO userDTO, List<TrustDTO> knownTrusts, List<ProgrammeDTO> knownProgrammes, List<OrganisationalEntityDTO> knownOrganisationalEntities) {
     Preconditions.checkNotNull(userDTO, "stop being stooopid");
     return mapUserAttributes(userDTO.getName(), userDTO.getFirstName(), userDTO.getLastName(), userDTO.getGmcId(),
         userDTO.getPhoneNumber(), userDTO.getEmailAddress(), userDTO.getActive(), userDTO.getLocalOffices(),
-        userDTO.getRoles(), userDTO.getAssociatedTrusts(), userDTO.getAssociatedProgrammes(), knownTrusts, knownProgrammes);
+        userDTO.getRoles(), userDTO.getAssociatedOrganisationalEntities(), userDTO.getAssociatedTrusts(),
+        userDTO.getAssociatedProgrammes(), knownTrusts, knownProgrammes, knownOrganisationalEntities);
   }
 
-  public HeeUserDTO convert(CreateUserDTO createUserDTO, List<TrustDTO> knownTrusts, List<ProgrammeDTO> knownProgrammes) {
+  public HeeUserDTO convert(CreateUserDTO createUserDTO, List<TrustDTO> knownTrusts, List<ProgrammeDTO> knownProgrammes, List<OrganisationalEntityDTO> knownOrganisationalEntities) {
     Preconditions.checkNotNull(createUserDTO, "stop being stooopid");
     HeeUserDTO heeUserDTO = mapUserAttributes(createUserDTO.getName(), createUserDTO.getFirstName(),
         createUserDTO.getLastName(), createUserDTO.getGmcId(), createUserDTO.getPhoneNumber(),
         createUserDTO.getEmailAddress(), createUserDTO.isActive(), createUserDTO.getLocalOffices(),
-        createUserDTO.getRoles(), createUserDTO.getAssociatedTrusts(), createUserDTO.getAssociatedProgrammes(), knownTrusts, knownProgrammes);
+        createUserDTO.getRoles(), createUserDTO.getEntities(),
+        createUserDTO.getAssociatedTrusts(), createUserDTO.getAssociatedProgrammes(), knownTrusts, knownProgrammes, knownOrganisationalEntities);
     heeUserDTO.setPassword(createUserDTO.getPassword());
     heeUserDTO.setTemporaryPassword(createUserDTO.getTempPassword());
     return heeUserDTO;
@@ -60,8 +64,8 @@ public class HeeUserMapper {
   }
 
   private HeeUserDTO mapUserAttributes(String name, String firstName, String lastName, String gmcId, String phoneNumber,
-      String emailAddress, boolean active, Set<String> localOffices, Set<String> roles, Set<String> associatedTrusts,
-      Set<String> associatedProgrammes, List<TrustDTO> knownTrusts, List<ProgrammeDTO> knownProgrammes) {
+      String emailAddress, boolean active, Set<String> localOffices, Set<String> roles, Set<String> entities,
+      Set<String> associatedTrusts, Set<String> associatedProgrammes, List<TrustDTO> knownTrusts, List<ProgrammeDTO> knownProgrammes, List<OrganisationalEntityDTO> knownOrganisationalEntities) {
     HeeUserDTO heeUserDTO = new HeeUserDTO();
     heeUserDTO.setName(name);
     heeUserDTO.setFirstName(firstName);
@@ -82,6 +86,7 @@ public class HeeUserMapper {
     }
     heeUserDTO.setAssociatedTrusts(mapUserTrust(associatedTrusts, knownTrusts));
     heeUserDTO.setAssociatedProgrammes(mapUserProgramme(associatedProgrammes, knownProgrammes));
+    heeUserDTO.setAssociatedOrganisationalEntities(mapUserOrganisationalEntity(entities, knownOrganisationalEntities));
 
     return heeUserDTO;
   }
@@ -120,6 +125,21 @@ public class HeeUserMapper {
     return programmes;
   }
 
+  private Set<UserOrganisationalEntityDTO> mapUserOrganisationalEntity(Set<String> associatedEntities, List<OrganisationalEntityDTO> knownOrganisationalEntities) {
+    Set<UserOrganisationalEntityDTO> organisationalEntities = Collections.EMPTY_SET;
+    if (CollectionUtils.isNotEmpty(knownOrganisationalEntities)) {
+      Map<Long, OrganisationalEntityDTO> idsToOrganisationalEntity = Sets.newHashSet(knownOrganisationalEntities).stream()
+              .collect(Collectors.toMap((OrganisationalEntityDTO::getId), (organisationalEntity) -> organisationalEntity));
+
+      organisationalEntities = associatedEntities.stream().map(Long::parseLong).map(idsToOrganisationalEntity::get).map(organisationalEntityDTO -> {
+        UserOrganisationalEntityDTO userOrganisationalEntityDTO = new UserOrganisationalEntityDTO();
+        userOrganisationalEntityDTO.setOrganisationalEntityId(organisationalEntityDTO.getId());
+        userOrganisationalEntityDTO.setOrganisationalEntityName(organisationalEntityDTO.getName());
+        return userOrganisationalEntityDTO;
+      }).collect(Collectors.toSet());
+    }
+    return organisationalEntities;
+  }
   /**
    * Used for the details page
    *
@@ -128,11 +148,10 @@ public class HeeUserMapper {
    * @param dbcdtos
    * @return
    */
-  public UserDTO convert(HeeUserDTO heeUserDTO, User keycloakUser, Set<DBCDTO> dbcdtos) {
+  public UserDTO convert(HeeUserDTO heeUserDTO, User keycloakUser) {
     UserDTO userDTO = new UserDTO();
     mapHeeUserAttributes(userDTO, heeUserDTO);
     mapKeycloakAttributes(userDTO, keycloakUser);
-    // mapDBCAttributes(userDTO, heeUserDTO, dbcdtos);
 
     return userDTO;
   }
@@ -164,6 +183,13 @@ public class HeeUserMapper {
             .collect(Collectors.toSet());
         userDTO.setAssociatedProgrammes(programmeIds);
       }
+
+      Set<UserOrganisationalEntityDTO> associatedOrganisationalEntities = heeUserDTO.getAssociatedOrganisationalEntities();
+      if(CollectionUtils.isNotEmpty(associatedOrganisationalEntities)) {
+        Set<String> organisationalEntityIds = associatedOrganisationalEntities.stream().map(UserOrganisationalEntityDTO::getOrganisationalEntityId).map(Object::toString)
+                .collect(Collectors.toSet());
+        userDTO.setAssociatedOrganisationalEntities(organisationalEntityIds);
+      }
     }
     return userDTO;
   }
@@ -173,15 +199,6 @@ public class HeeUserMapper {
       userDTO.setKcId(keycloakUser.getId());
       userDTO.setActive(keycloakUser.getEnabled());
     }
-    return userDTO;
-  }
-
-  private UserDTO mapDBCAttributes(UserDTO userDTO, HeeUserDTO heeUserDTO, Set<DBCDTO> dbcdtos) {
-    Map<String, String> dbcToLocalOffice = dbcdtos.stream().collect(Collectors.toMap(DBCDTO::getDbc, DBCDTO::getName));
-    Set<String> setOfLOs = heeUserDTO.getDesignatedBodyCodes().stream().map(dbc -> dbcToLocalOffice.get(dbc))
-        .collect(Collectors.toSet());
-    userDTO.setLocalOffices(setOfLOs);
-
     return userDTO;
   }
 }
