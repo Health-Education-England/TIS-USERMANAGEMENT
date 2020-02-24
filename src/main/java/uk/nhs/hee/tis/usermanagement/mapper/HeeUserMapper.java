@@ -44,7 +44,8 @@ public class HeeUserMapper {
     Preconditions.checkNotNull(userDTO, "stop being stooopid");
     return mapUserAttributes(userDTO.getName(), userDTO.getFirstName(), userDTO.getLastName(), userDTO.getGmcId(),
         userDTO.getPhoneNumber(), userDTO.getEmailAddress(), userDTO.getActive(), userDTO.getLocalOffices(),
-        userDTO.getRoles(), userDTO.getAssociatedTrusts(), userDTO.getAssociatedProgrammes(), knownTrusts, knownProgrammes);
+        userDTO.getRoles(), userDTO.getEntities(), userDTO.getAssociatedTrusts(),
+        userDTO.getAssociatedProgrammes(), knownTrusts, knownProgrammes);
   }
 
   public HeeUserDTO convert(CreateUserDTO createUserDTO, List<TrustDTO> knownTrusts, List<ProgrammeDTO> knownProgrammes) {
@@ -52,7 +53,8 @@ public class HeeUserMapper {
     HeeUserDTO heeUserDTO = mapUserAttributes(createUserDTO.getName(), createUserDTO.getFirstName(),
         createUserDTO.getLastName(), createUserDTO.getGmcId(), createUserDTO.getPhoneNumber(),
         createUserDTO.getEmailAddress(), createUserDTO.isActive(), createUserDTO.getLocalOffices(),
-        createUserDTO.getRoles(), createUserDTO.getAssociatedTrusts(), createUserDTO.getAssociatedProgrammes(), knownTrusts, knownProgrammes);
+        createUserDTO.getRoles(), createUserDTO.getEntities(),
+        createUserDTO.getAssociatedTrusts(), createUserDTO.getAssociatedProgrammes(), knownTrusts, knownProgrammes);
     heeUserDTO.setPassword(createUserDTO.getPassword());
     heeUserDTO.setTemporaryPassword(createUserDTO.getTempPassword());
     return heeUserDTO;
@@ -60,8 +62,8 @@ public class HeeUserMapper {
   }
 
   private HeeUserDTO mapUserAttributes(String name, String firstName, String lastName, String gmcId, String phoneNumber,
-      String emailAddress, boolean active, Set<String> localOffices, Set<String> roles, Set<String> associatedTrusts,
-      Set<String> associatedProgrammes, List<TrustDTO> knownTrusts, List<ProgrammeDTO> knownProgrammes) {
+      String emailAddress, boolean active, Set<String> localOffices, Set<String> roles, Set<String> entities,
+      Set<String> associatedTrusts, Set<String> associatedProgrammes, List<TrustDTO> knownTrusts, List<ProgrammeDTO> knownProgrammes) {
     HeeUserDTO heeUserDTO = new HeeUserDTO();
     heeUserDTO.setName(name);
     heeUserDTO.setFirstName(firstName);
@@ -71,6 +73,7 @@ public class HeeUserMapper {
     heeUserDTO.setEmailAddress(emailAddress);
     heeUserDTO.setActive(active);
     heeUserDTO.setDesignatedBodyCodes(localOffices);
+    heeUserDTO.setEntities(entities);
 
     if (CollectionUtils.isNotEmpty(roles)) {
       Set<RoleDTO> setOfRoles = roles.stream().map(roleName -> {
@@ -146,6 +149,7 @@ public class HeeUserMapper {
       userDTO.setPhoneNumber(heeUserDTO.getPhoneNumber());
       userDTO.setEmailAddress(heeUserDTO.getEmailAddress());
       userDTO.setLocalOffices(heeUserDTO.getDesignatedBodyCodes());
+      userDTO.setEntities(heeUserDTO.getEntities());
       if (CollectionUtils.isNotEmpty(heeUserDTO.getRoles())) {
         Set<String> setOfRoles = heeUserDTO.getRoles().stream().map(RoleDTO::getName).collect(Collectors.toSet());
         userDTO.setRoles(setOfRoles);

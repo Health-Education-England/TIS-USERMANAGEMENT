@@ -16,6 +16,7 @@ public class CreateUserDTO implements Serializable {
   private String confirmPassword;
   private boolean tempPassword;
   private Set<String> roles = new HashSet<>();
+  private Set<String> entities = new HashSet<>();
   private Set<String> localOffices = new HashSet<>();
   private Set<String> associatedTrusts = new HashSet<>();
   private Set<String> associatedProgrammes = new HashSet<>();
@@ -106,6 +107,14 @@ public class CreateUserDTO implements Serializable {
 
   public void setRoles(Set<String> roles) {
     this.roles = roles;
+  }
+
+  public Set<String> getEntities() {
+    return entities;
+  }
+
+  public void setEntities(Set<String> entities) {
+    this.entities = entities;
   }
 
   public Set<String> getLocalOffices() {

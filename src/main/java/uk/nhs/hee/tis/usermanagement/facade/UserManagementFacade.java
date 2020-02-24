@@ -135,6 +135,10 @@ public class UserManagementFacade {
     return roles;
   }
 
+  public List<String> getAllEntities(){
+    return profileService.getAllEntities();
+  }
+
   public List<DBCDTO> getAllDBCs() {
     return new ArrayList<>(referenceService.getAllDBCs());
   }

@@ -43,11 +43,13 @@ public class UserManagementController {
     model.addAttribute("userPassword", userPasswordDTO);
 
     List<String> allRoles = userManagementFacade.getAllAssignableRoles();
+    List<String> allEntities = userManagementFacade.getAllEntities();
     List<DBCDTO> allDBCs = userManagementFacade.getAllDBCs();
     List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
     List<ProgrammeDTO> allProgrammes = userManagementFacade.getAllProgrammes();
 
     model.addAttribute("roles", allRoles);
+    model.addAttribute("entities", allEntities);
     model.addAttribute("designatedBodyCodes", allDBCs);
     model.addAttribute("trusts", allTrusts);
     model.addAttribute("programmes", allProgrammes);
@@ -74,11 +76,13 @@ public class UserManagementController {
     model.addAttribute("user", new CreateUserDTO());
 
     List<String> allRoles = userManagementFacade.getAllAssignableRoles();
+    List<String> allEntities = userManagementFacade.getAllEntities();
     List<DBCDTO> allDBCs = userManagementFacade.getAllDBCs();
     List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
     List<ProgrammeDTO> allProgrammes = userManagementFacade.getAllProgrammes();
 
     model.addAttribute("roles", allRoles);
+    model.addAttribute("entities", allEntities);
     model.addAttribute("designatedBodyCodes", allDBCs);
     model.addAttribute("trusts", allTrusts);
     model.addAttribute("programmes", allProgrammes);

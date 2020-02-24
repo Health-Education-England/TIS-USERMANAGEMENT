@@ -25,6 +25,7 @@ import uk.nhs.hee.tis.usermanagement.service.ProfileService;
 public class UserManagementFacadeTest {
 
   private String adminRole = "HEE TIS Admin", etlRole = "ETL", roRole = "RVOfficer", rvAdmin = "RVAdmin";
+  private String heeEntity = "HEE", niEntity = "NI";
   @InjectMocks
   UserManagementFacade testClass;
 
@@ -80,5 +81,15 @@ public class UserManagementFacadeTest {
 
     // Verify expectations.
     verify(userMapper).convert(heeUser);
+  }
+
+  @Test
+  public void testGetAllEntities() {
+    List mockEntities = Lists.newArrayList(heeEntity, niEntity);
+
+    when(profileService.getAllEntities()).thenReturn(mockEntities);
+    List<String> actual = testClass.getAllEntities();
+    assertThat(actual, containsInAnyOrder(heeEntity, niEntity));
+    verify(profileService).getAllEntities();
   }
 }

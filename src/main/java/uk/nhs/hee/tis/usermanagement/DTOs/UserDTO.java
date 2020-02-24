@@ -13,6 +13,7 @@ public class UserDTO {
   private String emailAddress;
   private boolean active;
   private Set<String> roles = new HashSet<>();
+  private Set<String> entities = new HashSet<>();
   private Set<String> localOffices = new HashSet<>();
   private Set<String> associatedTrusts = new HashSet<>();
   private Set<String> associatedProgrammes = new HashSet<>();
@@ -87,6 +88,14 @@ public class UserDTO {
 
   public void setRoles(Set<String> roles) {
     this.roles = roles;
+  }
+
+  public Set<String> getEntities() {
+    return entities;
+  }
+
+  public void setEntities(Set<String> entities) {
+    this.entities = entities;
   }
 
   public Set<String> getLocalOffices() {

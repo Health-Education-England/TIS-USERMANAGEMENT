@@ -10,6 +10,7 @@ import static uk.nhs.hee.tis.usermanagement.service.ProfileService.HEE_USERS_END
 import com.google.common.collect.Sets;
 import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
 import com.transformuk.hee.tis.profile.dto.RoleDTO;
+import com.transformuk.hee.tis.profile.dto.OrganisationalEntityDTO;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +54,8 @@ public class ProfileServiceTest {
   private static final String ROLE_NAME_1 = "ROLE NAME 1";
   private static final String ROLE_NAME_2 = "ROLE NAME 2";
   private static final String ROLE_NAME_3 = "ROLE NAME 3";
+  private static final String ENTITY_NAME_1 = "ENTITY NAME 1";
+  private static final String ENTITY_NAME_2 = "ENTITY NAME 2";
 
   @InjectMocks
   private ProfileService testObj;
@@ -68,6 +71,9 @@ public class ProfileServiceTest {
 
   @Captor
   private ArgumentCaptor<ParameterizedTypeReference<List<RoleDTO>>> typeReferenceArgumentCaptor;
+
+  @Captor
+  private ArgumentCaptor<ParameterizedTypeReference<List<OrganisationalEntityDTO>>> entityTypeReferenceArgumentCaptor;
 
   @Test(expected = NullPointerException.class)
   public void getAllUsersShouldThrowExceptionWhenPageableParameterIsNull() {
@@ -306,6 +312,36 @@ public class ProfileServiceTest {
   public void testGetUserByUsernameIgnoreCase_null_nullPointerException() {
     // Call the code under test.
     testObj.getUserByUsernameIgnoreCase(null);
+  }
+
+  @Test
+  public void getAllEntitiesShouldReturnAllEntitiesFromProfileService() {
+    OrganisationalEntityDTO entityDTO1 = new OrganisationalEntityDTO();
+    entityDTO1.setName(ENTITY_NAME_1);
+    OrganisationalEntityDTO entityDTO2 = new OrganisationalEntityDTO();
+    entityDTO2.setName(ENTITY_NAME_2);
+    ArrayList<OrganisationalEntityDTO> entitiesList = Lists.newArrayList(entityDTO1, entityDTO2);
+
+    when(profileRestTemplateMock.exchange(urlArgumentCaptor.capture(), eq(HttpMethod.GET), eq(null),
+            entityTypeReferenceArgumentCaptor.capture())).thenReturn(ResponseEntity.ok(entitiesList));
+    ReflectionTestUtils.setField(testObj, "serviceUrl", "http://profileUrl.com");
+
+    List<String> result = testObj.getAllEntities();
+
+    Assert.assertEquals(2, result.size());
+    Assert.assertTrue(result.containsAll(Lists.newArrayList(ENTITY_NAME_1, ENTITY_NAME_2)));
+  }
+
+  @Test
+  public void getAllEntitiesShouldReturnNoEntitiesFromProfileServiceWhenProfileFails() {
+    when(profileRestTemplateMock.exchange(urlArgumentCaptor.capture(), eq(HttpMethod.GET), eq(null),
+            entityTypeReferenceArgumentCaptor.capture()))
+            .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
+    ReflectionTestUtils.setField(testObj, "serviceUrl", "http://profileUrl.com");
+
+    List<String> result = testObj.getAllEntities();
+
+    Assert.assertEquals(0, result.size());
   }
 
   private HeeUserDTO createHeeUserDto() {
