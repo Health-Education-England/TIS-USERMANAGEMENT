@@ -46,7 +46,7 @@ public class HeeUserMapper {
     Preconditions.checkNotNull(userDTO, "stop being stooopid");
     return mapUserAttributes(userDTO.getName(), userDTO.getFirstName(), userDTO.getLastName(), userDTO.getGmcId(),
         userDTO.getPhoneNumber(), userDTO.getEmailAddress(), userDTO.getActive(), userDTO.getLocalOffices(),
-        userDTO.getRoles(), userDTO.getAssociatedOrganisationalEntities(), userDTO.getAssociatedTrusts(),
+        userDTO.getRoles(), userDTO.getEntities(), userDTO.getAssociatedTrusts(),
         userDTO.getAssociatedProgrammes(), knownTrusts, knownProgrammes, knownOrganisationalEntities);
   }
 
@@ -188,7 +188,7 @@ public class HeeUserMapper {
       if(CollectionUtils.isNotEmpty(associatedOrganisationalEntities)) {
         Set<String> organisationalEntityIds = associatedOrganisationalEntities.stream().map(UserOrganisationalEntityDTO::getOrganisationalEntityId).map(Object::toString)
                 .collect(Collectors.toSet());
-        userDTO.setAssociatedOrganisationalEntities(organisationalEntityIds);
+        userDTO.setEntities(organisationalEntityIds);
       }
     }
     return userDTO;

@@ -157,7 +157,7 @@
                                 <option th:each="entity : ${entities}"
                                         th:value="${entity.id}"
                                         th:text="${entity.name}"
-                                        th:selected="${#lists.contains(user.entities, entity.id)}"></option>
+                                        th:selected="${#lists.contains(user.entities, #strings.toString(entity.id))}"></option>
                             </select>
                         </div>
 

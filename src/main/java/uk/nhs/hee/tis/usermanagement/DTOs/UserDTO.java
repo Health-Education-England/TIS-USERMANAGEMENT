@@ -90,11 +90,11 @@ public class UserDTO {
     this.roles = roles;
   }
 
-  public Set<String> getAssociatedOrganisationalEntities() {
+  public Set<String> getEntities() {
     return entities;
   }
 
-  public void setAssociatedOrganisationalEntities(Set<String> entities) {
+  public void setEntities(Set<String> entities) {
     this.entities = entities;
   }
 
