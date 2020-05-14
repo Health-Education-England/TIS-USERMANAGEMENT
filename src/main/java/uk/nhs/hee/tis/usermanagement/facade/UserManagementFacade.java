@@ -101,7 +101,9 @@ public class UserManagementFacade {
       if (!optionalHeeUserDTO.isPresent()) {
         //revert KC changes
         if (!keyCloakAdminClientService.updateUser(originalUser)) {
-          LOG.error("Could not revert KC changes back to previous version after profile update failed! Its possible that KC user [{}] is out of sync", userDTO.getName());
+          LOG.error(
+              "Could not revert KC changes back to previous version after profile update failed! Its possible that KC user [{}] is out of sync",
+              originalUser.getUsername());
         }
         throw new UpdateUserException(userDTO.getName(), ProfileService.NAME);
       }
@@ -126,7 +128,7 @@ public class UserManagementFacade {
 
   /**
    * Get a list of roles managed via the web user interface
-   * 
+   *
    * @return roles - A list of roles that can be assigned from the web application
    */
   public List<String> getAllAssignableRoles() {
