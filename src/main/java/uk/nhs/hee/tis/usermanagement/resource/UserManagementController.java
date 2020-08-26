@@ -108,6 +108,8 @@ public class UserManagementController {
       throw new UserCreationException("Cannot create user, the username has already existed");
     }
 
+    // add HEE role to the newly created user
+    user.getRoles().add("HEE");
     userManagementFacade.publishUserCreationRequestedEvent(user);
     model.addAttribute("message", "A request for user " + user.getFirstName() + " " + user.getLastName() + " (" +
         user.getName() + ") has been made. It may take a little while before you'll be able to see the new user");

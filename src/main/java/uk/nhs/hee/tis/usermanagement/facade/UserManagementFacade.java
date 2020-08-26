@@ -33,7 +33,7 @@ public class UserManagementFacade {
 
   private static final Logger LOG = LoggerFactory.getLogger(UserManagementFacade.class);
 
-  private static Collection<String> restrictedRoles = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("RVOfficer", "Machine User")));
+  private static Collection<String> restrictedRoles = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("RVOfficer", "Machine User", "HEE")));
 
   @Autowired
   private ProfileService profileService;
