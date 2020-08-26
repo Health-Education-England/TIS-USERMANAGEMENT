@@ -46,6 +46,9 @@
             #prompt {
                 color: red;
             }
+            #entityRole {
+                min-width: 200px;
+            }
 
         </style>
         <script type="text/javascript">
@@ -144,6 +147,17 @@
                                         th:value="${role}"
                                         th:text="${role}"
                                         th:selected="${#lists.contains(user.roles, role)}"></option>
+                            </select>
+                        </div>
+                        <div class="pure-control-group">
+                            <label for="entityRole">Entity Role</label>
+                            <select id="entityRole"
+                                    name="entityRole"
+                                    size="2">
+                                <option th:each="role : ${entityRoles}"
+                                        th:value="${role}"
+                                        th:text="${role}"
+                                        th:selected="${role == 'HEE'}"></option>
                             </select>
                         </div>
 

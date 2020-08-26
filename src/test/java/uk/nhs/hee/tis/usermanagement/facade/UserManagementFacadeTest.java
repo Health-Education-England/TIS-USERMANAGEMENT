@@ -24,7 +24,12 @@ import uk.nhs.hee.tis.usermanagement.service.ProfileService;
 @RunWith(MockitoJUnitRunner.class)
 public class UserManagementFacadeTest {
 
-  private String adminRole = "HEE TIS Admin", etlRole = "ETL", roRole = "RVOfficer", rvAdmin = "RVAdmin";
+  private final String adminRole = "HEE TIS Admin";
+  private final String etlRole = "ETL";
+  private final String roRole = "RVOfficer";
+  private final String rvAdmin = "RVAdmin";
+  private final String HEE = "HEE";
+
   @InjectMocks
   UserManagementFacade testClass;
 
@@ -42,6 +47,12 @@ public class UserManagementFacadeTest {
     List<String> actual = testClass.getAllAssignableRoles();
     assertThat(actual, containsInAnyOrder(adminRole, rvAdmin, etlRole));
     verify(profileService).getAllRoles();
+  }
+
+  @Test
+  public void testGetAllEntityRoles() {
+    List<String> entityRoles = testClass.getAllEntityRoles();
+    assertThat(entityRoles, containsInAnyOrder(HEE));
   }
 
   /**
