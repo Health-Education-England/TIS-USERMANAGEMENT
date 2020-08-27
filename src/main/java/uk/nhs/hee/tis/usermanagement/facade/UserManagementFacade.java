@@ -33,7 +33,9 @@ public class UserManagementFacade {
 
   private static final Logger LOG = LoggerFactory.getLogger(UserManagementFacade.class);
 
-  private static Collection<String> restrictedRoles = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("RVOfficer", "Machine User")));
+  private static Collection<String> restrictedRoles = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("RVOfficer", "Machine User", "HEE")));
+
+  private static Collection<String> entities = Collections.unmodifiableSet(new HashSet<>(Arrays.asList("HEE")));
 
   @Autowired
   private ProfileService profileService;
@@ -135,6 +137,12 @@ public class UserManagementFacade {
     List<String> roles = profileService.getAllRoles();
     roles.removeAll(restrictedRoles);
     return roles;
+  }
+
+  public List<String> getAllEntityRoles() {
+    List<String> entityRoles = new ArrayList<>();
+    entityRoles.addAll(entities);
+    return entityRoles;
   }
 
   public List<DBCDTO> getAllDBCs() {

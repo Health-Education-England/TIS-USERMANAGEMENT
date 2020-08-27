@@ -46,8 +46,10 @@ public class UserManagementController {
     List<DBCDTO> allDBCs = userManagementFacade.getAllDBCs();
     List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
     List<ProgrammeDTO> allProgrammes = userManagementFacade.getAllProgrammes();
+    List<String> allEntityRoles = userManagementFacade.getAllEntityRoles();
 
     model.addAttribute("roles", allRoles);
+    model.addAttribute("entityRoles", allEntityRoles);
     model.addAttribute("designatedBodyCodes", allDBCs);
     model.addAttribute("trusts", allTrusts);
     model.addAttribute("programmes", allProgrammes);
@@ -77,8 +79,10 @@ public class UserManagementController {
     List<DBCDTO> allDBCs = userManagementFacade.getAllDBCs();
     List<TrustDTO> allTrusts = userManagementFacade.getAllTrusts();
     List<ProgrammeDTO> allProgrammes = userManagementFacade.getAllProgrammes();
+    List<String> allEntityRoles = userManagementFacade.getAllEntityRoles();
 
     model.addAttribute("roles", allRoles);
+    model.addAttribute("entityRoles", allEntityRoles);
     model.addAttribute("designatedBodyCodes", allDBCs);
     model.addAttribute("trusts", allTrusts);
     model.addAttribute("programmes", allProgrammes);
@@ -108,6 +112,8 @@ public class UserManagementController {
       throw new UserCreationException("Cannot create user, the username has already existed");
     }
 
+    // add entity role to the newly created user
+    user.getRoles().add(user.getEntityRole());
     userManagementFacade.publishUserCreationRequestedEvent(user);
     model.addAttribute("message", "A request for user " + user.getFirstName() + " " + user.getLastName() + " (" +
         user.getName() + ") has been made. It may take a little while before you'll be able to see the new user");
