@@ -16,7 +16,7 @@ import uk.nhs.hee.tis.usermanagement.command.tcs.GetAllProgrammesCommand;
 @Service
 public class TcsService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(CacheService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TcsService.class);
 
   private static final int PAGE_SIZE = 500;
 
