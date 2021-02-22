@@ -72,7 +72,7 @@ node {
         sh "docker build -t ${containerRegistryLocation}/${dockerImageName}:$buildVersion ."
         sh "docker push ${containerRegistryLocation}/${dockerImageName}:$buildVersion"
 
-        sh "docker tag ${containerRegistryLocation}/${dockerImageName}:$buildVersion ${containerRegistryLocaltion}/usermanagement:latest"
+        sh "docker tag ${containerRegistryLocation}/${dockerImageName}:$buildVersion ${containerRegistryLocation}/usermanagement:latest"
         sh "docker push ${containerRegistryLocation}/${dockerImageName}:latest"
 
         sh "docker rmi ${containerRegistryLocation}/${dockerImageName}:latest"
