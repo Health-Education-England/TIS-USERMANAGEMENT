@@ -143,7 +143,7 @@
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
         <groupId>org.apache.maven.plugins</groupId>
-        <version>3.0.0</version>
+        <version>3.1.1</version>
         <configuration>
           <configLocation>google_checks.xml</configLocation>
           <consoleOutput>true</consoleOutput>
