@@ -5,8 +5,6 @@ permissions:
 
 on:
   pull_request:
-    branches:
-      - master
   workflow_call:
     secrets:
       codeartifact-username: ${{ secrets.AWS_MAVEN_USERNAME }}
