@@ -5,17 +5,13 @@ permissions:
 
 on:
   pull_request:
+    branches:
+      - master
   workflow_call:
     secrets:
       codeartifact-username: ${{ secrets.AWS_MAVEN_USERNAME }}
-        description: The username to access the codeartifact repository.
-        required: false
       codeartifact-password: ${{ secrets.AWS_MAVEN_PASSWORD }}
-        description: The password to access the codeartifact repository.
-        required: false
       sonar-token: ${{ secrets.SONAR_TOKEN }}
-        description: A token allowing access to SonarCloud.
-        required: true
 
 jobs :
   analyse:
