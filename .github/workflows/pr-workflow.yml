@@ -8,13 +8,9 @@ on:
     branches:
       - master
   workflow_call:
-    secrets:
-      codeartifact-username: ${{ secrets.AWS_MAVEN_USERNAME }}
-      codeartifact-password: ${{ secrets.AWS_MAVEN_PASSWORD }}
-      sonar-token: ${{ secrets.SONAR_TOKEN }}
 
-jobs :
-  analyse:
+jobs:
+  analysis:
     name: Analyse PR
     runs-on: ubuntu-latest
 
