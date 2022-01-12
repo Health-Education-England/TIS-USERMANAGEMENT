@@ -5,7 +5,7 @@
 
   <groupId>uk.nhs.hee.tis</groupId>
   <artifactId>usermanagement</artifactId>
-  <version>0.0.39</version>
+  <version>0.0.40</version>
   <packaging>jar</packaging>
 
   <name>usermanagement</name>
@@ -65,7 +65,7 @@
     <dependency>
       <groupId>com.transformuk.hee</groupId>
       <artifactId>profile-client</artifactId>
-      <version>2.9.0</version>
+      <version>3.1.1</version>
     </dependency>
     <dependency>
       <groupId>com.transformuk.hee</groupId>
