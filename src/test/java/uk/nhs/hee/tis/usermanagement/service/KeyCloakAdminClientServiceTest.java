@@ -28,15 +28,18 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ApplicationEventPublisher;
+import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
-import uk.nhs.hee.tis.usermanagement.event.CreateKeycloakUserRequestedEvent;
-import uk.nhs.hee.tis.usermanagement.event.DeleteKeycloakUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.CreateAuthenticationUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.DeleteAuthenticationUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.DeleteProfileUserRequestEvent;
 import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
+import uk.nhs.hee.tis.usermanagement.mapper.KeycloakUserMapperImpl;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KeyCloakAdminClientServiceTest {
@@ -63,6 +66,8 @@ public class KeyCloakAdminClientServiceTest {
   @Mock
   private ApplicationEventPublisher applicationEventPublisherMock;
 
+  @Spy
+  private KeycloakUserMapperImpl mapper;
 
   private UserDTO createUserDTO() {
     UserDTO userDTO = new UserDTO();
@@ -108,7 +113,7 @@ public class KeyCloakAdminClientServiceTest {
         expectedCreatedUser);
 
     testObj.createUserEventListener(
-        new CreateKeycloakUserRequestedEvent(createUserDTO, new HeeUserDTO()));
+        new CreateAuthenticationUserRequestedEvent(createUserDTO, new HeeUserDTO()));
 
     User capturedUser = userArgumentCaptor.getValue();
     Assert.assertEquals(FIRST_NAME, capturedUser.getFirstname());
@@ -274,12 +279,16 @@ public class KeyCloakAdminClientServiceTest {
 
   @Test
   public void deleteKeycloakUserEventListenerShouldPublishProfileDeleteWhenFlagTrue() {
-    User kcUser = User.create("userId1", "", "", "user1", "", "", false, null, true);
+    AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
+    authenticationUser.setId("userId1");
+    authenticationUser.setUsername("user1");
 
-    DeleteKeycloakUserRequestedEvent event = new DeleteKeycloakUserRequestedEvent(kcUser, true);
+    DeleteAuthenticationUserRequestedEvent event = new DeleteAuthenticationUserRequestedEvent(
+        authenticationUser, true);
     testObj.deleteKeycloakUserEventListener(event);
 
-    verify(keycloakAdminClientMock).removeUser(REALM_LIN, kcUser);
+    ArgumentCaptor<User> kcUserCaptor = ArgumentCaptor.forClass(User.class);
+    verify(keycloakAdminClientMock).removeUser(eq(REALM_LIN), kcUserCaptor.capture());
 
     ArgumentCaptor<DeleteProfileUserRequestEvent> profileEventCaptor = ArgumentCaptor.forClass(
         DeleteProfileUserRequestEvent.class);
@@ -287,17 +296,28 @@ public class KeyCloakAdminClientServiceTest {
 
     DeleteProfileUserRequestEvent profileEvent = profileEventCaptor.getValue();
     assertThat("Unexpected username.", profileEvent.getUsername(), is("user1"));
+
+    User kcUser = kcUserCaptor.getValue();
+    assertThat("Unexpected user id.", kcUser.getId(), is("userId1"));
+    assertThat("Unexpected username.", kcUser.getUsername(), is("user1"));
   }
 
   @Test
   public void deleteKeycloakUserEventListenerShouldNotPublishProfileDeleteWhenFlagFalse() {
-    User kcUser = new User();
+    AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
+    authenticationUser.setId("userId1");
 
-    DeleteKeycloakUserRequestedEvent event = new DeleteKeycloakUserRequestedEvent(kcUser, false);
+    DeleteAuthenticationUserRequestedEvent event = new DeleteAuthenticationUserRequestedEvent(
+        authenticationUser, false);
     testObj.deleteKeycloakUserEventListener(event);
 
-    verify(keycloakAdminClientMock).removeUser(REALM_LIN, kcUser);
+    ArgumentCaptor<User> kcUserCaptor = ArgumentCaptor.forClass(User.class);
+
+    verify(keycloakAdminClientMock).removeUser(eq(REALM_LIN), kcUserCaptor.capture());
     verify(applicationEventPublisherMock, never()).publishEvent(
-        any(DeleteProfileUserRequestEvent.class));
+        any(DeleteAuthenticationUserRequestedEvent.class));
+
+    User kcUser = kcUserCaptor.getValue();
+    assertThat("Unexpected user id.", kcUser.getId(), is("userId1"));
   }
 }

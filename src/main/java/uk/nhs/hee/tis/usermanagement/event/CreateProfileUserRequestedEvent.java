@@ -5,24 +5,25 @@ import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import org.springframework.context.ApplicationEvent;
 
 import java.util.Objects;
+import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 
 public class CreateProfileUserRequestedEvent extends ApplicationEvent {
 
   private HeeUserDTO heeUserDTO;
-  private User kcUser;
+  private AuthenticationUserDto authenticationUser;
 
-  public CreateProfileUserRequestedEvent(HeeUserDTO heeUserDTO, User kcUser) {
+  public CreateProfileUserRequestedEvent(HeeUserDTO heeUserDTO, AuthenticationUserDto authenticationUser) {
     super(heeUserDTO);
     this.heeUserDTO = heeUserDTO;
-    this.kcUser = kcUser;
+    this.authenticationUser = authenticationUser;
   }
 
   public HeeUserDTO getHeeUserDTO() {
     return heeUserDTO;
   }
 
-  public User getKcUser() {
-    return kcUser;
+  public AuthenticationUserDto getAuthenticationUser() {
+    return authenticationUser;
   }
 
   @Override
@@ -31,11 +32,11 @@ public class CreateProfileUserRequestedEvent extends ApplicationEvent {
     if (o == null || getClass() != o.getClass()) return false;
     CreateProfileUserRequestedEvent that = (CreateProfileUserRequestedEvent) o;
     return Objects.equals(heeUserDTO, that.heeUserDTO) &&
-        Objects.equals(kcUser, that.kcUser);
+        Objects.equals(authenticationUser, that.authenticationUser);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(heeUserDTO, kcUser);
+    return Objects.hash(heeUserDTO, authenticationUser);
   }
 }

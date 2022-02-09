@@ -2,25 +2,23 @@ package uk.nhs.hee.tis.usermanagement.mapper;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-import com.transform.hee.tis.keycloak.User;
 import com.transformuk.hee.tis.profile.dto.RoleDTO;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
+import com.transformuk.hee.tis.profile.service.dto.UserProgrammeDTO;
 import com.transformuk.hee.tis.profile.service.dto.UserTrustDTO;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
-import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.stereotype.Component;
-import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
-import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
-import com.transformuk.hee.tis.profile.service.dto.UserProgrammeDTO;
-
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.stereotype.Component;
+import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
+import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 
 @Component
 public class HeeUserMapper {
@@ -124,14 +122,14 @@ public class HeeUserMapper {
    * Used for the details page
    *
    * @param heeUserDTO
-   * @param keycloakUser
+   * @param authenticationUser
    * @param dbcdtos
    * @return
    */
-  public UserDTO convert(HeeUserDTO heeUserDTO, User keycloakUser, Set<DBCDTO> dbcdtos) {
+  public UserDTO convert(HeeUserDTO heeUserDTO, AuthenticationUserDto authenticationUser, Set<DBCDTO> dbcdtos) {
     UserDTO userDTO = new UserDTO();
     mapHeeUserAttributes(userDTO, heeUserDTO);
-    mapKeycloakAttributes(userDTO, keycloakUser);
+    mapKeycloakAttributes(userDTO, authenticationUser);
     // mapDBCAttributes(userDTO, heeUserDTO, dbcdtos);
 
     return userDTO;
@@ -168,10 +166,10 @@ public class HeeUserMapper {
     return userDTO;
   }
 
-  private UserDTO mapKeycloakAttributes(UserDTO userDTO, User keycloakUser) {
-    if (keycloakUser != null) {
-      userDTO.setKcId(keycloakUser.getId());
-      userDTO.setActive(keycloakUser.getEnabled());
+  private UserDTO mapKeycloakAttributes(UserDTO userDTO, AuthenticationUserDto authenticationUserDto) {
+    if (authenticationUserDto != null) {
+      userDTO.setKcId(authenticationUserDto.getId());
+      userDTO.setActive(authenticationUserDto.isEnabled());
     }
     return userDTO;
   }

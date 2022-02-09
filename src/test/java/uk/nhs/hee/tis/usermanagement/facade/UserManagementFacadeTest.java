@@ -12,7 +12,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
-import com.transform.hee.tis.keycloak.User;
 import com.transformuk.hee.tis.profile.dto.RoleDTO;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
@@ -37,15 +36,16 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
-import uk.nhs.hee.tis.usermanagement.event.CreateKeycloakUserRequestedEvent;
-import uk.nhs.hee.tis.usermanagement.event.DeleteKeycloakUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.CreateAuthenticationUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.DeleteAuthenticationUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.exception.UpdateUserException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.mapper.HeeUserMapper;
-import uk.nhs.hee.tis.usermanagement.service.KeyCloakAdminClientService;
+import uk.nhs.hee.tis.usermanagement.service.AuthenticationAdminService;
 import uk.nhs.hee.tis.usermanagement.service.ProfileService;
 import uk.nhs.hee.tis.usermanagement.service.ReferenceService;
 import uk.nhs.hee.tis.usermanagement.service.TcsService;
@@ -72,7 +72,7 @@ public class UserManagementFacadeTest {
   TcsService tcsService;
 
   @Mock
-  KeyCloakAdminClientService keyCloakAdminClientService;
+  AuthenticationAdminService authenticationAdminService;
 
   @Mock
   ApplicationEventPublisher applicationEventPublisher;
@@ -133,7 +133,8 @@ public class UserManagementFacadeTest {
 
   @Test
   public void shouldThrowExceptionGettingCompleteUserWhenUserNotFoundInProfile() {
-    when(keyCloakAdminClientService.getUser("user1")).thenReturn(Optional.of(new User()));
+    when(authenticationAdminService.getUser("user1")).thenReturn(
+        Optional.of(new AuthenticationUserDto()));
 
     exceptionRule.expect(UserNotFoundException.class);
     exceptionRule.expectMessage(containsString("user1"));
@@ -145,10 +146,11 @@ public class UserManagementFacadeTest {
   @Test
   public void shouldThrowExceptionGettingCompleteUserWhenUserNotFoundInKeycloak() {
     when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(new HeeUserDTO()));
+    when(authenticationAdminService.getServiceName()).thenReturn("TEST");
 
     exceptionRule.expect(UserNotFoundException.class);
     exceptionRule.expectMessage(containsString("user1"));
-    exceptionRule.expectMessage(containsString(KeyCloakAdminClientService.NAME));
+    exceptionRule.expectMessage(containsString(authenticationAdminService.getServiceName()));
 
     testClass.getCompleteUser("user1");
   }
@@ -158,10 +160,12 @@ public class UserManagementFacadeTest {
     HeeUserDTO heeUser = new HeeUserDTO();
     heeUser.setName("user1");
 
-    User kcUser = User.create("userId1", "", "", "", "", "", false, null, true);
+    AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
+    authenticationUser.setId("userId1");
+    authenticationUser.setEnabled(true);
 
     when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(heeUser));
-    when(keyCloakAdminClientService.getUser("user1")).thenReturn(Optional.of(kcUser));
+    when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
 
     UserDTO user = testClass.getCompleteUser("user1");
     assertThat("Unexpected user id.", user.getKcId(), is("userId1"));
@@ -195,9 +199,11 @@ public class UserManagementFacadeTest {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
+    when(authenticationAdminService.getServiceName()).thenReturn("TEST");
+
     exceptionRule.expect(UserNotFoundException.class);
     exceptionRule.expectMessage(containsString("user1"));
-    exceptionRule.expectMessage(containsString(KeyCloakAdminClientService.NAME));
+    exceptionRule.expectMessage(containsString(authenticationAdminService.getServiceName()));
 
     testClass.updateSingleUser(user);
   }
@@ -207,11 +213,13 @@ public class UserManagementFacadeTest {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
-    when(keyCloakAdminClientService.getUser("user1")).thenReturn(Optional.of(new User()));
+    when(authenticationAdminService.getUser("user1")).thenReturn(
+        Optional.of(new AuthenticationUserDto()));
+    when(authenticationAdminService.getServiceName()).thenReturn("TEST");
 
     exceptionRule.expect(UpdateUserException.class);
     exceptionRule.expectMessage(containsString("user1"));
-    exceptionRule.expectMessage(containsString(KeyCloakAdminClientService.NAME));
+    exceptionRule.expectMessage(containsString(authenticationAdminService.getServiceName()));
 
     testClass.updateSingleUser(user);
   }
@@ -221,8 +229,9 @@ public class UserManagementFacadeTest {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
-    when(keyCloakAdminClientService.getUser("user1")).thenReturn(Optional.of(new User()));
-    when(keyCloakAdminClientService.updateUser(user)).thenReturn(true);
+    when(authenticationAdminService.getUser("user1")).thenReturn(
+        Optional.of(new AuthenticationUserDto()));
+    when(authenticationAdminService.updateUser(user)).thenReturn(true);
 
     exceptionRule.expect(UserNotFoundException.class);
     exceptionRule.expectMessage(containsString("user1"));
@@ -230,7 +239,7 @@ public class UserManagementFacadeTest {
 
     testClass.updateSingleUser(user);
 
-    verify(keyCloakAdminClientService).updateUser(user);
+    verify(authenticationAdminService).updateUser(user);
   }
 
   @Test
@@ -238,14 +247,14 @@ public class UserManagementFacadeTest {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
-    User kcUser = new User();
-    kcUser.setId("userId1");
+    AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
+    authenticationUser.setId("userId1");
 
     HeeUserDTO heeUser = new HeeUserDTO();
     heeUser.setRoles(Collections.emptySet());
 
-    when(keyCloakAdminClientService.getUser("user1")).thenReturn(Optional.of(kcUser));
-    when(keyCloakAdminClientService.updateUser(user)).thenReturn(true);
+    when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
+    when(authenticationAdminService.updateUser(user)).thenReturn(true);
 
     when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(heeUser));
 
@@ -256,7 +265,7 @@ public class UserManagementFacadeTest {
     testClass.updateSingleUser(user);
 
     // Verify the rollback.
-    verify(keyCloakAdminClientService).updateUser(kcUser);
+    verify(authenticationAdminService).updateUser(authenticationUser);
   }
 
   @Test
@@ -266,14 +275,14 @@ public class UserManagementFacadeTest {
     Set<String> newRoles = new HashSet<>(Arrays.asList("role1", "role2"));
     user.setRoles(newRoles);
 
-    User kcUser = new User();
-    kcUser.setId("userId1");
+    AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
+    authenticationUser.setId("userId1");
 
     HeeUserDTO existingHeeUser = new HeeUserDTO();
     existingHeeUser.setRoles(buildRoleDtos("role1", "role3", "Machine User"));
 
-    when(keyCloakAdminClientService.getUser("user1")).thenReturn(Optional.of(kcUser));
-    when(keyCloakAdminClientService.updateUser(user)).thenReturn(true);
+    when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
+    when(authenticationAdminService.updateUser(user)).thenReturn(true);
 
     when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(existingHeeUser));
     ArgumentCaptor<HeeUserDTO> updatedHeeUserCaptor = ArgumentCaptor.forClass(HeeUserDTO.class);
@@ -291,7 +300,7 @@ public class UserManagementFacadeTest {
     assertThat("Unexpected roles.", updatedRoles, hasItems("role1", "role2", "Machine User"));
 
     // Verify no rollback.
-    verify(keyCloakAdminClientService, never()).updateUser(kcUser);
+    verify(authenticationAdminService, never()).updateUser(authenticationUser);
   }
 
   @Test
@@ -311,11 +320,11 @@ public class UserManagementFacadeTest {
 
     testClass.publishUserCreationRequestedEvent(createUser);
 
-    ArgumentCaptor<CreateKeycloakUserRequestedEvent> eventCaptor = ArgumentCaptor.forClass(
-        CreateKeycloakUserRequestedEvent.class);
+    ArgumentCaptor<CreateAuthenticationUserRequestedEvent> eventCaptor = ArgumentCaptor.forClass(
+        CreateAuthenticationUserRequestedEvent.class);
     verify(applicationEventPublisher).publishEvent(eventCaptor.capture());
 
-    CreateKeycloakUserRequestedEvent event = eventCaptor.getValue();
+    CreateAuthenticationUserRequestedEvent event = eventCaptor.getValue();
     assertThat("Unexpected user.", event.getUserDTO(), is(createUser));
 
     HeeUserDTO profileUser = event.getUserToCreateInProfileService();
@@ -332,28 +341,30 @@ public class UserManagementFacadeTest {
 
   @Test
   public void shouldNotPublishDeleteKeycloakUserEventWhenUserNotFound() {
+    when(authenticationAdminService.getServiceName()).thenReturn("TEST");
+
     exceptionRule.expect(UserNotFoundException.class);
     exceptionRule.expectMessage(containsString("user1"));
-    exceptionRule.expectMessage(containsString(KeyCloakAdminClientService.NAME));
+    exceptionRule.expectMessage(containsString(authenticationAdminService.getServiceName()));
 
-    testClass.publishDeleteKeycloakUserRequestedEvent("user1");
+    testClass.publishDeleteAuthenticationUserRequestedEvent("user1");
 
     verify(applicationEventPublisher, never()).publishEvent(any());
   }
 
   @Test
   public void shouldPublishDeleteKeycloakUserEventWhenUserFound() {
-    User kcUser = new User();
-    when(keyCloakAdminClientService.getUser("user1")).thenReturn(Optional.of(kcUser));
+    AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
+    when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
 
-    testClass.publishDeleteKeycloakUserRequestedEvent("user1");
+    testClass.publishDeleteAuthenticationUserRequestedEvent("user1");
 
-    ArgumentCaptor<DeleteKeycloakUserRequestedEvent> eventCaptor = ArgumentCaptor.forClass(
-        DeleteKeycloakUserRequestedEvent.class);
+    ArgumentCaptor<DeleteAuthenticationUserRequestedEvent> eventCaptor = ArgumentCaptor.forClass(
+        DeleteAuthenticationUserRequestedEvent.class);
     verify(applicationEventPublisher).publishEvent(eventCaptor.capture());
 
-    DeleteKeycloakUserRequestedEvent event = eventCaptor.getValue();
-    assertThat("Unexpected user.", event.getKcUser(), is(kcUser));
+    DeleteAuthenticationUserRequestedEvent event = eventCaptor.getValue();
+    assertThat("Unexpected user.", event.getAuthenticationUser(), is(authenticationUser));
     assertThat("Unexpected publish profile event flag.", event.isPublishDeleteProfileUserEvent(),
         is(true));
   }
@@ -367,7 +378,7 @@ public class UserManagementFacadeTest {
 
     testClass.updatePassword(userPassword);
 
-    verify(keyCloakAdminClientService).updatePassword("userId1", "P4$$w0rd", true);
+    verify(authenticationAdminService).updatePassword("userId1", "P4$$w0rd", true);
   }
 
   /**

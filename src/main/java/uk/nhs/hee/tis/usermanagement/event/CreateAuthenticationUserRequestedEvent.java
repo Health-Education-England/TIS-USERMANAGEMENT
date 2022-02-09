@@ -6,12 +6,12 @@ import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 
 import java.util.Objects;
 
-public class CreateKeycloakUserRequestedEvent extends ApplicationEvent {
+public class CreateAuthenticationUserRequestedEvent extends ApplicationEvent {
 
   private CreateUserDTO userDTO;
   private HeeUserDTO userToCreateInProfileService;
 
-  public CreateKeycloakUserRequestedEvent(CreateUserDTO source, HeeUserDTO userToCreateInProfileService) {
+  public CreateAuthenticationUserRequestedEvent(CreateUserDTO source, HeeUserDTO userToCreateInProfileService) {
     super(source);
     this.userDTO = source;
     this.userToCreateInProfileService = userToCreateInProfileService;
@@ -29,7 +29,7 @@ public class CreateKeycloakUserRequestedEvent extends ApplicationEvent {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    CreateKeycloakUserRequestedEvent that = (CreateKeycloakUserRequestedEvent) o;
+    CreateAuthenticationUserRequestedEvent that = (CreateAuthenticationUserRequestedEvent) o;
     return Objects.equals(userDTO, that.userDTO) &&
         Objects.equals(userToCreateInProfileService, that.userToCreateInProfileService);
   }
