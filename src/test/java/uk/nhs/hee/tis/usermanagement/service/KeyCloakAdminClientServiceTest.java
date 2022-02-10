@@ -1,9 +1,24 @@
 package uk.nhs.hee.tis.usermanagement.service;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.usermanagement.service.KeyCloakAdminClientService.REALM_LIN;
+
 import com.google.common.collect.Maps;
 import com.transform.hee.tis.keycloak.KeycloakAdminClient;
 import com.transform.hee.tis.keycloak.User;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
+import java.util.List;
+import java.util.Map;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Test;
@@ -18,22 +33,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.event.CreateKeycloakUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.DeleteKeycloakUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.DeleteProfileUserRequestEvent;
 import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
-
-import java.util.List;
-import java.util.Map;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
-import static uk.nhs.hee.tis.usermanagement.service.KeyCloakAdminClientService.REALM_LIN;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KeyCloakAdminClientServiceTest {
@@ -97,11 +100,15 @@ public class KeyCloakAdminClientServiceTest {
   @Test
   public void createUserEventListenerShouldCreateUserUsingKeyCloakAdminClient() {
     CreateUserDTO createUserDTO = createCreateUserDTO();
-    User expectedCreatedUser = User.create("ID", FIRST_NAME, LAST_NAME, NAME, EMAIL_ADDRESS, PASSWORD, TEMPORARY_PASSWORD, Maps.newHashMap(), ACTIVE);
+    User expectedCreatedUser = User.create("ID", FIRST_NAME, LAST_NAME, NAME, EMAIL_ADDRESS,
+        PASSWORD, TEMPORARY_PASSWORD, Maps.newHashMap(), ACTIVE);
 
-    when(keycloakAdminClientMock.createUser(eq(REALM_LIN), userArgumentCaptor.capture())).thenReturn(expectedCreatedUser);
+    when(
+        keycloakAdminClientMock.createUser(eq(REALM_LIN), userArgumentCaptor.capture())).thenReturn(
+        expectedCreatedUser);
 
-    testObj.createUserEventListener(new CreateKeycloakUserRequestedEvent(createUserDTO, new HeeUserDTO()));
+    testObj.createUserEventListener(
+        new CreateKeycloakUserRequestedEvent(createUserDTO, new HeeUserDTO()));
 
     User capturedUser = userArgumentCaptor.getValue();
     Assert.assertEquals(FIRST_NAME, capturedUser.getFirstname());
@@ -132,11 +139,14 @@ public class KeyCloakAdminClientServiceTest {
     try {
       testObj.updateUser(userDTO);
     } catch (UserNotFoundException unfe) {
-      Assert.assertEquals("Could not find user: [" + NAME_THAT_IS_NOT_IN_THE_SYSTEM + "] in the keycloak service", unfe.getMessage());
+      Assert.assertEquals(
+          "Could not find user: [" + NAME_THAT_IS_NOT_IN_THE_SYSTEM + "] in the keycloak service",
+          unfe.getMessage());
       throw unfe;
     } finally {
       verify(keycloakAdminClientMock).findByUsername(REALM_LIN, NAME_THAT_IS_NOT_IN_THE_SYSTEM);
-      verify(keycloakAdminClientMock, never()).updateUser(anyString(), anyString(), any(User.class));
+      verify(keycloakAdminClientMock, never()).updateUser(anyString(), anyString(),
+          any(User.class));
     }
   }
 
@@ -149,7 +159,8 @@ public class KeyCloakAdminClientServiceTest {
 
     testObj.updateUser(userDTO);
 
-    verify(keycloakAdminClientMock).updateUser(eq(REALM_LIN), eq(USER_ID), userArgumentCaptor.capture());
+    verify(keycloakAdminClientMock).updateUser(eq(REALM_LIN), eq(USER_ID),
+        userArgumentCaptor.capture());
 
     User capturedUser = userArgumentCaptor.getValue();
     Assert.assertEquals(FIRST_NAME, capturedUser.getFirstname());
@@ -207,7 +218,8 @@ public class KeyCloakAdminClientServiceTest {
     List<GroupRepresentation> foundGroupRepresentations = Lists.newArrayList(groupRepresentation);
 
     when(keycloakAdminClientMock.findByUsername(REALM_LIN, NAME)).thenReturn(userMock);
-    when(keycloakAdminClientMock.listGroups(REALM_LIN, userMock)).thenReturn(foundGroupRepresentations);
+    when(keycloakAdminClientMock.listGroups(REALM_LIN, userMock)).thenReturn(
+        foundGroupRepresentations);
 
     List<GroupRepresentation> result = testObj.getUserGroups(NAME);
 
@@ -222,7 +234,8 @@ public class KeyCloakAdminClientServiceTest {
     try {
       testObj.updatePassword(null, PASSWORD, TEMPORARY_PASSWORD);
     } finally {
-      verify(keycloakAdminClientMock, never()).updateUserPassword(anyString(), anyString(), anyString(), anyBoolean());
+      verify(keycloakAdminClientMock, never()).updateUserPassword(anyString(), anyString(),
+          anyString(), anyBoolean());
     }
   }
 
@@ -232,7 +245,8 @@ public class KeyCloakAdminClientServiceTest {
     try {
       testObj.updatePassword(USER_ID, null, TEMPORARY_PASSWORD);
     } finally {
-      verify(keycloakAdminClientMock, never()).updateUserPassword(anyString(), anyString(), anyString(), anyBoolean());
+      verify(keycloakAdminClientMock, never()).updateUserPassword(anyString(), anyString(),
+          anyString(), anyBoolean());
     }
   }
 
@@ -241,17 +255,49 @@ public class KeyCloakAdminClientServiceTest {
     try {
       testObj.updatePassword(USER_ID, PASSWORD, TEMPORARY_PASSWORD);
     } finally {
-      verify(keycloakAdminClientMock).updateUserPassword(REALM_LIN, USER_ID, PASSWORD, TEMPORARY_PASSWORD);
+      verify(keycloakAdminClientMock).updateUserPassword(REALM_LIN, USER_ID, PASSWORD,
+          TEMPORARY_PASSWORD);
     }
   }
 
   @Test
   public void updatePasswordShouldReturnTrueWhenUpdateSucceedsWithKC() {
-    when(keycloakAdminClientMock.updateUserPassword(REALM_LIN, USER_ID, PASSWORD, TEMPORARY_PASSWORD)).thenReturn(true);
+    when(keycloakAdminClientMock.updateUserPassword(REALM_LIN, USER_ID, PASSWORD,
+        TEMPORARY_PASSWORD)).thenReturn(true);
 
     boolean result = testObj.updatePassword(USER_ID, PASSWORD, TEMPORARY_PASSWORD);
     Assert.assertTrue(result);
 
-    verify(keycloakAdminClientMock).updateUserPassword(REALM_LIN, USER_ID, PASSWORD, TEMPORARY_PASSWORD);
+    verify(keycloakAdminClientMock).updateUserPassword(REALM_LIN, USER_ID, PASSWORD,
+        TEMPORARY_PASSWORD);
+  }
+
+  @Test
+  public void deleteKeycloakUserEventListenerShouldPublishProfileDeleteWhenFlagTrue() {
+    User kcUser = User.create("userId1", "", "", "user1", "", "", false, null, true);
+
+    DeleteKeycloakUserRequestedEvent event = new DeleteKeycloakUserRequestedEvent(kcUser, true);
+    testObj.deleteKeycloakUserEventListener(event);
+
+    verify(keycloakAdminClientMock).removeUser(REALM_LIN, kcUser);
+
+    ArgumentCaptor<DeleteProfileUserRequestEvent> profileEventCaptor = ArgumentCaptor.forClass(
+        DeleteProfileUserRequestEvent.class);
+    verify(applicationEventPublisherMock).publishEvent(profileEventCaptor.capture());
+
+    DeleteProfileUserRequestEvent profileEvent = profileEventCaptor.getValue();
+    assertThat("Unexpected username.", profileEvent.getUsername(), is("user1"));
+  }
+
+  @Test
+  public void deleteKeycloakUserEventListenerShouldNotPublishProfileDeleteWhenFlagFalse() {
+    User kcUser = new User();
+
+    DeleteKeycloakUserRequestedEvent event = new DeleteKeycloakUserRequestedEvent(kcUser, false);
+    testObj.deleteKeycloakUserEventListener(event);
+
+    verify(keycloakAdminClientMock).removeUser(REALM_LIN, kcUser);
+    verify(applicationEventPublisherMock, never()).publishEvent(
+        any(DeleteProfileUserRequestEvent.class));
   }
 }
