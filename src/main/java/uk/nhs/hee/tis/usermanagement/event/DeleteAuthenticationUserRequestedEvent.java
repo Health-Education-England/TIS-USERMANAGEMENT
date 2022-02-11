@@ -1,44 +1,29 @@
 package uk.nhs.hee.tis.usermanagement.event;
 
-import java.util.Objects;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import org.springframework.context.ApplicationEvent;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@ToString
 public class DeleteAuthenticationUserRequestedEvent extends ApplicationEvent {
 
-  private AuthenticationUserDto authenticationUser;
-  private boolean publishDeleteProfileUserEvent;
+  private final AuthenticationUserDto authenticationUser;
+  private final boolean publishDeleteProfileUserEvent;
 
+  /**
+   * Construct an event requesting a user is deleted by the authentication provider.
+   *
+   * @param authenticationUser            The authentication provider user to delete.
+   * @param publishDeleteProfileUserEvent Whether to publish an event to also delete from profile.
+   */
   public DeleteAuthenticationUserRequestedEvent(AuthenticationUserDto authenticationUser,
       boolean publishDeleteProfileUserEvent) {
     super(authenticationUser);
     this.authenticationUser = authenticationUser;
     this.publishDeleteProfileUserEvent = publishDeleteProfileUserEvent;
-  }
-
-  public AuthenticationUserDto getAuthenticationUser() {
-    return authenticationUser;
-  }
-
-  public boolean isPublishDeleteProfileUserEvent() {
-    return publishDeleteProfileUserEvent;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    DeleteAuthenticationUserRequestedEvent that = (DeleteAuthenticationUserRequestedEvent) o;
-    return publishDeleteProfileUserEvent == that.publishDeleteProfileUserEvent &&
-        Objects.equals(authenticationUser, that.authenticationUser);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(authenticationUser, publishDeleteProfileUserEvent);
   }
 }

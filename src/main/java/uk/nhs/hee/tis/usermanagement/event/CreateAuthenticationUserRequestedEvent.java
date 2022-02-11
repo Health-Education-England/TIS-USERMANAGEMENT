@@ -1,41 +1,30 @@
 package uk.nhs.hee.tis.usermanagement.event;
 
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import org.springframework.context.ApplicationEvent;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 
-import java.util.Objects;
-
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@ToString
 public class CreateAuthenticationUserRequestedEvent extends ApplicationEvent {
 
-  private CreateUserDTO userDTO;
-  private HeeUserDTO userToCreateInProfileService;
+  private final CreateUserDTO userDTO;
+  private final HeeUserDTO userToCreateInProfileService;
 
-  public CreateAuthenticationUserRequestedEvent(CreateUserDTO source, HeeUserDTO userToCreateInProfileService) {
+  /**
+   * Construct an event requesting a user is created by the authentication provider.
+   *
+   * @param source                       The user to create.
+   * @param userToCreateInProfileService The user profile details.
+   */
+  public CreateAuthenticationUserRequestedEvent(CreateUserDTO source,
+      HeeUserDTO userToCreateInProfileService) {
     super(source);
     this.userDTO = source;
     this.userToCreateInProfileService = userToCreateInProfileService;
-  }
-
-  public CreateUserDTO getUserDTO() {
-    return userDTO;
-  }
-
-  public HeeUserDTO getUserToCreateInProfileService() {
-    return userToCreateInProfileService;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    CreateAuthenticationUserRequestedEvent that = (CreateAuthenticationUserRequestedEvent) o;
-    return Objects.equals(userDTO, that.userDTO) &&
-        Objects.equals(userToCreateInProfileService, that.userToCreateInProfileService);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(userDTO, userToCreateInProfileService);
   }
 }

@@ -98,14 +98,14 @@ public class KeyCloakAdminClientService implements AuthenticationAdminService {
   }
 
   @Override
-  public boolean updateUser(UserDTO userDTO) {
-    Preconditions.checkNotNull(userDTO, "Cannot update user in KC if the user is null");
+  public boolean updateUser(UserDTO userDto) {
+    Preconditions.checkNotNull(userDto, "Cannot update user in KC if the user is null");
 
     // Need to validate here - or check KC client behaviour
-    Optional<User> existingUser = getKcUser(userDTO.getName());
-    existingUser.orElseThrow(() -> new UserNotFoundException(userDTO.getName(), "keycloak"));
+    Optional<User> existingUser = getKcUser(userDto.getName());
+    existingUser.orElseThrow(() -> new UserNotFoundException(userDto.getName(), "keycloak"));
 
-    User userToUpdate = heeUserToKeycloakUser(userDTO);
+    User userToUpdate = heeUserToKeycloakUser(userDto);
     return updateUser(userToUpdate);
   }
 

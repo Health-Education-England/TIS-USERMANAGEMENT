@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Map;
 import lombok.Data;
 
+/**
+ * A DTO representing a generic user from an authentication provider.
+ */
 @Data
 public class AuthenticationUserDto {
 

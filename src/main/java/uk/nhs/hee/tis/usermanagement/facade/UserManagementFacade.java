@@ -96,26 +96,26 @@ public class UserManagementFacade {
    * <p>
    * Do KC first as thats more likely to fail
    *
-   * @param userDTO
+   * @param userDto
    */
-  public void updateSingleUser(UserDTO userDTO) {
+  public void updateSingleUser(UserDTO userDto) {
     Optional<AuthenticationUserDto> optionalOriginalUser = authenticationAdminService.getUser(
-        userDTO.getName());
+        userDto.getName());
     AuthenticationUserDto originalUser = optionalOriginalUser.orElseThrow(
-        () -> new UserNotFoundException(userDTO.getName(),
+        () -> new UserNotFoundException(userDto.getName(),
             authenticationAdminService.getServiceName()));
 
     Optional<HeeUserDTO> optionalOriginalHeeUser = profileService.getUserByUsername(
-        userDTO.getName());
-    boolean success = authenticationAdminService.updateUser(userDTO);
+        userDto.getName());
+    boolean success = authenticationAdminService.updateUser(userDto);
     if (success) {
       HeeUserDTO originalHeeUser = optionalOriginalHeeUser.orElseThrow(
-          () -> new UserNotFoundException(userDTO.getName(), ProfileService.NAME));
+          () -> new UserNotFoundException(userDto.getName(), ProfileService.NAME));
       originalHeeUser.getRoles().stream()
           .filter(r -> restrictedRoles.contains(r.getName()))
-          .forEach(r -> userDTO.getRoles().add(r.getName()));
+          .forEach(r -> userDto.getRoles().add(r.getName()));
       Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(
-          heeUserMapper.convert(userDTO, referenceService.getAllTrusts(),
+          heeUserMapper.convert(userDto, referenceService.getAllTrusts(),
               tcsService.getAllProgrammes()));
       if (!optionalHeeUserDTO.isPresent()) {
         //revert KC changes
@@ -124,23 +124,28 @@ public class UserManagementFacade {
               "Could not revert KC changes back to previous version after profile update failed! Its possible that KC user [{}] is out of sync",
               originalUser.getUsername());
         }
-        throw new UpdateUserException(userDTO.getName(), ProfileService.NAME);
+        throw new UpdateUserException(userDto.getName(), ProfileService.NAME);
       }
     } else {
-      throw new UpdateUserException(userDTO.getName(), authenticationAdminService.getServiceName());
+      throw new UpdateUserException(userDto.getName(), authenticationAdminService.getServiceName());
     }
   }
 
   /**
-   * Publish an event that will kick off the creation of a user
+   * Publish an event that will kick off the creation of a user.
    */
-  public void publishUserCreationRequestedEvent(CreateUserDTO userDTO) {
-    HeeUserDTO userToCreateInProfileService = heeUserMapper.convert(userDTO,
+  public void publishUserCreationRequestedEvent(CreateUserDTO userDto) {
+    HeeUserDTO userToCreateInProfileService = heeUserMapper.convert(userDto,
         referenceService.getAllTrusts(), tcsService.getAllProgrammes());
     applicationEventPublisher.publishEvent(
-        new CreateAuthenticationUserRequestedEvent(userDTO, userToCreateInProfileService));
+        new CreateAuthenticationUserRequestedEvent(userDto, userToCreateInProfileService));
   }
 
+  /**
+   * Publish an event that will kick off the deletion of a user.
+   *
+   * @param username
+   */
   public void publishDeleteAuthenticationUserRequestedEvent(String username) {
     Optional<AuthenticationUserDto> optionalUser = authenticationAdminService.getUser(username);
     AuthenticationUserDto user = optionalUser.orElseThrow(
@@ -175,8 +180,13 @@ public class UserManagementFacade {
     return new ArrayList<>(tcsService.getAllProgrammes());
   }
 
-  public void updatePassword(UserPasswordDTO passwordDTO) {
-    authenticationAdminService.updatePassword(passwordDTO.getKcId(), passwordDTO.getPassword(),
-        passwordDTO.isTempPassword());
+  /**
+   * Update the user password.
+   *
+   * @param passwordDto The DTO containing data about the user and their new password.
+   */
+  public void updatePassword(UserPasswordDTO passwordDto) {
+    authenticationAdminService.updatePassword(passwordDto.getKcId(), passwordDto.getPassword(),
+        passwordDto.isTempPassword());
   }
 }

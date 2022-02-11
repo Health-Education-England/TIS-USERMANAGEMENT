@@ -4,6 +4,9 @@ import java.util.Optional;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 
+/**
+ * An interface for performing admin actions against the implementing authentication provider.
+ */
 public interface AuthenticationAdminService {
 
   /**
@@ -32,10 +35,10 @@ public interface AuthenticationAdminService {
   /**
    * Update the user in the authentication provider.
    *
-   * @param userDTO The user details to update.
+   * @param userDto The user details to update.
    * @return Whether the update was successful.
    */
-  boolean updateUser(UserDTO userDTO);
+  boolean updateUser(UserDTO userDto);
 
   /**
    * Update the password for the given user.

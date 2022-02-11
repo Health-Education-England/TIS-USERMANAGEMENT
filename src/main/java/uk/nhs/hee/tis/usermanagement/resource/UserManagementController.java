@@ -23,9 +23,10 @@ import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
 import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 
-
 @Controller
 public class UserManagementController {
+
+  private static final String ATTRIBUTE_MESSAGE = "message";
 
   public static final int REQUIRED_PASSWORD_LENGTH = 8;
   @Autowired
@@ -118,10 +119,10 @@ public class UserManagementController {
     // add entity role to the newly created user
     user.getRoles().add(user.getEntityRole());
     userManagementFacade.publishUserCreationRequestedEvent(user);
-    model.addAttribute("message",
-        "A request for user " + user.getFirstName() + " " + user.getLastName() + " (" +
-            user.getName()
-            + ") has been made. It may take a little while before you'll be able to see the new user");
+    model.addAttribute(ATTRIBUTE_MESSAGE,
+        "A request for user " + user.getFirstName() + " " + user.getLastName()
+            + " (" + user.getName() + ") has been made. "
+            + "It may take a little while before you'll be able to see the new user");
     return "success";
   }
 
@@ -129,7 +130,7 @@ public class UserManagementController {
   @PostMapping("/updateUser")
   public String updateUser(@ModelAttribute UserDTO user, Model model) {
     userManagementFacade.updateSingleUser(user);
-    model.addAttribute("message",
+    model.addAttribute(ATTRIBUTE_MESSAGE,
         "The user " + user.getFirstName() + " " + user.getLastName() + " (" + user.getName()
             + ") has been updated");
     return "success";
@@ -144,7 +145,7 @@ public class UserManagementController {
     }
 
     userManagementFacade.updatePassword(passwordDTO);
-    model.addAttribute("message", "Password has been updated for the user");
+    model.addAttribute(ATTRIBUTE_MESSAGE, "Password has been updated for the user");
     return "success";
   }
 
@@ -152,7 +153,7 @@ public class UserManagementController {
   @PostMapping("/deleteUser")
   public String deleteUser(@ModelAttribute UserDTO user, Model model) {
     userManagementFacade.publishDeleteAuthenticationUserRequestedEvent(user.getName());
-    model.addAttribute("message",
+    model.addAttribute(ATTRIBUTE_MESSAGE,
         "The user " + user.getName()
             + " has been deleted. This may take a while to show up on the system");
     return "success";
