@@ -4,6 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
+import java.util.List;
+import java.util.Optional;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +23,8 @@ import uk.nhs.hee.tis.usermanagement.command.profile.GetPaginatedUsersCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.GetUserByUsernameCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.UpdateUserCommand;
 import uk.nhs.hee.tis.usermanagement.event.CreateProfileUserRequestedEvent;
-import uk.nhs.hee.tis.usermanagement.event.DeleteKeycloakUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.DeleteAuthenticationUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.DeleteProfileUserRequestEvent;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ProfileService {
@@ -52,9 +51,11 @@ public class ProfileService {
    * @return Page of HeeUserDTO
    */
   public Page<HeeUserDTO> getAllUsers(Pageable pageable, @Nullable String username) {
-    Preconditions.checkNotNull(pageable, "Pageable cannot be null when requesting a paginated result");
+    Preconditions.checkNotNull(pageable,
+        "Pageable cannot be null when requesting a paginated result");
 
-    GetPaginatedUsersCommand getPaginatedUsersCommand = new GetPaginatedUsersCommand(profileServiceImpl, pageable, username);
+    GetPaginatedUsersCommand getPaginatedUsersCommand = new GetPaginatedUsersCommand(
+        profileServiceImpl, pageable, username);
     return getPaginatedUsersCommand.execute();
   }
 
@@ -65,16 +66,20 @@ public class ProfileService {
    * @return an optional of the found user
    */
   public Optional<HeeUserDTO> getUserByUsername(String username) {
-    Preconditions.checkNotNull(username, "Username cannot be null when searching for a user by username");
+    Preconditions.checkNotNull(username,
+        "Username cannot be null when searching for a user by username");
 
-    GetUserByUsernameCommand getUserByUsernameCommand = new GetUserByUsernameCommand(profileServiceImpl, username, false);
+    GetUserByUsernameCommand getUserByUsernameCommand = new GetUserByUsernameCommand(
+        profileServiceImpl, username, false);
     return getUserByUsernameCommand.execute();
   }
 
   public Optional<HeeUserDTO> getUserByUsernameIgnoreCase(String username) {
-    Preconditions.checkNotNull(username, "Username cannot be null when searching for a user by username");
+    Preconditions.checkNotNull(username,
+        "Username cannot be null when searching for a user by username");
 
-    GetUserByUsernameCommand getUserByUsernameCommand = new GetUserByUsernameCommand(profileServiceImpl, username, true);
+    GetUserByUsernameCommand getUserByUsernameCommand = new GetUserByUsernameCommand(
+        profileServiceImpl, username, true);
     return getUserByUsernameCommand.execute();
   }
 
@@ -88,15 +93,20 @@ public class ProfileService {
   public void createProfileUserEventListener(CreateProfileUserRequestedEvent event) {
     Preconditions.checkNotNull(event.getHeeUserDTO(), "Cannot create user if user is null");
     try {
-      LOG.info("Received CreateProfileUserEvent for user [{}]", event.getHeeUserDTO().getEmailAddress());
+      LOG.info("Received CreateProfileUserEvent for user [{}]",
+          event.getHeeUserDTO().getEmailAddress());
       profileServiceImpl.createDto(event.getHeeUserDTO(), HEE_USERS_ENDPOINT, HeeUserDTO.class);
       LOG.info("Create complete for user [{}]", event.getHeeUserDTO().getEmailAddress());
     } catch (Exception e) {
-      LOG.info("Error occurred while creating user in Profile service with the following data: [{}]", new Gson().toJson(event.getHeeUserDTO()));
+      LOG.info(
+          "Error occurred while creating user in Profile service with the following data: [{}]",
+          new Gson().toJson(event.getHeeUserDTO()));
       LOG.info(ExceptionUtils.getStackTrace(e));
       // reverse call to kc
-      LOG.info("Publishing event to reverse the kc user create for user [{}]", event.getKcUser().getEmail());
-      applicationEventPublisher.publishEvent(new DeleteKeycloakUserRequestedEvent(event.getKcUser(), false));
+      LOG.info("Publishing event to reverse the kc user create for user [{}]",
+          event.getAuthenticationUser().getEmail());
+      applicationEventPublisher.publishEvent(
+          new DeleteAuthenticationUserRequestedEvent(event.getAuthenticationUser(), false));
     }
   }
 
@@ -109,7 +119,8 @@ public class ProfileService {
   public Optional<HeeUserDTO> updateUser(HeeUserDTO userToUpdateDTO) {
     Preconditions.checkNotNull(userToUpdateDTO, "Cannot update user if user to update is null");
 
-    UpdateUserCommand updateUserCommand = new UpdateUserCommand(profileServiceImpl, userToUpdateDTO);
+    UpdateUserCommand updateUserCommand = new UpdateUserCommand(profileServiceImpl,
+        userToUpdateDTO);
     return updateUserCommand.execute();
   }
 

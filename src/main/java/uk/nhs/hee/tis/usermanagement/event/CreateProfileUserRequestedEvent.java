@@ -1,41 +1,30 @@
 package uk.nhs.hee.tis.usermanagement.event;
 
-import com.transform.hee.tis.keycloak.User;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import org.springframework.context.ApplicationEvent;
+import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 
-import java.util.Objects;
-
+@EqualsAndHashCode(callSuper = false)
+@Getter
+@ToString
 public class CreateProfileUserRequestedEvent extends ApplicationEvent {
 
-  private HeeUserDTO heeUserDTO;
-  private User kcUser;
+  private final HeeUserDTO heeUserDTO;
+  private final AuthenticationUserDto authenticationUser;
 
-  public CreateProfileUserRequestedEvent(HeeUserDTO heeUserDTO, User kcUser) {
+  /**
+   * Construct an event requesting a profile user is created.
+   *
+   * @param heeUserDTO         The profile user details.
+   * @param authenticationUser The authentication provider user details.
+   */
+  public CreateProfileUserRequestedEvent(HeeUserDTO heeUserDTO,
+      AuthenticationUserDto authenticationUser) {
     super(heeUserDTO);
     this.heeUserDTO = heeUserDTO;
-    this.kcUser = kcUser;
-  }
-
-  public HeeUserDTO getHeeUserDTO() {
-    return heeUserDTO;
-  }
-
-  public User getKcUser() {
-    return kcUser;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    CreateProfileUserRequestedEvent that = (CreateProfileUserRequestedEvent) o;
-    return Objects.equals(heeUserDTO, that.heeUserDTO) &&
-        Objects.equals(kcUser, that.kcUser);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(heeUserDTO, kcUser);
+    this.authenticationUser = authenticationUser;
   }
 }
