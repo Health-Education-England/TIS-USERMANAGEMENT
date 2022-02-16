@@ -12,6 +12,7 @@ import org.keycloak.representations.idm.GroupRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.mapper.KeycloakUserMapper;
 
 @Service
+@ConditionalOnProperty(name = "application.authentication-provider", havingValue = "keycloak")
 public class KeyCloakAdminClientService implements AuthenticationAdminService {
 
   static final String REALM_LIN = "lin";
