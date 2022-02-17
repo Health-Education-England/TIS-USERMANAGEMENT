@@ -18,5 +18,5 @@ public class AuthenticationUserDto {
   private String email;
   private Map<String, List<String>> attributes;
   private String password;
-  private boolean temporaryPassword;
+  private Boolean temporaryPassword;
 }

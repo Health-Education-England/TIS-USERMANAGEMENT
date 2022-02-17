@@ -8,7 +8,7 @@ import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 /**
  * A mapper to convert to/from a Keycloak {@link User} object.
  */
-@Mapper(componentModel = "spring", uses = {User.class})
+@Mapper(componentModel = "spring")
 public interface KeycloakUserMapper {
 
   /**
@@ -17,9 +17,9 @@ public interface KeycloakUserMapper {
    * @param keycloakUser The keycloak user to convert.
    * @return The converted authentication user.
    */
-  @Mapping(source = "firstname", target = "givenName")
-  @Mapping(source = "surname", target = "familyName")
-  @Mapping(source = "tempPassword", target = "temporaryPassword")
+  @Mapping(target = "givenName", source = "firstname")
+  @Mapping(target = "familyName", source = "surname")
+  @Mapping(target = "temporaryPassword", source = "tempPassword")
   AuthenticationUserDto toAuthenticationUser(User keycloakUser);
 
   /**
@@ -36,7 +36,7 @@ public interface KeycloakUserMapper {
         authenticationUser.getUsername(),
         authenticationUser.getEmail(),
         authenticationUser.getPassword(),
-        authenticationUser.isTemporaryPassword(),
+        authenticationUser.getTemporaryPassword(),
         authenticationUser.getAttributes(),
         authenticationUser.isEnabled()
     );
