@@ -103,7 +103,7 @@ public class KeyCloakAdminClientService implements AuthenticationAdminService {
 
     // Need to validate here - or check KC client behaviour
     Optional<User> existingUser = getKcUser(userDto.getName());
-    if(!existingUser.isPresent()) {
+    if (!existingUser.isPresent()) {
       throw new UserNotFoundException(userDto.getName(), "keycloak");
     }
 
