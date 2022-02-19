@@ -12,12 +12,17 @@ import static org.mockito.Mockito.when;
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClient;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
+import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
+import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
+import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import com.amazonaws.services.cognitoidp.model.UserType;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -102,12 +107,7 @@ public class CognitoAuthenticationAdminServiceTest {
   public void shouldPublishCreateCognitoUserResultWhenCreateEventReceived() {
     UserType cognitoUser = new UserType();
     cognitoUser.setUsername(USERNAME);
-    cognitoUser.setAttributes(Arrays.asList(
-        new AttributeType().withName(SUB_FIELD).withValue(SUB_VALUE),
-        new AttributeType().withName(GIVEN_NAME_FIELD).withValue(GIVEN_NAME_VALUE),
-        new AttributeType().withName(FAMILY_NAME_FIELD).withValue(FAMILY_NAME_VALUE),
-        new AttributeType().withName(EMAIL_FIELD).withValue(EMAIL_VALUE)
-    ));
+    cognitoUser.setAttributes(buildStandardCognitoAttributes());
     cognitoUser.setEnabled(true);
 
     AdminCreateUserResult result = new AdminCreateUserResult();
@@ -123,8 +123,86 @@ public class CognitoAuthenticationAdminServiceTest {
         CreateProfileUserRequestedEvent.class);
     verify(eventPublisher).publishEvent(eventCaptor.capture());
 
-    AuthenticationUserDto authenticationUser = eventCaptor.getValue().getAuthenticationUser();
+    verifyAuthenticationUser(eventCaptor.getValue().getAuthenticationUser());
+  }
 
+  @Test
+  public void shouldPublishHeeUserToBeCreatedWhenCreateEventReceived() {
+    HeeUserDTO heeUser = new HeeUserDTO();
+
+    CreateAuthenticationUserRequestedEvent event = new CreateAuthenticationUserRequestedEvent(
+        new CreateUserDTO(), heeUser);
+    service.createUserEventListener(event);
+
+    ArgumentCaptor<CreateProfileUserRequestedEvent> eventCaptor = ArgumentCaptor.forClass(
+        CreateProfileUserRequestedEvent.class);
+    verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+    assertThat("Unexpected hee user.", eventCaptor.getValue().getHeeUserDTO(),
+        sameInstance(heeUser));
+  }
+
+  @Test
+  public void shouldSendGetCognitoUserRequest() {
+    AdminGetUserResult result = new AdminGetUserResult();
+    result.setUserAttributes(Collections.emptyList());
+
+    ArgumentCaptor<AdminGetUserRequest> requestCaptor = ArgumentCaptor.forClass(
+        AdminGetUserRequest.class);
+    when(cognitoClient.adminGetUser(requestCaptor.capture())).thenReturn(result);
+
+    service.getUser(USERNAME);
+
+    AdminGetUserRequest request = requestCaptor.getValue();
+    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
+  }
+
+  @Test
+  public void shouldReturnGetCognitoUserResultWhenUsernameFound() {
+    AdminGetUserResult result = new AdminGetUserResult();
+    result.setUsername(USERNAME);
+    result.setUserAttributes(buildStandardCognitoAttributes());
+    result.setEnabled(true);
+
+    when(cognitoClient.adminGetUser(any())).thenReturn(result);
+
+    Optional<AuthenticationUserDto> optionalAuthenticationUser = service.getUser(USERNAME);
+
+    assertThat("Expected user not found.", optionalAuthenticationUser.isPresent(), is(true));
+    verifyAuthenticationUser(optionalAuthenticationUser.get());
+  }
+
+  @Test
+  public void shouldReturnEmptyGetCognitoUserResultWhenUsernameNotFound() {
+    when(cognitoClient.adminGetUser(any())).thenThrow(
+        new UserNotFoundException("User does not exist."));
+
+    Optional<AuthenticationUserDto> optionalAuthenticationUser = service.getUser(USERNAME);
+
+    assertThat("Unexpected user found.", optionalAuthenticationUser.isPresent(), is(false));
+  }
+
+  /**
+   * Build a list of standard Cognito attributes.
+   *
+   * @return The built list.
+   */
+  private List<AttributeType> buildStandardCognitoAttributes() {
+    return Arrays.asList(
+        new AttributeType().withName(SUB_FIELD).withValue(SUB_VALUE),
+        new AttributeType().withName(GIVEN_NAME_FIELD).withValue(GIVEN_NAME_VALUE),
+        new AttributeType().withName(FAMILY_NAME_FIELD).withValue(FAMILY_NAME_VALUE),
+        new AttributeType().withName(EMAIL_FIELD).withValue(EMAIL_VALUE)
+    );
+  }
+
+  /**
+   * Verify that the authentication user has the expected values.
+   *
+   * @param authenticationUser The authentication user to verify.
+   */
+  private void verifyAuthenticationUser(AuthenticationUserDto authenticationUser) {
     assertThat("Unexpected user id.", authenticationUser.getId(), is(SUB_VALUE));
     assertThat("Unexpected username.", authenticationUser.getUsername(), is(USERNAME));
     assertThat("Unexpected given name.", authenticationUser.getGivenName(), is(GIVEN_NAME_VALUE));
@@ -142,21 +220,5 @@ public class CognitoAuthenticationAdminServiceTest {
         is(singletonList(GIVEN_NAME_VALUE)));
     assertThat("Unexpected family name.", attributes.get(FAMILY_NAME_FIELD),
         is(singletonList(FAMILY_NAME_VALUE)));
-  }
-
-  @Test
-  public void shouldPublishHeeUserToBeCreatedWhenCreateEventReceived() {
-    HeeUserDTO heeUser = new HeeUserDTO();
-
-    CreateAuthenticationUserRequestedEvent event = new CreateAuthenticationUserRequestedEvent(
-        new CreateUserDTO(), heeUser);
-    service.createUserEventListener(event);
-
-    ArgumentCaptor<CreateProfileUserRequestedEvent> eventCaptor = ArgumentCaptor.forClass(
-        CreateProfileUserRequestedEvent.class);
-    verify(eventPublisher).publishEvent(eventCaptor.capture());
-
-    assertThat("Unexpected hee user.", eventCaptor.getValue().getHeeUserDTO(),
-        sameInstance(heeUser));
   }
 }

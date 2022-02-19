@@ -3,7 +3,11 @@ package uk.nhs.hee.tis.usermanagement.service;
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
+import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
+import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
+import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
@@ -14,6 +18,7 @@ import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoRequestMapper;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoResultMapper;
 
+@Slf4j
 @Service
 @ConditionalOnProperty(name = "application.authentication-provider", havingValue = "cognito")
 public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdminService {
@@ -53,7 +58,17 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   @Override
   public Optional<AuthenticationUserDto> getUser(String username) {
-    return Optional.empty();
+    AdminGetUserRequest request = new AdminGetUserRequest()
+        .withUserPoolId(userPoolId)
+        .withUsername(username);
+
+    try {
+      AdminGetUserResult result = cognitoClient.adminGetUser(request);
+      return Optional.of(resultMapper.toAuthenticationUser(result));
+    } catch (UserNotFoundException e) {
+      log.warn(e.getMessage());
+      return Optional.empty();
+    }
   }
 
   @Override
