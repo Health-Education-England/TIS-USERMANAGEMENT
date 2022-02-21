@@ -6,12 +6,14 @@ import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClient;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
+import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
@@ -33,6 +35,8 @@ import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.event.CreateAuthenticationUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.CreateProfileUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.DeleteAuthenticationUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.event.DeleteProfileUserRequestEvent;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoRequestMapperImpl;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoResultMapperImpl;
 
@@ -181,6 +185,52 @@ public class CognitoAuthenticationAdminServiceTest {
     Optional<AuthenticationUserDto> optionalAuthenticationUser = service.getUser(USERNAME);
 
     assertThat("Unexpected user found.", optionalAuthenticationUser.isPresent(), is(false));
+  }
+
+  @Test
+  public void shouldSendDeleteCognitoUserRequestWhenDeleteEventReceived() {
+    AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
+    authenticationUser.setId(SUB_VALUE);
+
+    DeleteAuthenticationUserRequestedEvent event = new DeleteAuthenticationUserRequestedEvent(
+        authenticationUser, false);
+    service.deleteKeycloakUserEventListener(event);
+
+    ArgumentCaptor<AdminDeleteUserRequest> requestCaptor = ArgumentCaptor.forClass(
+        AdminDeleteUserRequest.class);
+    verify(cognitoClient).adminDeleteUser(requestCaptor.capture());
+
+    AdminDeleteUserRequest request = requestCaptor.getValue();
+    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.getUsername(), is(SUB_VALUE));
+  }
+
+  @Test
+  public void shouldPublishDeleteProfileUserEventWhenDeleteEventReceivedWhenPublishIsTrue() {
+    AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
+    authenticationUser.setUsername(USERNAME);
+
+    DeleteAuthenticationUserRequestedEvent event = new DeleteAuthenticationUserRequestedEvent(
+        authenticationUser, true);
+    service.deleteKeycloakUserEventListener(event);
+
+    ArgumentCaptor<DeleteProfileUserRequestEvent> eventCaptor = ArgumentCaptor.forClass(
+        DeleteProfileUserRequestEvent.class);
+    verify(eventPublisher).publishEvent(eventCaptor.capture());
+
+    assertThat("Unexpected username.", eventCaptor.getValue().getUsername(), is(USERNAME));
+  }
+
+  @Test
+  public void shouldNotPublishDeleteProfileUserEventWhenDeleteEventReceivedWhenPublishIsFalse() {
+    AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
+    authenticationUser.setUsername(USERNAME);
+
+    DeleteAuthenticationUserRequestedEvent event = new DeleteAuthenticationUserRequestedEvent(
+        authenticationUser, false);
+    service.deleteKeycloakUserEventListener(event);
+
+    verify(eventPublisher, never()).publishEvent(any());
   }
 
   /**

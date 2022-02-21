@@ -3,6 +3,7 @@ package uk.nhs.hee.tis.usermanagement.service;
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
+import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
@@ -88,6 +89,10 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   @Override
   void deleteUser(AuthenticationUserDto authenticationUser) {
+    AdminDeleteUserRequest request = new AdminDeleteUserRequest()
+        .withUserPoolId(userPoolId)
+        .withUsername(authenticationUser.getId());
 
+    cognitoClient.adminDeleteUser(request);
   }
 }
