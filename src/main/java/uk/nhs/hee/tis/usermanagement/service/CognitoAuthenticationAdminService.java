@@ -72,6 +72,16 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
       cognitoClient.adminDisableUser(disableRequest);
     }
 
+    // Passwords are temporary by default, set permanent if required.
+    if (!createUserDto.getTempPassword()) {
+      AdminSetUserPasswordRequest passwordRequest = new AdminSetUserPasswordRequest()
+          .withUserPoolId(userPoolId)
+          .withUsername(result.getUser().getUsername())
+          .withPassword(createUserDto.getPassword())
+          .withPermanent(true);
+      cognitoClient.adminSetUserPassword(passwordRequest);
+    }
+
     return resultMapper.toAuthenticationUser(result);
   }
 

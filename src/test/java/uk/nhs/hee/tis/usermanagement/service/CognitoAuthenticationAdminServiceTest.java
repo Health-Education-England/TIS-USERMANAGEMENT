@@ -92,6 +92,7 @@ public class CognitoAuthenticationAdminServiceTest {
     dto.setFirstName(GIVEN_NAME_VALUE);
     dto.setLastName(FAMILY_NAME_VALUE);
     dto.setActive(true);
+    dto.setTempPassword(true);
 
     CreateAuthenticationUserRequestedEvent event = new CreateAuthenticationUserRequestedEvent(dto,
         new HeeUserDTO());
@@ -121,6 +122,7 @@ public class CognitoAuthenticationAdminServiceTest {
   public void shouldNotDisableCreatedUserWhenActiveTrue() {
     CreateUserDTO dto = new CreateUserDTO();
     dto.setActive(true);
+    dto.setTempPassword(true);
 
     AdminCreateUserResult result = new AdminCreateUserResult()
         .withUser(new UserType()
@@ -156,6 +158,47 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
+  public void shouldNotSetPermanentPasswordForCreatedUserWhenTempPasswordTrue() {
+    CreateUserDTO dto = new CreateUserDTO();
+    dto.setTempPassword(true);
+
+    AdminCreateUserResult result = new AdminCreateUserResult()
+        .withUser(new UserType()
+            .withUsername(USERNAME)
+            .withAttributes(Collections.emptyList()));
+    when(cognitoClient.adminCreateUser(any())).thenReturn(result);
+
+    service.createUser(dto);
+
+    verify(cognitoClient, never()).adminSetUserPassword(any());
+  }
+
+  @Test
+  public void shouldSetPermanentPasswordForCreatedUserWhenTempPasswordFalse() {
+    CreateUserDTO dto = new CreateUserDTO();
+    dto.setPassword(PASSWORD);
+    dto.setTempPassword(false);
+
+    AdminCreateUserResult result = new AdminCreateUserResult()
+        .withUser(new UserType()
+            .withUsername(USERNAME)
+            .withAttributes(Collections.emptyList()));
+    when(cognitoClient.adminCreateUser(any())).thenReturn(result);
+
+    service.createUser(dto);
+
+    ArgumentCaptor<AdminSetUserPasswordRequest> requestCaptor = ArgumentCaptor.forClass(
+        AdminSetUserPasswordRequest.class);
+    verify(cognitoClient).adminSetUserPassword(requestCaptor.capture());
+
+    AdminSetUserPasswordRequest request = requestCaptor.getValue();
+    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
+    assertThat("Unexpected password.", request.getPassword(), is(PASSWORD));
+    assertThat("Unexpected password permanence.", request.getPermanent(), is(true));
+  }
+
+  @Test
   public void shouldPublishCreatedUserWhenUserCreated() {
     UserType cognitoUser = new UserType();
     cognitoUser.setUsername(USERNAME);
@@ -169,6 +212,7 @@ public class CognitoAuthenticationAdminServiceTest {
 
     CreateUserDTO createUserDto = new CreateUserDTO();
     createUserDto.setActive(true);
+    createUserDto.setTempPassword(true);
 
     CreateAuthenticationUserRequestedEvent event = new CreateAuthenticationUserRequestedEvent(
         createUserDto, new HeeUserDTO());
@@ -185,6 +229,7 @@ public class CognitoAuthenticationAdminServiceTest {
   public void shouldPublishProfileUserToBeCreatedWhenUserCreated() {
     CreateUserDTO createUserDto = new CreateUserDTO();
     createUserDto.setActive(true);
+    createUserDto.setTempPassword(true);
 
     HeeUserDTO heeUser = new HeeUserDTO();
 
