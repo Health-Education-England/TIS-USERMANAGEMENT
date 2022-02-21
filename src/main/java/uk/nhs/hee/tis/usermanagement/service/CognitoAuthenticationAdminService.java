@@ -8,6 +8,7 @@ import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminSetUserPasswordRequest;
+import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
 import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
+import uk.nhs.hee.tis.usermanagement.mapper.AuthenticationUserMapper;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoRequestMapper;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoResultMapper;
 
@@ -33,16 +35,19 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   private final CognitoRequestMapper requestMapper;
   private final CognitoResultMapper resultMapper;
+  private final AuthenticationUserMapper userMapper;
 
   CognitoAuthenticationAdminService(ApplicationEventPublisher applicationEventPublisher,
       AWSCognitoIdentityProvider cognitoClient,
       @Value("${application.cognito.user-pool-id}") String userPoolId,
-      CognitoRequestMapper requestMapper, CognitoResultMapper resultMapper) {
+      CognitoRequestMapper requestMapper, CognitoResultMapper resultMapper,
+      AuthenticationUserMapper userMapper) {
     super(applicationEventPublisher);
     this.cognitoClient = cognitoClient;
     this.userPoolId = userPoolId;
     this.requestMapper = requestMapper;
     this.resultMapper = resultMapper;
+    this.userMapper = userMapper;
   }
 
   @Override
@@ -76,12 +81,22 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   @Override
   public boolean updateUser(AuthenticationUserDto authenticationUser) {
-    return false;
+    AdminUpdateUserAttributesRequest request = requestMapper.toUpdateUserRequest(authenticationUser)
+        .withUserPoolId(userPoolId);
+
+    try {
+      cognitoClient.adminUpdateUserAttributes(request);
+      return true;
+    } catch (AWSCognitoIdentityProviderException e) {
+      log.error(e.getMessage());
+      return false;
+    }
   }
 
   @Override
   public boolean updateUser(UserDTO userDto) {
-    return false;
+    AuthenticationUserDto authenticationUser = userMapper.toAuthenticationUser(userDto);
+    return updateUser(authenticationUser);
   }
 
   @Override
@@ -94,19 +109,18 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
     try {
       cognitoClient.adminSetUserPassword(request);
+      return true;
     } catch (AWSCognitoIdentityProviderException e) {
       log.error(e.getMessage());
       return false;
     }
-
-    return true;
   }
 
   @Override
   void deleteUser(AuthenticationUserDto authenticationUser) {
     AdminDeleteUserRequest request = new AdminDeleteUserRequest()
         .withUserPoolId(userPoolId)
-        .withUsername(authenticationUser.getId());
+        .withUsername(authenticationUser.getUsername());
 
     cognitoClient.adminDeleteUser(request);
   }

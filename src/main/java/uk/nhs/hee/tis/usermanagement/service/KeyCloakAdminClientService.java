@@ -21,7 +21,7 @@ import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserGroupsCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.UpdateUserCommand;
 import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
-import uk.nhs.hee.tis.usermanagement.mapper.KeycloakUserMapper;
+import uk.nhs.hee.tis.usermanagement.mapper.AuthenticationUserMapper;
 
 @Service
 @ConditionalOnProperty(name = "application.authentication-provider", havingValue = "keycloak")
@@ -33,10 +33,10 @@ public class KeyCloakAdminClientService extends AbstractAuthenticationAdminServi
 
   private final KeycloakAdminClient keycloakAdminClient;
 
-  private final KeycloakUserMapper mapper;
+  private final AuthenticationUserMapper mapper;
 
   KeyCloakAdminClientService(ApplicationEventPublisher applicationEventPublisher,
-      KeycloakAdminClient keycloakAdminClient, KeycloakUserMapper mapper) {
+      KeycloakAdminClient keycloakAdminClient, AuthenticationUserMapper mapper) {
     super(applicationEventPublisher);
     this.keycloakAdminClient = keycloakAdminClient;
     this.mapper = mapper;

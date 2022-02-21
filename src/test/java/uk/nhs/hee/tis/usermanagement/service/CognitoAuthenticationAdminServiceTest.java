@@ -18,12 +18,14 @@ import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminSetUserPasswordRequest;
+import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
 import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import com.amazonaws.services.cognitoidp.model.UserType;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,10 +37,12 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.event.CreateAuthenticationUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.CreateProfileUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.DeleteAuthenticationUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.DeleteProfileUserRequestEvent;
+import uk.nhs.hee.tis.usermanagement.mapper.AuthenticationUserMapperImpl;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoRequestMapperImpl;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoResultMapperImpl;
 
@@ -72,7 +76,8 @@ public class CognitoAuthenticationAdminServiceTest {
         cognitoClient,
         USER_POOL_ID,
         new CognitoRequestMapperImpl(),
-        new CognitoResultMapperImpl()
+        new CognitoResultMapperImpl(),
+        new AuthenticationUserMapperImpl()
     );
   }
 
@@ -190,6 +195,132 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
+  public void shouldSendUpdateCognitoUserRequestWhenAuthenticationUserProvided() {
+    AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
+    authenticationUser.setUsername(USERNAME);
+    authenticationUser.setGivenName(GIVEN_NAME_VALUE);
+    authenticationUser.setFamilyName(FAMILY_NAME_VALUE);
+    authenticationUser.setEmail(EMAIL_VALUE);
+    authenticationUser.setAttributes(
+        Collections.singletonMap("sub", singletonList(SUB_VALUE)));
+
+    service.updateUser(authenticationUser);
+
+    ArgumentCaptor<AdminUpdateUserAttributesRequest> requestCaptor = ArgumentCaptor.forClass(
+        AdminUpdateUserAttributesRequest.class);
+    verify(cognitoClient).adminUpdateUserAttributes(requestCaptor.capture());
+
+    AdminUpdateUserAttributesRequest request = requestCaptor.getValue();
+    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
+
+    List<AttributeType> attributes = request.getUserAttributes();
+    assertThat("Unexpected attribute count.", attributes.size(), is(3));
+
+    Map<String, String> attributeMap = attributes.stream()
+        .collect(Collectors.toMap(AttributeType::getName, AttributeType::getValue));
+    assertThat("Unexpected email.", attributeMap.get(EMAIL_FIELD), is(EMAIL_VALUE));
+    assertThat("Unexpected given name.", attributeMap.get(GIVEN_NAME_FIELD), is(GIVEN_NAME_VALUE));
+    assertThat("Unexpected family name.", attributeMap.get(FAMILY_NAME_FIELD),
+        is(FAMILY_NAME_VALUE));
+  }
+
+  @Test
+  public void shouldOverwriteOriginalAttributesWhenUpdatingUser() {
+    AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
+    authenticationUser.setUsername(USERNAME);
+    authenticationUser.setGivenName(GIVEN_NAME_VALUE);
+    authenticationUser.setFamilyName(FAMILY_NAME_VALUE);
+    authenticationUser.setEmail(EMAIL_VALUE);
+
+    Map<String, List<String>> originalAttributes = new HashMap<>();
+    originalAttributes.put(SUB_FIELD, singletonList("original-value-123"));
+    originalAttributes.put(GIVEN_NAME_FIELD, singletonList("originalValue1"));
+    originalAttributes.put(FAMILY_NAME_FIELD, singletonList("originalValue2"));
+    originalAttributes.put(EMAIL_FIELD, singletonList("originalValue3"));
+    authenticationUser.setAttributes(originalAttributes);
+
+    service.updateUser(authenticationUser);
+
+    ArgumentCaptor<AdminUpdateUserAttributesRequest> requestCaptor = ArgumentCaptor.forClass(
+        AdminUpdateUserAttributesRequest.class);
+    verify(cognitoClient).adminUpdateUserAttributes(requestCaptor.capture());
+
+    List<AttributeType> attributes = requestCaptor.getValue().getUserAttributes();
+    assertThat("Unexpected attribute count.", attributes.size(), is(3));
+
+    Map<String, String> attributeMap = attributes.stream()
+        .collect(Collectors.toMap(AttributeType::getName, AttributeType::getValue));
+    assertThat("Unexpected email.", attributeMap.get(EMAIL_FIELD), is(EMAIL_VALUE));
+    assertThat("Unexpected given name.", attributeMap.get(GIVEN_NAME_FIELD), is(GIVEN_NAME_VALUE));
+    assertThat("Unexpected family name.", attributeMap.get(FAMILY_NAME_FIELD),
+        is(FAMILY_NAME_VALUE));
+  }
+
+  @Test
+  public void shouldReturnTrueWhenUserUpdatedByAuthenticationUser() {
+    boolean updated = service.updateUser(new AuthenticationUserDto());
+
+    assertThat("Unexpected updated state.", updated, is(true));
+  }
+
+  @Test
+  public void shouldReturnFalseWhenUserUpdateFailsByAuthenticationUser() {
+    when(cognitoClient.adminUpdateUserAttributes(any())).thenThrow(
+        new AWSCognitoIdentityProviderException("Dummy Exception."));
+
+    boolean updated = service.updateUser(new AuthenticationUserDto());
+
+    assertThat("Unexpected updated state.", updated, is(false));
+  }
+
+  @Test
+  public void shouldSendUpdateCognitoUserRequestWhenUserDtoProvided() {
+    UserDTO userDto = new UserDTO();
+    userDto.setName(USERNAME);
+    userDto.setFirstName(GIVEN_NAME_VALUE);
+    userDto.setLastName(FAMILY_NAME_VALUE);
+    userDto.setEmailAddress(EMAIL_VALUE);
+
+    service.updateUser(userDto);
+
+    ArgumentCaptor<AdminUpdateUserAttributesRequest> requestCaptor = ArgumentCaptor.forClass(
+        AdminUpdateUserAttributesRequest.class);
+    verify(cognitoClient).adminUpdateUserAttributes(requestCaptor.capture());
+
+    AdminUpdateUserAttributesRequest request = requestCaptor.getValue();
+    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
+
+    List<AttributeType> attributes = request.getUserAttributes();
+    assertThat("Unexpected attribute count.", attributes.size(), is(3));
+
+    Map<String, String> attributeMap = attributes.stream()
+        .collect(Collectors.toMap(AttributeType::getName, AttributeType::getValue));
+    assertThat("Unexpected email.", attributeMap.get(EMAIL_FIELD), is(EMAIL_VALUE));
+    assertThat("Unexpected given name.", attributeMap.get(GIVEN_NAME_FIELD), is(GIVEN_NAME_VALUE));
+    assertThat("Unexpected family name.", attributeMap.get(FAMILY_NAME_FIELD),
+        is(FAMILY_NAME_VALUE));
+  }
+
+  @Test
+  public void shouldReturnTrueWhenUserUpdatedByUserDto() {
+    boolean updated = service.updateUser(new UserDTO());
+
+    assertThat("Unexpected updated state.", updated, is(true));
+  }
+
+  @Test
+  public void shouldReturnFalseWhenUserUpdateFailsByUserDto() {
+    when(cognitoClient.adminUpdateUserAttributes(any())).thenThrow(
+        new AWSCognitoIdentityProviderException("Dummy Exception."));
+
+    boolean updated = service.updateUser(new UserDTO());
+
+    assertThat("Unexpected updated state.", updated, is(false));
+  }
+
+  @Test
   public void shouldSetTemporaryPasswordWhenTempPasswordIsTrue() {
     service.updatePassword(SUB_VALUE, PASSWORD, true);
 
@@ -239,7 +370,7 @@ public class CognitoAuthenticationAdminServiceTest {
   @Test
   public void shouldSendDeleteCognitoUserRequest() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
-    authenticationUser.setId(SUB_VALUE);
+    authenticationUser.setUsername(USERNAME);
 
     DeleteAuthenticationUserRequestedEvent event = new DeleteAuthenticationUserRequestedEvent(
         authenticationUser, false);
@@ -251,7 +382,7 @@ public class CognitoAuthenticationAdminServiceTest {
 
     AdminDeleteUserRequest request = requestCaptor.getValue();
     assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
-    assertThat("Unexpected username.", request.getUsername(), is(SUB_VALUE));
+    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
   }
 
   @Test

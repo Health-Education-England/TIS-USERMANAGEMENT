@@ -12,7 +12,7 @@ import org.junit.Before;
 import org.junit.Test;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 
-public class KeycloakUserMapperTest {
+public class AuthenticationUserMapperTest {
 
   private static final String ID = "123-abc-456-def";
   private static final String GIVEN_NAME = "Anthony";
@@ -26,11 +26,11 @@ public class KeycloakUserMapperTest {
   private static final boolean IS_ENABLED = true;
 
 
-  private KeycloakUserMapper mapper;
+  private AuthenticationUserMapper mapper;
 
   @Before
   public void setUp() {
-    mapper = new KeycloakUserMapperImpl();
+    mapper = new AuthenticationUserMapperImpl();
   }
 
   @Test
