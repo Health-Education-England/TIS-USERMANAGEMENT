@@ -5,6 +5,8 @@ import com.amazonaws.services.cognitoidp.model.AWSCognitoIdentityProviderExcepti
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
+import com.amazonaws.services.cognitoidp.model.AdminDisableUserRequest;
+import com.amazonaws.services.cognitoidp.model.AdminEnableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminSetUserPasswordRequest;
@@ -61,6 +63,15 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
         .withUserPoolId(userPoolId);
 
     AdminCreateUserResult result = cognitoClient.adminCreateUser(request);
+
+    // Users are enabled by default, disable if required.
+    if (!createUserDto.isActive()) {
+      AdminDisableUserRequest disableRequest = new AdminDisableUserRequest()
+          .withUserPoolId(userPoolId)
+          .withUsername(result.getUser().getUsername());
+      cognitoClient.adminDisableUser(disableRequest);
+    }
+
     return resultMapper.toAuthenticationUser(result);
   }
 
@@ -81,11 +92,25 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   @Override
   public boolean updateUser(AuthenticationUserDto authenticationUser) {
-    AdminUpdateUserAttributesRequest request = requestMapper.toUpdateUserRequest(authenticationUser)
-        .withUserPoolId(userPoolId);
 
     try {
+      if (authenticationUser.isEnabled()) {
+        AdminEnableUserRequest enableRequest = new AdminEnableUserRequest()
+            .withUserPoolId(userPoolId)
+            .withUsername(authenticationUser.getUsername());
+        cognitoClient.adminEnableUser(enableRequest);
+      } else {
+        AdminDisableUserRequest disableRequest = new AdminDisableUserRequest()
+            .withUserPoolId(userPoolId)
+            .withUsername(authenticationUser.getUsername());
+        cognitoClient.adminDisableUser(disableRequest);
+      }
+
+      AdminUpdateUserAttributesRequest request =
+          requestMapper.toUpdateUserRequest(authenticationUser)
+              .withUserPoolId(userPoolId);
       cognitoClient.adminUpdateUserAttributes(request);
+
       return true;
     } catch (AWSCognitoIdentityProviderException e) {
       log.error(e.getMessage());

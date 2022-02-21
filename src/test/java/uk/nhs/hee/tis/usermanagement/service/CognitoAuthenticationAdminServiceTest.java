@@ -15,6 +15,8 @@ import com.amazonaws.services.cognitoidp.model.AWSCognitoIdentityProviderExcepti
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
+import com.amazonaws.services.cognitoidp.model.AdminDisableUserRequest;
+import com.amazonaws.services.cognitoidp.model.AdminEnableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminSetUserPasswordRequest;
@@ -89,6 +91,7 @@ public class CognitoAuthenticationAdminServiceTest {
     dto.setPassword(PASSWORD);
     dto.setFirstName(GIVEN_NAME_VALUE);
     dto.setLastName(FAMILY_NAME_VALUE);
+    dto.setActive(true);
 
     CreateAuthenticationUserRequestedEvent event = new CreateAuthenticationUserRequestedEvent(dto,
         new HeeUserDTO());
@@ -115,6 +118,44 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
+  public void shouldNotDisableCreatedUserWhenActiveTrue() {
+    CreateUserDTO dto = new CreateUserDTO();
+    dto.setActive(true);
+
+    AdminCreateUserResult result = new AdminCreateUserResult()
+        .withUser(new UserType()
+            .withUsername(USERNAME)
+            .withAttributes(Collections.emptyList()));
+    when(cognitoClient.adminCreateUser(any())).thenReturn(result);
+
+    service.createUser(dto);
+
+    verify(cognitoClient, never()).adminDisableUser(any());
+  }
+
+  @Test
+  public void shouldDisableCreatedUserWhenActiveFalse() {
+    CreateUserDTO dto = new CreateUserDTO();
+    dto.setActive(false);
+
+    AdminCreateUserResult result = new AdminCreateUserResult()
+        .withUser(new UserType()
+            .withUsername(USERNAME)
+            .withAttributes(Collections.emptyList()));
+    when(cognitoClient.adminCreateUser(any())).thenReturn(result);
+
+    service.createUser(dto);
+
+    ArgumentCaptor<AdminDisableUserRequest> requestCaptor = ArgumentCaptor.forClass(
+        AdminDisableUserRequest.class);
+    verify(cognitoClient).adminDisableUser(requestCaptor.capture());
+
+    AdminDisableUserRequest request = requestCaptor.getValue();
+    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
+  }
+
+  @Test
   public void shouldPublishCreatedUserWhenUserCreated() {
     UserType cognitoUser = new UserType();
     cognitoUser.setUsername(USERNAME);
@@ -126,8 +167,11 @@ public class CognitoAuthenticationAdminServiceTest {
 
     when(cognitoClient.adminCreateUser(any())).thenReturn(result);
 
+    CreateUserDTO createUserDto = new CreateUserDTO();
+    createUserDto.setActive(true);
+
     CreateAuthenticationUserRequestedEvent event = new CreateAuthenticationUserRequestedEvent(
-        new CreateUserDTO(), new HeeUserDTO());
+        createUserDto, new HeeUserDTO());
     service.createUserEventListener(event);
 
     ArgumentCaptor<CreateProfileUserRequestedEvent> eventCaptor = ArgumentCaptor.forClass(
@@ -139,10 +183,13 @@ public class CognitoAuthenticationAdminServiceTest {
 
   @Test
   public void shouldPublishProfileUserToBeCreatedWhenUserCreated() {
+    CreateUserDTO createUserDto = new CreateUserDTO();
+    createUserDto.setActive(true);
+
     HeeUserDTO heeUser = new HeeUserDTO();
 
     CreateAuthenticationUserRequestedEvent event = new CreateAuthenticationUserRequestedEvent(
-        new CreateUserDTO(), heeUser);
+        createUserDto, heeUser);
     service.createUserEventListener(event);
 
     ArgumentCaptor<CreateProfileUserRequestedEvent> eventCaptor = ArgumentCaptor.forClass(
@@ -223,6 +270,40 @@ public class CognitoAuthenticationAdminServiceTest {
     assertThat("Unexpected given name.", attributeMap.get(GIVEN_NAME_FIELD), is(GIVEN_NAME_VALUE));
     assertThat("Unexpected family name.", attributeMap.get(FAMILY_NAME_FIELD),
         is(FAMILY_NAME_VALUE));
+  }
+
+  @Test
+  public void shouldEnableUserWhenUpdatingUserAndEnabledTrue() {
+    AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
+    authenticationUser.setUsername(USERNAME);
+    authenticationUser.setEnabled(true);
+
+    service.updateUser(authenticationUser);
+
+    ArgumentCaptor<AdminEnableUserRequest> requestCaptor = ArgumentCaptor.forClass(
+        AdminEnableUserRequest.class);
+    verify(cognitoClient).adminEnableUser(requestCaptor.capture());
+
+    AdminEnableUserRequest request = requestCaptor.getValue();
+    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
+  }
+
+  @Test
+  public void shouldDisableWhenUpdatingUserAndEnabledFalse() {
+    AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
+    authenticationUser.setUsername(USERNAME);
+    authenticationUser.setEnabled(false);
+
+    service.updateUser(authenticationUser);
+
+    ArgumentCaptor<AdminDisableUserRequest> requestCaptor = ArgumentCaptor.forClass(
+        AdminDisableUserRequest.class);
+    verify(cognitoClient).adminDisableUser(requestCaptor.capture());
+
+    AdminDisableUserRequest request = requestCaptor.getValue();
+    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
   }
 
   @Test
