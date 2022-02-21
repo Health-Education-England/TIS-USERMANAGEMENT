@@ -36,6 +36,11 @@ public abstract class CognitoRequestMapper {
   @Mapping(target = "temporaryPassword", source = "password")
   public abstract AdminCreateUserRequest toCreateUserRequest(CreateUserDTO createUserDto);
 
+
+  @Mapping(target = "userAttributes", source = "authenticationUser")
+  public abstract AdminUpdateUserAttributesRequest toUpdateUserRequest(
+      AuthenticationUserDto authenticationUser);
+
   /**
    * Extract a list of Cognito attributes from a {@link CreateUserDTO}.
    *
@@ -59,10 +64,6 @@ public abstract class CognitoRequestMapper {
 
     return attributes;
   }
-
-  @Mapping(target = "userAttributes", source = "authenticationUser")
-  public abstract AdminUpdateUserAttributesRequest toUpdateUserRequest(
-      AuthenticationUserDto authenticationUser);
 
   /**
    * Extract a list of Cognito attributes from a {@link AuthenticationUserDto}.

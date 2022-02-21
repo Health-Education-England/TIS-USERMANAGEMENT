@@ -80,7 +80,7 @@ public abstract class CognitoResultMapper {
   private String getAttributeValue(Map<String, List<String>> attributes, String name) {
     List<String> values = attributes.get(name);
 
-    if (values != null && values.size() > 0) {
+    if (values != null && !values.isEmpty()) {
       return values.get(0);
     }
 
