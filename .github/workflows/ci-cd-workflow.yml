@@ -45,7 +45,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: app-jar
-          path: tcs-*/target/*.jar
+          path: target/*.jar
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -99,19 +99,11 @@ jobs:
       - name: package java
         run: |
           mvn install -DskipTests
-          cp ./tcs-service/target/tcs-service-*.war ./tcs-service/target/app.jar
+          cp ./target/usermanagement.war ./target/app.jar
 
-      - name: Publish api artifact
+      - name: Publish usermanagement artifact
         continue-on-error: true
-        run: mvn --batch-mode deploy -DskipTests --file tcs-api/pom.xml
-
-      - name: Publish client artifact
-        continue-on-error: true
-        run: mvn --batch-mode deploy -DskipTests --file tcs-client/pom.xml
-
-      - name: Publish persistence artifact
-        continue-on-error: true
-        run: mvn --batch-mode deploy -DskipTests --file tcs-persistence/pom.xml
+        run: mvn --batch-mode deploy -DskipTests --file pom.xml
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -127,9 +119,9 @@ jobs:
       - name: Build, tag and push image to Amazon ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: tcs
+          ECR_REPOSITORY: usermanagement
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} -f ./tcs-service/Dockerfile ./tcs-service
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} -f ./usermanagement-service/Dockerfile ./usermanagement-service
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push --all-tags $ECR_REGISTRY/$ECR_REPOSITORY
 
@@ -158,15 +150,15 @@ jobs:
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: .aws/tis-tcs-preprod.json
-          container-name: tis-tcs
-          image: ${{ steps.login-ecr.outputs.registry }}/tcs:${{ github.sha }}
+          task-definition: .aws/tis-usermanagement-preprod.json
+          container-name: tis-usermanagement
+          image: ${{ steps.login-ecr.outputs.registry }}/usermanagement:${{ github.sha }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: tis-tcs
+          service: tis-usermanagement
           cluster: tis-preprod
           wait-for-service-stability: true
 
@@ -195,15 +187,15 @@ jobs:
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: .aws/tis-tcs-prod.json
-          container-name: tis-tcs
-          image: ${{ steps.login-ecr.outputs.registry }}/tcs:${{ github.sha }}
+          task-definition: .aws/tis-usermanagement-prod.json
+          container-name: tis-usermanagement
+          image: ${{ steps.login-ecr.outputs.registry }}/usermanagement:${{ github.sha }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: tis-tcs
+          service: tis-usermanagement
           cluster: tis-prod
           wait-for-service-stability: true
 
@@ -228,13 +220,13 @@ jobs:
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: .aws/tis-tcs-nimdta.json
-          container-name: tis-tcs
-          image: ${{ steps.login-ecr.outputs.registry }}/tcs:${{ github.sha }}
+          task-definition: .aws/tis-usermanagement-nimdta.json
+          container-name: tis-usermanagement
+          image: ${{ steps.login-ecr.outputs.registry }}/usermanagement:${{ github.sha }}
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: tis-tcs
+          service: tis-usermanagement
           cluster: tis-nimdta
           wait-for-service-stability: true
