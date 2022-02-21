@@ -25,7 +25,6 @@ public abstract class CognitoResultMapper {
    * @param cognitoResult the cognito result to convert.
    * @return The converted authentication user.
    */
-  @Mapping(target = "username", source = "user.username")
   @Mapping(target = "attributes", source = "user.attributes")
   @Mapping(target = "enabled", source = "user.enabled")
   public abstract AuthenticationUserDto toAuthenticationUser(AdminCreateUserResult cognitoResult);
@@ -63,9 +62,12 @@ public abstract class CognitoResultMapper {
     Map<String, List<String>> attributes = authenticationUser.getAttributes();
 
     authenticationUser.setId(getAttributeValue(attributes, "sub"));
-    authenticationUser.setEmail(getAttributeValue(attributes, "email"));
     authenticationUser.setGivenName(getAttributeValue(attributes, "given_name"));
     authenticationUser.setFamilyName(getAttributeValue(attributes, "family_name"));
+
+    String email = getAttributeValue(attributes, "email");
+    authenticationUser.setUsername(email);
+    authenticationUser.setEmail(email);
   }
 
   /**

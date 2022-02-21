@@ -560,7 +560,7 @@ public class CognitoAuthenticationAdminServiceTest {
    */
   private void verifyAuthenticationUser(AuthenticationUserDto authenticationUser) {
     assertThat("Unexpected user id.", authenticationUser.getId(), is(SUB_VALUE));
-    assertThat("Unexpected username.", authenticationUser.getUsername(), is(USERNAME));
+    assertThat("Unexpected username.", authenticationUser.getUsername(), is(EMAIL_VALUE));
     assertThat("Unexpected given name.", authenticationUser.getGivenName(), is(GIVEN_NAME_VALUE));
     assertThat("Unexpected family name.", authenticationUser.getFamilyName(),
         is(FAMILY_NAME_VALUE));
