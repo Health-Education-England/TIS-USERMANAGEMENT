@@ -11,11 +11,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClient;
+import com.amazonaws.services.cognitoidp.model.AWSCognitoIdentityProviderException;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
+import com.amazonaws.services.cognitoidp.model.AdminSetUserPasswordRequest;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
 import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import com.amazonaws.services.cognitoidp.model.UserType;
@@ -75,7 +77,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldSendCreateCognitoUserRequestWhenCreateEventReceived() {
+  public void shouldSendCreateUserRequest() {
     CreateUserDTO dto = new CreateUserDTO();
     dto.setName(USERNAME);
     dto.setEmailAddress(EMAIL_VALUE);
@@ -108,7 +110,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldPublishCreateCognitoUserResultWhenCreateEventReceived() {
+  public void shouldPublishCreatedUserWhenUserCreated() {
     UserType cognitoUser = new UserType();
     cognitoUser.setUsername(USERNAME);
     cognitoUser.setAttributes(buildStandardCognitoAttributes());
@@ -131,7 +133,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldPublishHeeUserToBeCreatedWhenCreateEventReceived() {
+  public void shouldPublishProfileUserToBeCreatedWhenUserCreated() {
     HeeUserDTO heeUser = new HeeUserDTO();
 
     CreateAuthenticationUserRequestedEvent event = new CreateAuthenticationUserRequestedEvent(
@@ -188,7 +190,54 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldSendDeleteCognitoUserRequestWhenDeleteEventReceived() {
+  public void shouldSetTemporaryPasswordWhenTempPasswordIsTrue() {
+    service.updatePassword(SUB_VALUE, PASSWORD, true);
+
+    ArgumentCaptor<AdminSetUserPasswordRequest> requestCaptor = ArgumentCaptor.forClass(
+        AdminSetUserPasswordRequest.class);
+    verify(cognitoClient).adminSetUserPassword(requestCaptor.capture());
+
+    AdminSetUserPasswordRequest request = requestCaptor.getValue();
+    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.getUsername(), is(SUB_VALUE));
+    assertThat("Unexpected password.", request.getPassword(), is(PASSWORD));
+    assertThat("Unexpected permanent flag.", request.getPermanent(), is(false));
+  }
+
+  @Test
+  public void shouldSetPermanentPasswordWhenTempPasswordIsFalse() {
+    service.updatePassword(SUB_VALUE, PASSWORD, false);
+
+    ArgumentCaptor<AdminSetUserPasswordRequest> requestCaptor = ArgumentCaptor.forClass(
+        AdminSetUserPasswordRequest.class);
+    verify(cognitoClient).adminSetUserPassword(requestCaptor.capture());
+
+    AdminSetUserPasswordRequest request = requestCaptor.getValue();
+    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.getUsername(), is(SUB_VALUE));
+    assertThat("Unexpected password.", request.getPassword(), is(PASSWORD));
+    assertThat("Unexpected permanent flag.", request.getPermanent(), is(true));
+  }
+
+  @Test
+  public void shouldReturnTrueWhenUpdatePasswordSucceeds() {
+    boolean updated = service.updatePassword(SUB_VALUE, PASSWORD, false);
+
+    assertThat("Unexpected updated state.", updated, is(true));
+  }
+
+  @Test
+  public void shouldReturnFalseWhenUpdatePasswordFails() {
+    when(cognitoClient.adminSetUserPassword(any())).thenThrow(
+        new AWSCognitoIdentityProviderException("Dummy exception."));
+
+    boolean updated = service.updatePassword(SUB_VALUE, PASSWORD, false);
+
+    assertThat("Unexpected updated state.", updated, is(false));
+  }
+
+  @Test
+  public void shouldSendDeleteCognitoUserRequest() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     authenticationUser.setId(SUB_VALUE);
 
@@ -206,7 +255,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldPublishDeleteProfileUserEventWhenDeleteEventReceivedWhenPublishIsTrue() {
+  public void shouldPublishDeleteProfileUserEventWhenPublishIsTrue() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     authenticationUser.setUsername(USERNAME);
 
@@ -222,7 +271,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldNotPublishDeleteProfileUserEventWhenDeleteEventReceivedWhenPublishIsFalse() {
+  public void shouldNotPublishDeleteProfileUserEventWhenPublishIsFalse() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     authenticationUser.setUsername(USERNAME);
 

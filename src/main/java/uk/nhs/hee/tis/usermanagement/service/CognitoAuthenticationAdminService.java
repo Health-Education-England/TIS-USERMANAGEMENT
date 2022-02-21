@@ -1,11 +1,13 @@
 package uk.nhs.hee.tis.usermanagement.service;
 
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
+import com.amazonaws.services.cognitoidp.model.AWSCognitoIdentityProviderException;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
+import com.amazonaws.services.cognitoidp.model.AdminSetUserPasswordRequest;
 import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -84,7 +86,20 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   @Override
   public boolean updatePassword(String userId, String password, boolean tempPassword) {
-    return false;
+    AdminSetUserPasswordRequest request = new AdminSetUserPasswordRequest()
+        .withUserPoolId(userPoolId)
+        .withUsername(userId)
+        .withPassword(password)
+        .withPermanent(!tempPassword);
+
+    try {
+      cognitoClient.adminSetUserPassword(request);
+    } catch (AWSCognitoIdentityProviderException e) {
+      log.error(e.getMessage());
+      return false;
+    }
+
+    return true;
   }
 
   @Override
