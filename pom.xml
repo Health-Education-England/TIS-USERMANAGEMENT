@@ -28,7 +28,7 @@
     <lombok.version>1.16.22</lombok.version>
     <mapstruct.version>1.4.2.Final</mapstruct.version>
     <mockito.version>2.22.0</mockito.version>
-
+    <aws-java-sdk.version>1.12.162</aws-java-sdk.version>
 
     <!-- SonarCloud configuration -->
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
@@ -73,12 +73,12 @@
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-core</artifactId>
-      <version>1.12.153</version>
+      <version>${aws-java-sdk.version}</version>
     </dependency>
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-cognitoidp</artifactId>
-      <version>1.12.153</version>
+      <version>${aws-java-sdk.version}</version>
     </dependency>
 
     <dependency>

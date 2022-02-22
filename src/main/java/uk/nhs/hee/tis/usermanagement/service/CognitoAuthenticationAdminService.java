@@ -98,7 +98,7 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
       AdminGetUserResult result = cognitoClient.adminGetUser(request);
       return Optional.of(resultMapper.toAuthenticationUser(result));
     } catch (UserNotFoundException e) {
-      log.warn(e.getMessage());
+      log.warn(e.getMessage(), e);
       return Optional.empty();
     }
   }
@@ -126,7 +126,7 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
       return true;
     } catch (AWSCognitoIdentityProviderException e) {
-      log.error(e.getMessage());
+      log.error(e.getMessage(), e);
       return false;
     }
   }
@@ -149,7 +149,7 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
       cognitoClient.adminSetUserPassword(request);
       return true;
     } catch (AWSCognitoIdentityProviderException e) {
-      log.error(e.getMessage());
+      log.error(e.getMessage(), e);
       return false;
     }
   }
