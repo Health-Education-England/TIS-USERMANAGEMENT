@@ -39,7 +39,7 @@ import uk.nhs.hee.tis.usermanagement.event.DeleteAuthenticationUserRequestedEven
 import uk.nhs.hee.tis.usermanagement.event.DeleteProfileUserRequestEvent;
 import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
-import uk.nhs.hee.tis.usermanagement.mapper.KeycloakUserMapperImpl;
+import uk.nhs.hee.tis.usermanagement.mapper.AuthenticationUserMapperImpl;
 
 @RunWith(MockitoJUnitRunner.class)
 public class KeyCloakAdminClientServiceTest {
@@ -67,7 +67,7 @@ public class KeyCloakAdminClientServiceTest {
   private ApplicationEventPublisher applicationEventPublisherMock;
 
   @Spy
-  private KeycloakUserMapperImpl mapper;
+  private AuthenticationUserMapperImpl mapper;
 
   private UserDTO createUserDTO() {
     UserDTO userDTO = new UserDTO();

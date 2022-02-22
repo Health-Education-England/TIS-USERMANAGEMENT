@@ -9,11 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.keycloak.representations.idm.GroupRepresentation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
@@ -22,35 +19,39 @@ import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserAttributesCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserGroupsCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.UpdateUserCommand;
-import uk.nhs.hee.tis.usermanagement.event.CreateAuthenticationUserRequestedEvent;
-import uk.nhs.hee.tis.usermanagement.event.CreateProfileUserRequestedEvent;
-import uk.nhs.hee.tis.usermanagement.event.DeleteAuthenticationUserRequestedEvent;
-import uk.nhs.hee.tis.usermanagement.event.DeleteProfileUserRequestEvent;
 import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
-import uk.nhs.hee.tis.usermanagement.mapper.KeycloakUserMapper;
+import uk.nhs.hee.tis.usermanagement.mapper.AuthenticationUserMapper;
 
 @Service
-public class KeyCloakAdminClientService implements AuthenticationAdminService {
+@ConditionalOnProperty(name = "application.authentication-provider", havingValue = "keycloak")
+public class KeyCloakAdminClientService extends AbstractAuthenticationAdminService {
 
   static final String REALM_LIN = "lin";
 
-  private static final Logger LOG = LoggerFactory.getLogger(KeyCloakAdminClientService.class);
-
   private static final String NAME = "Keycloak";
 
-  @Autowired
-  private KeycloakAdminClient keycloakAdminClient;
+  private final KeycloakAdminClient keycloakAdminClient;
 
-  @Autowired
-  private ApplicationEventPublisher applicationEventPublisher;
+  private final AuthenticationUserMapper mapper;
 
-  @Autowired
-  private KeycloakUserMapper mapper;
+  KeyCloakAdminClientService(ApplicationEventPublisher applicationEventPublisher,
+      KeycloakAdminClient keycloakAdminClient, AuthenticationUserMapper mapper) {
+    super(applicationEventPublisher);
+    this.keycloakAdminClient = keycloakAdminClient;
+    this.mapper = mapper;
+  }
 
   @Override
   public String getServiceName() {
     return NAME;
+  }
+
+  @Override
+  AuthenticationUserDto createUser(CreateUserDTO createUserDto) {
+    User userToCreate = heeUserToKeycloakUser(createUserDto);
+    User kcUser = keycloakAdminClient.createUser(REALM_LIN, userToCreate);
+    return mapper.toAuthenticationUser(kcUser);
   }
 
   @Override
@@ -70,24 +71,6 @@ public class KeyCloakAdminClientService implements AuthenticationAdminService {
 
     GetUserCommand getUserCommand = new GetUserCommand(keycloakAdminClient, username, REALM_LIN);
     return getUserCommand.execute();
-  }
-
-  /**
-   * Create user in Keycloak and
-   *
-   * @param event the user to create
-   */
-  @EventListener
-  public void createUserEventListener(CreateAuthenticationUserRequestedEvent event) {
-    // create user in KeyCloak
-    LOG.info("Received CreateKeycloakUserEvent for user [{}]",
-        event.getUserDTO().getEmailAddress());
-    User userToCreate = heeUserToKeycloakUser(event.getUserDTO());
-    User kcUser = keycloakAdminClient.createUser(REALM_LIN, userToCreate);
-    AuthenticationUserDto authenticationUser = mapper.toAuthenticationUser(kcUser);
-    applicationEventPublisher.publishEvent(
-        new CreateProfileUserRequestedEvent(event.getUserToCreateInProfileService(),
-            authenticationUser));
   }
 
   @Override
@@ -183,15 +166,9 @@ public class KeyCloakAdminClientService implements AuthenticationAdminService {
         createUserDTO.getTempPassword(), attributes, createUserDTO.isActive());
   }
 
-  @EventListener
-  public void deleteKeycloakUserEventListener(DeleteAuthenticationUserRequestedEvent event) {
-    LOG.info("Received DeleteAuthenticationUserEvent for user [{}]",
-        event.getAuthenticationUser().getUsername());
-    User kcUser = mapper.toKeycloakUser(event.getAuthenticationUser());
+  @Override
+  void deleteUser(AuthenticationUserDto authenticationUser) {
+    User kcUser = mapper.toKeycloakUser(authenticationUser);
     keycloakAdminClient.removeUser(REALM_LIN, kcUser);
-    if (event.isPublishDeleteProfileUserEvent()) {
-      applicationEventPublisher.publishEvent(
-          new DeleteProfileUserRequestEvent(event.getAuthenticationUser().getUsername()));
-    }
   }
 }
