@@ -121,7 +121,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: usermanagement
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} -f ./usermanagement-service/Dockerfile ./usermanagement-service
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} .
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push --all-tags $ECR_REGISTRY/$ECR_REPOSITORY
 
