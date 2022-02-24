@@ -99,11 +99,7 @@ jobs:
       - name: package java
         run: |
           mvn install -DskipTests
-          cp ./target/usermanagement.war ./target/app.jar
-
-      - name: Publish usermanagement artifact
-        continue-on-error: true
-        run: mvn --batch-mode deploy -DskipTests --file pom.xml
+          cp ./target/usermanagement-*.jar ./target/app.jar
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
