@@ -99,7 +99,7 @@ jobs:
       - name: package java
         run: |
           mvn install -DskipTests
-          cp ./target/usermanagement.war ./target/app.jar
+          cp ./target/usermanagement-*.jar ./target/app.jar
 
       - name: Publish usermanagement artifact
         continue-on-error: true
