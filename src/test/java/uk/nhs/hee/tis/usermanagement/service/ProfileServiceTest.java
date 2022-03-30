@@ -3,7 +3,7 @@ package uk.nhs.hee.tis.usermanagement.service;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.usermanagement.service.ProfileService.HEE_USERS_ENDPOINT;
 
@@ -74,7 +74,7 @@ public class ProfileServiceTest {
     try {
       testObj.getAllUsers(null, "SEARCH STRING");
     } finally {
-      verifyZeroInteractions(profileServiceImplMock);
+      verifyNoInteractions(profileServiceImplMock);
     }
   }
 
@@ -122,7 +122,7 @@ public class ProfileServiceTest {
     try {
       testObj.getUserByUsername(null);
     } finally {
-      verifyZeroInteractions(profileServiceImplMock);
+      verifyNoInteractions(profileServiceImplMock);
     }
   }
 
@@ -161,7 +161,7 @@ public class ProfileServiceTest {
     try {
       testObj.createProfileUserEventListener(null);
     } finally {
-      verifyZeroInteractions(profileServiceImplMock);
+      verifyNoInteractions(profileServiceImplMock);
     }
   }
 
@@ -184,7 +184,7 @@ public class ProfileServiceTest {
     try {
       testObj.updateUser(null);
     } finally {
-      verifyZeroInteractions(profileServiceImplMock);
+      verifyNoInteractions(profileServiceImplMock);
     }
   }
 
