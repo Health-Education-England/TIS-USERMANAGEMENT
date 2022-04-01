@@ -9,7 +9,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.nhs.hee.tis.usermanagement.service.KeyCloakAdminClientService.REALM_LIN;
 
@@ -98,7 +98,7 @@ public class KeyCloakAdminClientServiceTest {
     try {
       testObj.createUserEventListener(null);
     } finally {
-      verifyZeroInteractions(keycloakAdminClientMock);
+      verifyNoInteractions(keycloakAdminClientMock);
     }
   }
 
@@ -132,7 +132,7 @@ public class KeyCloakAdminClientServiceTest {
     try {
       testObj.updateUser((UserDTO) null);
     } finally {
-      verifyZeroInteractions(keycloakAdminClientMock);
+      verifyNoInteractions(keycloakAdminClientMock);
     }
   }
 
@@ -181,7 +181,7 @@ public class KeyCloakAdminClientServiceTest {
     try {
       testObj.getUserAttributes(null);
     } finally {
-      verifyZeroInteractions(keycloakAdminClientMock);
+      verifyNoInteractions(keycloakAdminClientMock);
     }
   }
 
@@ -201,7 +201,7 @@ public class KeyCloakAdminClientServiceTest {
     try {
       testObj.getUserGroups(null);
     } finally {
-      verifyZeroInteractions(keycloakAdminClientMock);
+      verifyNoInteractions(keycloakAdminClientMock);
     }
   }
 
