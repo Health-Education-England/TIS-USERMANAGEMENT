@@ -19,7 +19,7 @@ jobs:
         uses: actions/setup-java@v3.1.0
         with:
           cache: maven
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Configure AWS credentials
@@ -77,7 +77,7 @@ jobs:
         uses: actions/setup-java@v3.1.0
         with:
           cache: maven
-          distribution: adopt
+          distribution: temurin
           java-version: 11
 
       - name: Configure AWS credentials
