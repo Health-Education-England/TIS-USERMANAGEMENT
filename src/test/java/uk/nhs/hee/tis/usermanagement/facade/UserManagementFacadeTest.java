@@ -58,7 +58,7 @@ public class UserManagementFacadeTest {
   private final String roRole = "RVOfficer";
   private final String rvAdmin = "RVAdmin";
   private final String HEE = "HEE";
-  private final String tssSupportRole = "TssSupportAdmin";
+  private static final String TSS_SUPPORT_ADMIN = "TSS Support Admin";
 
   @InjectMocks
   UserManagementFacade testClass;
@@ -86,7 +86,8 @@ public class UserManagementFacadeTest {
 
   @Test
   public void shouldGetAllAssignableRoles() {
-    List<String> mockRoles = Lists.newArrayList(adminRole, rvAdmin, roRole, etlRole, tssSupportRole);
+    List<String> mockRoles =
+        Lists.newArrayList(adminRole, rvAdmin, roRole, etlRole, TSS_SUPPORT_ADMIN);
 
     when(profileService.getAllRoles()).thenReturn(mockRoles);
     List<String> actual = testClass.getAllAssignableRoles();
