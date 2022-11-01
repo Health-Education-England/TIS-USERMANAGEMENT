@@ -75,6 +75,11 @@ public class UserManagementController {
     return "allUsers";
   }
 
+  /**
+   * @param search - a whitespace separated collection of usernames to search for
+   * @param model - the model to provide to the view
+   * @return the key (view name) for the view to send to the user
+   */
   @PreAuthorize("hasAuthority('heeuser:view')")
   @GetMapping("/rolesForUsers")
   public String getRolesForUsers(@RequestParam(required = false, defaultValue = "") String search,
