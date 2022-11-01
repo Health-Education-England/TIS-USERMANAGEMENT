@@ -3,7 +3,10 @@ package uk.nhs.hee.tis.usermanagement.resource;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
 import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -29,6 +32,8 @@ public class UserManagementController {
   private static final String ATTRIBUTE_MESSAGE = "message";
 
   public static final int REQUIRED_PASSWORD_LENGTH = 8;
+  public static final String SUCCESS = "success";
+
   @Autowired
   private UserManagementFacade userManagementFacade;
 
@@ -68,6 +73,25 @@ public class UserManagementController {
     model.addAttribute("currentPage", pageable.getPageNumber() + 1);
     model.addAttribute("searchParam", search);
     return "allUsers";
+  }
+
+  /**
+   * Show the roles associated with a list of users.
+   *
+   * @param search - a whitespace separated collection of usernames to search for
+   * @param model - the model to provide to the view
+   * @return the key (view name) for the view to send to the user
+   */
+  @PreAuthorize("hasAuthority('heeuser:view')")
+  @GetMapping("/rolesForUsers")
+  public String getRolesForUsers(@RequestParam(required = false, defaultValue = "") String search,
+      Model model) {
+    List<UserDTO> userDtos = Arrays.stream(search.split("\\s"))
+        .map(userManagementFacade::getUserByNameIgnoreCase)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+    model.addAttribute("users", userDtos);
+    return "rolesForUsers";
   }
 
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
@@ -123,7 +147,7 @@ public class UserManagementController {
         "A request for user " + user.getFirstName() + " " + user.getLastName()
             + " (" + user.getName() + ") has been made. "
             + "It may take a little while before you'll be able to see the new user");
-    return "success";
+    return SUCCESS;
   }
 
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
@@ -133,7 +157,7 @@ public class UserManagementController {
     model.addAttribute(ATTRIBUTE_MESSAGE,
         "The user " + user.getFirstName() + " " + user.getLastName() + " (" + user.getName()
             + ") has been updated");
-    return "success";
+    return SUCCESS;
   }
 
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
@@ -146,7 +170,7 @@ public class UserManagementController {
 
     userManagementFacade.updatePassword(passwordDTO);
     model.addAttribute(ATTRIBUTE_MESSAGE, "Password has been updated for the user");
-    return "success";
+    return SUCCESS;
   }
 
   @PreAuthorize("hasAuthority('heeuser:delete')")
@@ -156,6 +180,6 @@ public class UserManagementController {
     model.addAttribute(ATTRIBUTE_MESSAGE,
         "The user " + user.getName()
             + " has been deleted. This may take a while to show up on the system");
-    return "success";
+    return SUCCESS;
   }
 }
