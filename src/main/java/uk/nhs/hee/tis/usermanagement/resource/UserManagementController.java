@@ -3,7 +3,9 @@ package uk.nhs.hee.tis.usermanagement.resource;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
 import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -68,6 +70,17 @@ public class UserManagementController {
     model.addAttribute("currentPage", pageable.getPageNumber() + 1);
     model.addAttribute("searchParam", search);
     return "allUsers";
+  }
+
+  @PreAuthorize("hasAuthority('heeuser:view')")
+  @GetMapping("/rolesForUsers")
+  public String getUserPermissions(@RequestParam(required = false, defaultValue = "") String search,
+      Model model) {
+    List<UserDTO> userDtos = Arrays.stream(search.split("\\s"))
+        .map(userManagementFacade::getUserByNameIgnoreCase)
+        .collect(Collectors.toList());
+    model.addAttribute("users", userDtos);
+    return "rolesForUsers";
   }
 
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
