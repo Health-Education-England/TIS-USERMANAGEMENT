@@ -5,6 +5,7 @@ import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
 import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,10 +75,14 @@ public class UserManagementController {
 
   @PreAuthorize("hasAuthority('heeuser:view')")
   @GetMapping("/rolesForUsers")
-  public String getUserPermissions(@RequestParam(required = false, defaultValue = "") String search,
+  public String getRolesForUsers(@RequestParam(required = false, defaultValue = "") String search,
+      @RequestParam(defaultValue = "") String sort,
+      @RequestParam(defaultValue = "") String sortOrder,
       Model model) {
     List<UserDTO> userDtos = Arrays.stream(search.split("\\s"))
         .map(userManagementFacade::getUserByNameIgnoreCase)
+        //        .sorted(Comparator.comparing())
+        .filter(Objects::nonNull)
         .collect(Collectors.toList());
     model.addAttribute("users", userDtos);
     return "rolesForUsers";

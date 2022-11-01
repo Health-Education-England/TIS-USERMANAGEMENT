@@ -49,7 +49,7 @@
         <div>
             <form method="get" class="pure-form">
                 <label for="search">Search by username</label>
-                <input type="text" name="search" id="search" placeholder="Bob">
+x                <input type="textarea" name="search" id="search" placeholder="saedhia.mohammed@hee.nhs.uk">
                 <input type="submit" value="Submit" class="pure-button">
             </form>
         </div>
@@ -70,7 +70,7 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="user : ${pagedUsers.getContent()}">
+            <tr th:each="user : ${users}">
                 <td th:text="${user.name}">name</td>
                 <td th:text="${user.firstName}">firstName</td>
                 <td th:text="${user.lastName}">firstName</td>
@@ -94,17 +94,6 @@
     </div>
     <div class="pure-u-1-5"></div>
     <div class="pure-u-1-5"></div>
-    <div class="pure-u-3-5">
-   <span th:if="${pagedUsers.hasPrevious()}">
-      <a th:href="@{'/allUsers?' + ${pagedUsers.getPreviousPageRequestParameters()} + '&search=' + ${searchParam}}">Previous</a>
-   </span>
-
-        <span th:text="'Page: ' + ${currentPage}">page</span>
-
-        <span th:if="${pagedUsers.hasNext()}">
-      <a th:href="@{'/allUsers?' + ${pagedUsers.getNextPageRequestParameters()} + '&search=' + ${searchParam}}">Next</a>
-   </span>
-    </div>
     <div class="pure-u-1-5"></div>
 </div>
 </body>
