@@ -76,6 +76,8 @@ public class UserManagementController {
   }
 
   /**
+   * Show the roles associated with a list of users.
+   *
    * @param search - a whitespace separated collection of usernames to search for
    * @param model - the model to provide to the view
    * @return the key (view name) for the view to send to the user
