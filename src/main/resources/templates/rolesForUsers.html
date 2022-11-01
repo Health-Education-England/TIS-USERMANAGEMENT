@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css"
+          integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+
+    <!--[if lte IE 8]>
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-old-ie-min.css">
+    <![endif]-->
+    <!--[if gt IE 8]><!-->
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/grids-responsive-min.css">
+    <!--<![endif]-->
+
+    <!-- CSS only -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+    <!-- JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
+
+    <title>All Users</title>
+
+    <style>
+      .create-user { float: right; }
+      table.pure-table { width: 100%; }
+      div.control-section { margin-bottom: 10px; }
+   </style>
+</head>
+
+<body>
+
+<div class="pure-g">
+
+    <div class="pure-u-1-5"></div>
+    <div class="pure-u-3-5">
+        <h1>All Users</h1>
+    </div>
+    <div class="pure-u-1-5"></div>
+
+    <div class="pure-u-1-5"></div>
+    <div class="pure-u-3-5 control-section">
+
+
+        <div>
+            <h3 th:text="${message != null} ? ${message}">Flash Message</h3>
+            <a class="pure-button create-user" th:href="@{'/createUser'}">Create User</a>
+        </div>
+        <div>
+            <form method="get" class="pure-form">
+                <label for="search">Search by username</label>
+                <input type="text" name="search" id="search" placeholder="Bob">
+                <input type="submit" value="Submit" class="pure-button">
+            </form>
+        </div>
+    </div>
+    <div class="pure-u-1-5"></div>
+
+    <div class="pure-u-1-5"></div>
+    <div class="pure-u-3-5">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Username</th>
+                <th>Forenames</th>
+                <th>Surname</th>
+                <th>Email Address</th>
+                <th>Roles</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="user : ${pagedUsers.getContent()}">
+                <td th:text="${user.name}">name</td>
+                <td th:text="${user.firstName}">firstName</td>
+                <td th:text="${user.lastName}">firstName</td>
+                <td th:text="${user.emailAddress}">email</td>
+                <td>
+                    <div class="d-flex flex-wrap">
+                  <span th:each="role : ${user.roles}">
+                       <span class="badge text-bg-secondary" th:text="${role}"></span>
+                     &nbsp;
+                  </span>
+
+
+
+                    </div>
+
+                </td>
+                <td><a class="pure-button" th:href="@{'/user?userName=' + ${user.name}}">Edit</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="pure-u-1-5"></div>
+    <div class="pure-u-1-5"></div>
+    <div class="pure-u-3-5">
+   <span th:if="${pagedUsers.hasPrevious()}">
+      <a th:href="@{'/allUsers?' + ${pagedUsers.getPreviousPageRequestParameters()} + '&search=' + ${searchParam}}">Previous</a>
+   </span>
+
+        <span th:text="'Page: ' + ${currentPage}">page</span>
+
+        <span th:if="${pagedUsers.hasNext()}">
+      <a th:href="@{'/allUsers?' + ${pagedUsers.getNextPageRequestParameters()} + '&search=' + ${searchParam}}">Next</a>
+   </span>
+    </div>
+    <div class="pure-u-1-5"></div>
+</div>
+</body>
+</html>
