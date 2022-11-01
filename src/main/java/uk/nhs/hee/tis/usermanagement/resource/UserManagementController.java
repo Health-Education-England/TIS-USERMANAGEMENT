@@ -32,6 +32,8 @@ public class UserManagementController {
   private static final String ATTRIBUTE_MESSAGE = "message";
 
   public static final int REQUIRED_PASSWORD_LENGTH = 8;
+  public static final String SUCCESS = "success";
+
   @Autowired
   private UserManagementFacade userManagementFacade;
 
@@ -76,12 +78,9 @@ public class UserManagementController {
   @PreAuthorize("hasAuthority('heeuser:view')")
   @GetMapping("/rolesForUsers")
   public String getRolesForUsers(@RequestParam(required = false, defaultValue = "") String search,
-      @RequestParam(defaultValue = "") String sort,
-      @RequestParam(defaultValue = "") String sortOrder,
       Model model) {
     List<UserDTO> userDtos = Arrays.stream(search.split("\\s"))
         .map(userManagementFacade::getUserByNameIgnoreCase)
-        //        .sorted(Comparator.comparing())
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
     model.addAttribute("users", userDtos);
@@ -141,7 +140,7 @@ public class UserManagementController {
         "A request for user " + user.getFirstName() + " " + user.getLastName()
             + " (" + user.getName() + ") has been made. "
             + "It may take a little while before you'll be able to see the new user");
-    return "success";
+    return SUCCESS;
   }
 
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
@@ -151,7 +150,7 @@ public class UserManagementController {
     model.addAttribute(ATTRIBUTE_MESSAGE,
         "The user " + user.getFirstName() + " " + user.getLastName() + " (" + user.getName()
             + ") has been updated");
-    return "success";
+    return SUCCESS;
   }
 
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
@@ -164,7 +163,7 @@ public class UserManagementController {
 
     userManagementFacade.updatePassword(passwordDTO);
     model.addAttribute(ATTRIBUTE_MESSAGE, "Password has been updated for the user");
-    return "success";
+    return SUCCESS;
   }
 
   @PreAuthorize("hasAuthority('heeuser:delete')")
@@ -174,6 +173,6 @@ public class UserManagementController {
     model.addAttribute(ATTRIBUTE_MESSAGE,
         "The user " + user.getName()
             + " has been deleted. This may take a while to show up on the system");
-    return "success";
+    return SUCCESS;
   }
 }
