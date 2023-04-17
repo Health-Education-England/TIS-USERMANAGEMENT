@@ -40,7 +40,7 @@ public class UserManagementFacade {
   private static final Logger LOG = LoggerFactory.getLogger(UserManagementFacade.class);
 
   private static final Collection<String> restrictedRoles = Collections.unmodifiableSet(
-      new HashSet<>(Arrays.asList("RVOfficer", "Machine User", "HEE", "TSS Support Admin")));
+      new HashSet<>(Arrays.asList("RVOfficer", "Machine User", "HEE")));
 
   private static final Collection<String> entities = Collections.singleton("HEE");
 
