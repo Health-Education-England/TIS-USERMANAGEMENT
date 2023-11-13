@@ -23,7 +23,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <java.version>1.8</java.version>
     <spring-cloud.version>2021.0.1</spring-cloud.version>
-    <mapstruct.version>1.4.2.Final</mapstruct.version>
+    <mapstruct.version>1.5.5.Final</mapstruct.version>
     <aws-java-sdk.version>1.12.225</aws-java-sdk.version>
 
     <!-- SonarCloud configuration -->
