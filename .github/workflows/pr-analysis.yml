@@ -11,5 +11,6 @@ jobs:
     uses: health-education-england/.github/.github/workflows/pr-analysis-maven.yml@main
     with:
       use-codeartifact: true
+      java-version: 11
     secrets:
       sonar-token: ${{ secrets.SONAR_TOKEN }}
