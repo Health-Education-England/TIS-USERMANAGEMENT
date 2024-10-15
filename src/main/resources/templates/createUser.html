@@ -203,7 +203,8 @@
                         </div>
 
 
-                        <div class="pure-control-group">
+                        <div class="pure-control-group"
+                            th:if="${@environment.getProperty('application.authentication-provider') == 'keycloak'}">
                             <label for="password">Password</label>
                             <input type="password"
                                    id="password"
@@ -214,7 +215,8 @@
                                    th:field="${user.password}">
                         </div>
 
-                        <div class="pure-control-group">
+                        <div class="pure-control-group"
+                              th:if="${@environment.getProperty('application.authentication-provider') == 'keycloak'}">
                             <label for="confirmPassword">Confirm Password</label>
                             <input type="password"
                                    id="confirmPassword"
@@ -225,7 +227,8 @@
                                    th:field="${user.confirmPassword}">
                         </div>
 
-                        <div class="pure-control-group">
+                        <div class="pure-control-group"
+                             th:if="${@environment.getProperty('application.authentication-provider') == 'keycloak'}">
                             <label for="tempPassword">Temporary Password</label>
                             <input type="checkbox"
                                    id="tempPassword"

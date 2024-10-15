@@ -9,7 +9,6 @@ import com.amazonaws.services.cognitoidp.model.AdminDisableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminEnableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
-import com.amazonaws.services.cognitoidp.model.AdminSetUserPasswordRequest;
 import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
 import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import java.util.Optional;
@@ -75,16 +74,6 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
       cognitoClient.adminDisableUser(disableRequest);
     }
 
-    // Passwords are temporary by default, set permanent if required.
-    if (!createUserDto.getTempPassword()) {
-      AdminSetUserPasswordRequest passwordRequest = new AdminSetUserPasswordRequest()
-          .withUserPoolId(userPoolId)
-          .withUsername(result.getUser().getUsername())
-          .withPassword(createUserDto.getPassword())
-          .withPermanent(true);
-      cognitoClient.adminSetUserPassword(passwordRequest);
-    }
-
     return resultMapper.toAuthenticationUser(result);
   }
 
@@ -139,19 +128,7 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   @Override
   public boolean updatePassword(String userId, String password, boolean tempPassword) {
-    AdminSetUserPasswordRequest request = new AdminSetUserPasswordRequest()
-        .withUserPoolId(userPoolId)
-        .withUsername(userId)
-        .withPassword(password)
-        .withPermanent(!tempPassword);
-
-    try {
-      cognitoClient.adminSetUserPassword(request);
-      return true;
-    } catch (AWSCognitoIdentityProviderException e) {
-      log.error(e.getMessage(), e);
-      return false;
-    }
+    throw new UnsupportedOperationException("Users must reset their own password.");
   }
 
   @Override

@@ -81,7 +81,7 @@
     <dependency>
       <groupId>com.transformuk.hee</groupId>
       <artifactId>profile-client</artifactId>
-      <version>3.2.0</version>
+      <version>3.2.1</version>
     </dependency>
     <dependency>
       <groupId>com.transformuk.hee</groupId>

@@ -33,7 +33,6 @@ public abstract class CognitoRequestMapper {
    */
   @Mapping(target = "username", source = "name")
   @Mapping(target = "userAttributes", source = "createUserDto")
-  @Mapping(target = "temporaryPassword", source = "password")
   public abstract AdminCreateUserRequest toCreateUserRequest(CreateUserDTO createUserDto);
 
 

@@ -206,6 +206,7 @@
                     </fieldset>
                 </form>
                 <form class="pure-form-aligned update-password-form"
+                      th:if="${@environment.getProperty('application.authentication-provider') == 'keycloak'}"
                       th:method="post"
                       th:action="@{/updatePassword}"
                       th:object="${userPassword}">
