@@ -6,7 +6,6 @@ import com.transformuk.hee.tis.profile.dto.RoleDTO;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import com.transformuk.hee.tis.profile.service.dto.UserProgrammeDTO;
 import com.transformuk.hee.tis.profile.service.dto.UserTrustDTO;
-import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
 import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
 import java.util.Collections;
@@ -30,8 +29,8 @@ public class HeeUserMapper {
   /**
    * Used for the list page where only the profile service info is needed
    *
-   * @param heeUserDto
-   * @return
+   * @param heeUserDto The Authorization (profile) information to map
+   * @return The UserManagement composite DTO, which will be partially populated
    */
   public UserDTO convert(HeeUserDTO heeUserDto) {
     UserDTO userDto = new UserDTO();
@@ -52,14 +51,11 @@ public class HeeUserMapper {
   public HeeUserDTO convert(CreateUserDTO createUserDto, List<TrustDTO> knownTrusts,
       List<ProgrammeDTO> knownProgrammes) {
     Preconditions.checkNotNull(createUserDto, "stop being stooopid");
-    HeeUserDTO heeUserDto = mapUserAttributes(createUserDto.getName(), createUserDto.getFirstName(),
+    return mapUserAttributes(createUserDto.getName(), createUserDto.getFirstName(),
         createUserDto.getLastName(), createUserDto.getGmcId(), createUserDto.getPhoneNumber(),
         createUserDto.getEmailAddress(), createUserDto.isActive(), createUserDto.getLocalOffices(),
         createUserDto.getRoles(), createUserDto.getAssociatedTrusts(),
         createUserDto.getAssociatedProgrammes(), knownTrusts, knownProgrammes);
-    heeUserDto.setPassword(createUserDto.getPassword());
-    heeUserDto.setTemporaryPassword(createUserDto.getTempPassword());
-    return heeUserDto;
 
   }
 
@@ -94,10 +90,10 @@ public class HeeUserMapper {
   }
 
   private Set<UserTrustDTO> mapUserTrust(Set<String> associatedTrusts, List<TrustDTO> knownTrusts) {
-    Set<UserTrustDTO> trusts = Collections.EMPTY_SET;
+    Set<UserTrustDTO> trusts = Collections.emptySet();
     if (CollectionUtils.isNotEmpty(associatedTrusts)) {
       Map<Long, TrustDTO> idsToTrust = knownTrusts.stream()
-          .collect(Collectors.toMap((TrustDTO::getId), (trust) -> trust));
+          .collect(Collectors.toMap((TrustDTO::getId), trust -> trust));
 
       trusts = associatedTrusts.stream().map(Long::parseLong).map(idsToTrust::get).map(trustDto -> {
         UserTrustDTO userTrustDto = new UserTrustDTO();
@@ -112,10 +108,10 @@ public class HeeUserMapper {
 
   private Set<UserProgrammeDTO> mapUserProgramme(Set<String> associatedProgrammes,
       List<ProgrammeDTO> knownProgrammes) {
-    Set<UserProgrammeDTO> programmes = Collections.EMPTY_SET;
+    Set<UserProgrammeDTO> programmes = Collections.emptySet();
     if (CollectionUtils.isNotEmpty(knownProgrammes)) {
       Map<Long, ProgrammeDTO> idsToProgramme = Sets.newHashSet(knownProgrammes).stream()
-          .collect(Collectors.toMap((ProgrammeDTO::getId), (programme) -> programme));
+          .collect(Collectors.toMap((ProgrammeDTO::getId), programme -> programme));
 
       programmes = associatedProgrammes.stream().map(Long::parseLong).map(idsToProgramme::get)
           .map(programmeDto -> {
@@ -132,17 +128,14 @@ public class HeeUserMapper {
   /**
    * Used for the details page
    *
-   * @param heeUserDto
-   * @param authenticationUser
-   * @param dbcdtos
-   * @return
+   * @param heeUserDto The Authorization (profile) user attributes
+   * @param authenticationUser The Authentication user attributes
+   * @return A composite user from data we hold
    */
-  public UserDTO convert(HeeUserDTO heeUserDto, AuthenticationUserDto authenticationUser,
-      Set<DBCDTO> dbcdtos) {
+  public UserDTO convert(HeeUserDTO heeUserDto, AuthenticationUserDto authenticationUser) {
     UserDTO userDto = new UserDTO();
     mapHeeUserAttributes(userDto, heeUserDto);
-    mapKeycloakAttributes(userDto, authenticationUser);
-    // mapDBCAttributes(userDto, heeUserDto, dbcdtos);
+    mapAuthUserAttributes(userDto, authenticationUser);
 
     return userDto;
   }
@@ -181,23 +174,12 @@ public class HeeUserMapper {
     return userDto;
   }
 
-  private UserDTO mapKeycloakAttributes(UserDTO userDto,
+  private UserDTO mapAuthUserAttributes(UserDTO userDto,
       AuthenticationUserDto authenticationUserDto) {
     if (authenticationUserDto != null) {
       userDto.setKcId(authenticationUserDto.getId());
       userDto.setActive(authenticationUserDto.isEnabled());
     }
-    return userDto;
-  }
-
-  private UserDTO mapDbcAttributes(UserDTO userDto, HeeUserDTO heeUserDto, Set<DBCDTO> dbcdtos) {
-    Map<String, String> dbcToLocalOffice = dbcdtos.stream()
-        .collect(Collectors.toMap(DBCDTO::getDbc, DBCDTO::getName));
-    Set<String> setOfLOs = heeUserDto.getDesignatedBodyCodes().stream()
-        .map(dbc -> dbcToLocalOffice.get(dbc))
-        .collect(Collectors.toSet());
-    userDto.setLocalOffices(setOfLOs);
-
     return userDto;
   }
 }

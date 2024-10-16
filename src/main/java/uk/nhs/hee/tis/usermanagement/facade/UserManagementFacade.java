@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,13 +70,12 @@ public class UserManagementFacade {
         () -> new UserNotFoundException(username, ProfileService.NAME));
     AuthenticationUserDto authenticationUser = optionalAuthenticationUser.orElseThrow(
         () -> new UserNotFoundException(username, authenticationAdminService.getServiceName()));
-    Set<DBCDTO> dbcdtos = referenceService.getAllDBCs();
-    return heeUserMapper.convert(heeUserDTO, authenticationUser, dbcdtos);
+    return heeUserMapper.convert(heeUserDTO, authenticationUser);
   }
 
   public UserDTO getUserByNameIgnoreCase(String username) {
     Optional<HeeUserDTO> optionalHeeUserDTO = profileService.getUserByUsernameIgnoreCase(username);
-    if (!optionalHeeUserDTO.isPresent()) {
+    if (optionalHeeUserDTO.isEmpty()) {
       return null;
     } else {
       HeeUserDTO heeUserDTO = optionalHeeUserDTO.get();
@@ -96,7 +94,7 @@ public class UserManagementFacade {
    * <p>
    * Do KC first as thats more likely to fail
    *
-   * @param userDto
+   * @param userDto The complete information to be updated across backend services
    */
   public void updateSingleUser(UserDTO userDto) {
     Optional<AuthenticationUserDto> optionalOriginalUser = authenticationAdminService.getUser(
@@ -117,7 +115,7 @@ public class UserManagementFacade {
       Optional<HeeUserDTO> optionalHeeUserDTO = profileService.updateUser(
           heeUserMapper.convert(userDto, referenceService.getAllTrusts(),
               tcsService.getAllProgrammes()));
-      if (!optionalHeeUserDTO.isPresent()) {
+      if (optionalHeeUserDTO.isEmpty()) {
         //revert KC changes
         if (!authenticationAdminService.updateUser(originalUser)) {
           LOG.error(
@@ -144,7 +142,7 @@ public class UserManagementFacade {
   /**
    * Publish an event that will kick off the deletion of a user.
    *
-   * @param username
+   * @param username The unique preferred username / name of the user to delete
    */
   public void publishDeleteAuthenticationUserRequestedEvent(String username) {
     Optional<AuthenticationUserDto> optionalUser = authenticationAdminService.getUser(username);

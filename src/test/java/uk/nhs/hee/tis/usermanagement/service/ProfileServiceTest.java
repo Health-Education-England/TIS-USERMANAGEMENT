@@ -48,8 +48,6 @@ public class ProfileServiceTest {
   private static final boolean ACTIVE = true;
   private static final String EMAIL_ADDRESS = "EMAIL ADDRESS";
   private static final String GMC_ID = "1234567";
-  private static final String PASSWORD = "PASSWORD";
-  private static final boolean TEMPORARY_PASSWORD = false;
   private static final String ROLE_NAME_1 = "ROLE NAME 1";
   private static final String ROLE_NAME_2 = "ROLE NAME 2";
   private static final String ROLE_NAME_3 = "ROLE NAME 3";
@@ -316,8 +314,6 @@ public class ProfileServiceTest {
     userToCreateDTO.setActive(ACTIVE);
     userToCreateDTO.setEmailAddress(EMAIL_ADDRESS);
     userToCreateDTO.setGmcId(GMC_ID);
-    userToCreateDTO.setPassword(PASSWORD);
-    userToCreateDTO.setTemporaryPassword(TEMPORARY_PASSWORD);
     userToCreateDTO.setDesignatedBodyCodes(Sets.newHashSet());
     return userToCreateDTO;
   }

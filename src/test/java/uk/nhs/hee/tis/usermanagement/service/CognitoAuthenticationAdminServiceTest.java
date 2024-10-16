@@ -2,6 +2,7 @@ package uk.nhs.hee.tis.usermanagement.service;
 
 import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -19,7 +20,6 @@ import com.amazonaws.services.cognitoidp.model.AdminDisableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminEnableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
-import com.amazonaws.services.cognitoidp.model.AdminSetUserPasswordRequest;
 import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
 import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
@@ -88,10 +88,11 @@ public class CognitoAuthenticationAdminServiceTest {
     CreateUserDTO dto = new CreateUserDTO();
     dto.setName(USERNAME);
     dto.setEmailAddress(EMAIL_VALUE);
-    dto.setPassword(PASSWORD);
     dto.setFirstName(GIVEN_NAME_VALUE);
     dto.setLastName(FAMILY_NAME_VALUE);
     dto.setActive(true);
+    // Password fields should never be set when connected to Cognito, but this is tested for completeness
+    dto.setPassword(PASSWORD);
     dto.setTempPassword(true);
 
     CreateAuthenticationUserRequestedEvent event = new CreateAuthenticationUserRequestedEvent(dto,
@@ -105,7 +106,7 @@ public class CognitoAuthenticationAdminServiceTest {
     AdminCreateUserRequest request = requestCaptor.getValue();
     assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
     assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
-    assertThat("Unexpected password.", request.getTemporaryPassword(), is(PASSWORD));
+    assertThat("Unexpected password.", request.getTemporaryPassword(), nullValue());
 
     List<AttributeType> attributes = request.getUserAttributes();
     assertThat("Unexpected attribute count.", attributes.size(), is(3));
@@ -122,7 +123,6 @@ public class CognitoAuthenticationAdminServiceTest {
   public void shouldNotDisableCreatedUserWhenActiveTrue() {
     CreateUserDTO dto = new CreateUserDTO();
     dto.setActive(true);
-    dto.setTempPassword(true);
 
     AdminCreateUserResult result = new AdminCreateUserResult()
         .withUser(new UserType()
@@ -158,47 +158,6 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldNotSetPermanentPasswordForCreatedUserWhenTempPasswordTrue() {
-    CreateUserDTO dto = new CreateUserDTO();
-    dto.setTempPassword(true);
-
-    AdminCreateUserResult result = new AdminCreateUserResult()
-        .withUser(new UserType()
-            .withUsername(USERNAME)
-            .withAttributes(Collections.emptyList()));
-    when(cognitoClient.adminCreateUser(any())).thenReturn(result);
-
-    service.createUser(dto);
-
-    verify(cognitoClient, never()).adminSetUserPassword(any());
-  }
-
-  @Test
-  public void shouldSetPermanentPasswordForCreatedUserWhenTempPasswordFalse() {
-    CreateUserDTO dto = new CreateUserDTO();
-    dto.setPassword(PASSWORD);
-    dto.setTempPassword(false);
-
-    AdminCreateUserResult result = new AdminCreateUserResult()
-        .withUser(new UserType()
-            .withUsername(USERNAME)
-            .withAttributes(Collections.emptyList()));
-    when(cognitoClient.adminCreateUser(any())).thenReturn(result);
-
-    service.createUser(dto);
-
-    ArgumentCaptor<AdminSetUserPasswordRequest> requestCaptor = ArgumentCaptor.forClass(
-        AdminSetUserPasswordRequest.class);
-    verify(cognitoClient).adminSetUserPassword(requestCaptor.capture());
-
-    AdminSetUserPasswordRequest request = requestCaptor.getValue();
-    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
-    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
-    assertThat("Unexpected password.", request.getPassword(), is(PASSWORD));
-    assertThat("Unexpected password permanence.", request.getPermanent(), is(true));
-  }
-
-  @Test
   public void shouldPublishCreatedUserWhenUserCreated() {
     UserType cognitoUser = new UserType();
     cognitoUser.setUsername(USERNAME);
@@ -212,7 +171,6 @@ public class CognitoAuthenticationAdminServiceTest {
 
     CreateUserDTO createUserDto = new CreateUserDTO();
     createUserDto.setActive(true);
-    createUserDto.setTempPassword(true);
 
     CreateAuthenticationUserRequestedEvent event = new CreateAuthenticationUserRequestedEvent(
         createUserDto, new HeeUserDTO());
@@ -229,7 +187,6 @@ public class CognitoAuthenticationAdminServiceTest {
   public void shouldPublishProfileUserToBeCreatedWhenUserCreated() {
     CreateUserDTO createUserDto = new CreateUserDTO();
     createUserDto.setActive(true);
-    createUserDto.setTempPassword(true);
 
     HeeUserDTO heeUser = new HeeUserDTO();
 
@@ -442,53 +399,6 @@ public class CognitoAuthenticationAdminServiceTest {
         new AWSCognitoIdentityProviderException("Dummy Exception."));
 
     boolean updated = service.updateUser(new UserDTO());
-
-    assertThat("Unexpected updated state.", updated, is(false));
-  }
-
-  @Test
-  public void shouldSetTemporaryPasswordWhenTempPasswordIsTrue() {
-    service.updatePassword(SUB_VALUE, PASSWORD, true);
-
-    ArgumentCaptor<AdminSetUserPasswordRequest> requestCaptor = ArgumentCaptor.forClass(
-        AdminSetUserPasswordRequest.class);
-    verify(cognitoClient).adminSetUserPassword(requestCaptor.capture());
-
-    AdminSetUserPasswordRequest request = requestCaptor.getValue();
-    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
-    assertThat("Unexpected username.", request.getUsername(), is(SUB_VALUE));
-    assertThat("Unexpected password.", request.getPassword(), is(PASSWORD));
-    assertThat("Unexpected permanent flag.", request.getPermanent(), is(false));
-  }
-
-  @Test
-  public void shouldSetPermanentPasswordWhenTempPasswordIsFalse() {
-    service.updatePassword(SUB_VALUE, PASSWORD, false);
-
-    ArgumentCaptor<AdminSetUserPasswordRequest> requestCaptor = ArgumentCaptor.forClass(
-        AdminSetUserPasswordRequest.class);
-    verify(cognitoClient).adminSetUserPassword(requestCaptor.capture());
-
-    AdminSetUserPasswordRequest request = requestCaptor.getValue();
-    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
-    assertThat("Unexpected username.", request.getUsername(), is(SUB_VALUE));
-    assertThat("Unexpected password.", request.getPassword(), is(PASSWORD));
-    assertThat("Unexpected permanent flag.", request.getPermanent(), is(true));
-  }
-
-  @Test
-  public void shouldReturnTrueWhenUpdatePasswordSucceeds() {
-    boolean updated = service.updatePassword(SUB_VALUE, PASSWORD, false);
-
-    assertThat("Unexpected updated state.", updated, is(true));
-  }
-
-  @Test
-  public void shouldReturnFalseWhenUpdatePasswordFails() {
-    when(cognitoClient.adminSetUserPassword(any())).thenThrow(
-        new AWSCognitoIdentityProviderException("Dummy exception."));
-
-    boolean updated = service.updatePassword(SUB_VALUE, PASSWORD, false);
 
     assertThat("Unexpected updated state.", updated, is(false));
   }
