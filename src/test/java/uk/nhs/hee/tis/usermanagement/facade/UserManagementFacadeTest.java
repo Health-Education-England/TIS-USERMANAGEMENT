@@ -188,7 +188,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldThrowExceptionUpdatingSingleUserWhenUsernameNotFoundInKeycloak() {
+  public void shouldThrowExceptionUpdatingSingleUserWhenUsernameNotFoundInAuthService() {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
@@ -201,7 +201,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldThrowExceptionUpdatingSingleUserWhenKeycloakUpdateFails() {
+  public void shouldThrowExceptionUpdatingSingleUserWhenAuthServiceUpdateFails() {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
@@ -216,7 +216,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldUpdateSingleKeycloakUserAndThrowExceptionWhenUsernameNotFoundInProfile() {
+  public void shouldUpdateSingleAuthServiceUserAndThrowExceptionWhenUsernameNotFoundInProfile() {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
@@ -232,7 +232,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldNotUpdateSingleKeycloakUserAndThrowExceptionWhenProfileUpdateFails() {
+  public void shouldNotUpdateSingleAuthServiceUserAndThrowExceptionWhenProfileUpdateFails() {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
@@ -256,7 +256,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldUpdateSingleUserWhenKeycloakAndProfileUpdatesSucceed() {
+  public void shouldUpdateSingleUserWhenAuthServiceAndProfileUpdatesSucceed() {
     UserDTO user = new UserDTO();
     user.setName("user1");
     Set<String> newRoles = new HashSet<>(Arrays.asList("role1", "role2"));
@@ -327,7 +327,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldNotPublishDeleteKeycloakUserEventWhenUserNotFound() {
+  public void shouldNotPublishDeleteAuthServiceUserEventWhenUserNotFound() {
     when(authenticationAdminService.getServiceName()).thenReturn("TEST");
 
     UserNotFoundException actual = assertThrows(UserNotFoundException.class,
@@ -339,7 +339,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldPublishDeleteKeycloakUserEventWhenUserFound() {
+  public void shouldPublishDeleteAuthServiceUserEventWhenUserFound() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
 

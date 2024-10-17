@@ -9,7 +9,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,11 +36,14 @@ public class UserManagementController {
   public static final int REQUIRED_PASSWORD_LENGTH = 8;
   public static final String SUCCESS = "success";
 
-  @Autowired
-  private UserManagementFacade userManagementFacade;
+  private final UserManagementFacade userManagementFacade;
+  private final String authProvider;
 
-  @Value("${application.authentication-provider}")
-  private String authProvider;
+  public UserManagementController(UserManagementFacade userManagementFacade,
+      @Value("${application.authentication-provider}") String authProvider) {
+    this.userManagementFacade = userManagementFacade;
+    this.authProvider = authProvider;
+  }
 
   @PreAuthorize("hasAuthority('heeuser:view')")
   @GetMapping("/user")
