@@ -4,8 +4,9 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -23,9 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -53,12 +52,6 @@ import uk.nhs.hee.tis.usermanagement.service.TcsService;
 @RunWith(MockitoJUnitRunner.class)
 public class UserManagementFacadeTest {
 
-  private final String adminRole = "HEE TIS Admin";
-  private final String etlRole = "ETL";
-  private final String roRole = "RVOfficer";
-  private final String rvAdmin = "RVAdmin";
-  private final String HEE = "HEE";
-
   @InjectMocks
   UserManagementFacade testClass;
 
@@ -80,11 +73,12 @@ public class UserManagementFacadeTest {
   @Spy
   private HeeUserMapper userMapper;
 
-  @Rule
-  public ExpectedException exceptionRule = ExpectedException.none();
-
   @Test
   public void shouldGetAllAssignableRoles() {
+    String adminRole = "HEE TIS Admin";
+    String etlRole = "ETL";
+    String roRole = "RVOfficer";
+    String rvAdmin = "RVAdmin";
     List<String> mockRoles = Lists.newArrayList(adminRole, rvAdmin, roRole, etlRole);
 
     when(profileService.getAllRoles()).thenReturn(mockRoles);
@@ -96,7 +90,8 @@ public class UserManagementFacadeTest {
   @Test
   public void shouldGetAllEntityRoles() {
     List<String> entityRoles = testClass.getAllEntityRoles();
-    assertThat(entityRoles, containsInAnyOrder(HEE));
+    String hee = "HEE";
+    assertThat(entityRoles, containsInAnyOrder(hee));
   }
 
   @Test
@@ -136,23 +131,21 @@ public class UserManagementFacadeTest {
     when(authenticationAdminService.getUser("user1")).thenReturn(
         Optional.of(new AuthenticationUserDto()));
 
-    exceptionRule.expect(UserNotFoundException.class);
-    exceptionRule.expectMessage(containsString("user1"));
-    exceptionRule.expectMessage(containsString(ProfileService.NAME));
-
-    testClass.getCompleteUser("user1");
+    UserNotFoundException actual = assertThrows(UserNotFoundException.class,
+        () -> testClass.getCompleteUser("user1"));
+    assertThat(actual.getMessage(), containsString("user1"));
+    assertThat(actual.getMessage(), containsString(ProfileService.NAME));
   }
 
   @Test
-  public void shouldThrowExceptionGettingCompleteUserWhenUserNotFoundInKeycloak() {
+  public void shouldThrowExceptionGettingCompleteUserWhenUserNotFoundInAuthService() {
     when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(new HeeUserDTO()));
     when(authenticationAdminService.getServiceName()).thenReturn("TEST");
 
-    exceptionRule.expect(UserNotFoundException.class);
-    exceptionRule.expectMessage(containsString("user1"));
-    exceptionRule.expectMessage(containsString(authenticationAdminService.getServiceName()));
-
-    testClass.getCompleteUser("user1");
+    UserNotFoundException actual = assertThrows(UserNotFoundException.class,
+        () -> testClass.getCompleteUser("user1"));
+    assertThat(actual.getMessage(), containsString("user1"));
+    assertThat(actual.getMessage(), containsString(authenticationAdminService.getServiceName()));
   }
 
   @Test
@@ -195,21 +188,20 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldThrowExceptionUpdatingSingleUserWhenUsernameNotFoundInKeycloak() {
+  public void shouldThrowExceptionUpdatingSingleUserWhenUsernameNotFoundInAuthService() {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
     when(authenticationAdminService.getServiceName()).thenReturn("TEST");
 
-    exceptionRule.expect(UserNotFoundException.class);
-    exceptionRule.expectMessage(containsString("user1"));
-    exceptionRule.expectMessage(containsString(authenticationAdminService.getServiceName()));
-
-    testClass.updateSingleUser(user);
+    UserNotFoundException actual = assertThrows(UserNotFoundException.class,
+        () -> testClass.updateSingleUser(user));
+    assertThat(actual.getMessage(), containsString("user1"));
+    assertThat(actual.getMessage(), containsString(authenticationAdminService.getServiceName()));
   }
 
   @Test
-  public void shouldThrowExceptionUpdatingSingleUserWhenKeycloakUpdateFails() {
+  public void shouldThrowExceptionUpdatingSingleUserWhenAuthServiceUpdateFails() {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
@@ -217,15 +209,14 @@ public class UserManagementFacadeTest {
         Optional.of(new AuthenticationUserDto()));
     when(authenticationAdminService.getServiceName()).thenReturn("TEST");
 
-    exceptionRule.expect(UpdateUserException.class);
-    exceptionRule.expectMessage(containsString("user1"));
-    exceptionRule.expectMessage(containsString(authenticationAdminService.getServiceName()));
-
-    testClass.updateSingleUser(user);
+    UpdateUserException actual = assertThrows(UpdateUserException.class,
+        () -> testClass.updateSingleUser(user));
+    assertThat(actual.getMessage(), containsString("user1"));
+    assertThat(actual.getMessage(), containsString(authenticationAdminService.getServiceName()));
   }
 
   @Test
-  public void shouldUpdateSingleKeycloakUserAndThrowExceptionWhenUsernameNotFoundInProfile() {
+  public void shouldUpdateSingleAuthServiceUserAndThrowExceptionWhenUsernameNotFoundInProfile() {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
@@ -233,17 +224,15 @@ public class UserManagementFacadeTest {
         Optional.of(new AuthenticationUserDto()));
     when(authenticationAdminService.updateUser(user)).thenReturn(true);
 
-    exceptionRule.expect(UserNotFoundException.class);
-    exceptionRule.expectMessage(containsString("user1"));
-    exceptionRule.expectMessage(containsString(ProfileService.NAME));
-
-    testClass.updateSingleUser(user);
-
+    UserNotFoundException actual = assertThrows(UserNotFoundException.class,
+        () -> testClass.updateSingleUser(user));
+    assertThat(actual.getMessage(), containsString("user1"));
+    assertThat(actual.getMessage(), containsString(ProfileService.NAME));
     verify(authenticationAdminService).updateUser(user);
   }
 
   @Test
-  public void shouldNotUpdateSingleKeycloakUserAndThrowExceptionWhenProfileUpdateFails() {
+  public void shouldNotUpdateSingleAuthServiceUserAndThrowExceptionWhenProfileUpdateFails() {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
@@ -258,18 +247,16 @@ public class UserManagementFacadeTest {
 
     when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(heeUser));
 
-    exceptionRule.expect(UpdateUserException.class);
-    exceptionRule.expectMessage(containsString("user1"));
-    exceptionRule.expectMessage(containsString(ProfileService.NAME));
-
-    testClass.updateSingleUser(user);
-
+    UpdateUserException actual = assertThrows(UpdateUserException.class,
+        () -> testClass.updateSingleUser(user));
+    assertThat(actual.getMessage(), containsString("user1"));
+    assertThat(actual.getMessage(), containsString(ProfileService.NAME));
     // Verify the rollback.
     verify(authenticationAdminService).updateUser(authenticationUser);
   }
 
   @Test
-  public void shouldUpdateSingleUserWhenKeycloakAndProfileUpdatesSucceed() {
+  public void shouldUpdateSingleUserWhenAuthServiceAndProfileUpdatesSucceed() {
     UserDTO user = new UserDTO();
     user.setName("user1");
     Set<String> newRoles = new HashSet<>(Arrays.asList("role1", "role2"));
@@ -340,20 +327,19 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldNotPublishDeleteKeycloakUserEventWhenUserNotFound() {
+  public void shouldNotPublishDeleteAuthServiceUserEventWhenUserNotFound() {
     when(authenticationAdminService.getServiceName()).thenReturn("TEST");
 
-    exceptionRule.expect(UserNotFoundException.class);
-    exceptionRule.expectMessage(containsString("user1"));
-    exceptionRule.expectMessage(containsString(authenticationAdminService.getServiceName()));
-
-    testClass.publishDeleteAuthenticationUserRequestedEvent("user1");
+    UserNotFoundException actual = assertThrows(UserNotFoundException.class,
+        () -> testClass.publishDeleteAuthenticationUserRequestedEvent("user1"));
+    assertThat(actual.getMessage(), containsString("user1"));
+    assertThat(actual.getMessage(), containsString(authenticationAdminService.getServiceName()));
 
     verify(applicationEventPublisher, never()).publishEvent(any());
   }
 
   @Test
-  public void shouldPublishDeleteKeycloakUserEventWhenUserFound() {
+  public void shouldPublishDeleteAuthServiceUserEventWhenUserFound() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
 

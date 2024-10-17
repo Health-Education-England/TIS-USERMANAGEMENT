@@ -7,8 +7,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,7 @@ import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
 import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 
+@Slf4j
 @Controller
 public class UserManagementController {
 
@@ -34,8 +36,14 @@ public class UserManagementController {
   public static final int REQUIRED_PASSWORD_LENGTH = 8;
   public static final String SUCCESS = "success";
 
-  @Autowired
-  private UserManagementFacade userManagementFacade;
+  private final UserManagementFacade userManagementFacade;
+  private final String authProvider;
+
+  public UserManagementController(UserManagementFacade userManagementFacade,
+      @Value("${application.authentication-provider}") String authProvider) {
+    this.userManagementFacade = userManagementFacade;
+    this.authProvider = authProvider;
+  }
 
   @PreAuthorize("hasAuthority('heeuser:view')")
   @GetMapping("/user")
@@ -79,7 +87,7 @@ public class UserManagementController {
    * Show the roles associated with a list of users.
    *
    * @param search - a whitespace separated collection of usernames to search for
-   * @param model - the model to provide to the view
+   * @param model  - the model to provide to the view
    * @return the key (view name) for the view to send to the user
    */
   @PreAuthorize("hasAuthority('heeuser:view')")
@@ -117,7 +125,9 @@ public class UserManagementController {
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PostMapping("/createUser")
   public String createUser(@ModelAttribute CreateUserDTO user, Model model) {
-    if (!StringUtils.equals(user.getPassword(), user.getConfirmPassword())) {
+    if ("cognito".equalsIgnoreCase(authProvider)) {
+      log.debug("Ignoring provided password for Cognito.");
+    } else if (!StringUtils.equals(user.getPassword(), user.getConfirmPassword())) {
       throw new UserCreationException("Cannot create user, passwords do not match");
     } else if (StringUtils.isEmpty(user.getPassword())
         || user.getPassword().length() < REQUIRED_PASSWORD_LENGTH) {
