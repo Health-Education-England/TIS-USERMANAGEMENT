@@ -59,13 +59,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .and()
         // we don't need CSRF because our token is invulnerable
         .csrf().disable()
-        .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).accessDeniedHandler(accessDeniedHandler)
+//        .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).accessDeniedHandler(accessDeniedHandler)
+        .authorizeRequests().anyRequest().authenticated()
         .and()
-        // don't create session
-        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        .and()
-        // Custom JWT based security filter
-        .addFilterBefore(authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
+        .oauth2Login();
   }
 
   //npn have slashes, allowing GET requests with slashes through https://stackoverflow.com/a/41593282
