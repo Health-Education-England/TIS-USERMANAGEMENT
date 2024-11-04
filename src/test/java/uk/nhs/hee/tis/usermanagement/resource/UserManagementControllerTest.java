@@ -32,7 +32,7 @@ import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 
 @SpringBootTest
-class UserManagementResourceTest {
+class UserManagementControllerTest {
 
   private MockMvc mockMvc;
   @MockBean
