@@ -8,6 +8,7 @@ import com.transformuk.hee.tis.security.RestAccessDeniedHandler;
 import com.transformuk.hee.tis.security.filter.JwtAuthenticationTokenFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -25,10 +26,11 @@ import org.springframework.security.web.firewall.HttpFirewall;
 import java.util.Arrays;
 
 @Configuration
+@ConditionalOnProperty(name = "application.authentication-provider", havingValue = "keycloak")
 @EnableWebSecurity
 @EnableAutoConfiguration
 @Import(JwtSpringSecurityConfig.class)
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+public class KeycloakWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Autowired
   private JwtAuthenticationEntryPoint unauthorizedHandler;
