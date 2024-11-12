@@ -44,8 +44,8 @@ import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 /**
  * Resource that exposes user functionality which is expected to be supported. It operates slightly
  * differently from the {@link UserManagementController} it will replace.
- * <p>
- * Exceptions are not handled explicitly so
+ *
+ * <p>Exceptions are not handled explicitly so
  * {@link org.springframework.web.bind.annotation.ControllerAdvice} can map to a Response.
  */
 @RestController
@@ -61,7 +61,7 @@ public class UserResource {
   }
 
   /**
-   * Get complete user information, combining different sources (backends).
+   * Gets complete user information, combining different sources (backends).
    *
    * @param username The name of the user to look for
    * @return The complete, composite user information
@@ -72,6 +72,13 @@ public class UserResource {
     return userFacade.getCompleteUser(username);
   }
 
+  /**
+   * Gets a list of users, matching a search term if one is provided.
+   *
+   * @param pageable Definition of the page to return
+   * @param search Search term to search for in usernames
+   * @return A collection of users which may be a page subset of the full results
+   */
   @PreAuthorize("hasAuthority('heeuser:view')")
   @GetMapping
   public List<UserDTO> getAllUsers(Pageable pageable,
