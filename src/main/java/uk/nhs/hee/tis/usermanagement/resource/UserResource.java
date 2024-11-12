@@ -18,6 +18,7 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package uk.nhs.hee.tis.usermanagement.resource;
 
 import java.util.List;
@@ -40,6 +41,13 @@ import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 
+/**
+ * Resource that exposes user functionality which is expected to be supported. It operates slightly
+ * differently from the {@link UserManagementController} it will replace.
+ * <p>
+ * Exceptions are not handled explicitly so
+ * {@link org.springframework.web.bind.annotation.ControllerAdvice} can map to a Response.
+ */
 @RestController
 @RequestMapping("/api/users")
 public class UserResource {
@@ -52,6 +60,12 @@ public class UserResource {
     this.userFacade = userFacade;
   }
 
+  /**
+   * Get complete user information, combining different sources (backends).
+   *
+   * @param username The name of the user to look for
+   * @return The complete, composite user information
+   */
   @PreAuthorize("hasAuthority('heeuser:view')")
   @GetMapping("/{username}")
   public UserDTO getCompleteUser(@PathVariable String username) {
@@ -66,6 +80,13 @@ public class UserResource {
     return page.getContent();
   }
 
+  /**
+   * Creates a new user.
+   *
+   * @param user Complete information needed to create a user across backend services
+   * @return The response entity indicates if the request was accepted but does not guarantee that
+   *     the user was successfully created in all backends
+   */
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PostMapping
   public ResponseEntity<CreateUserDTO> createUser(@RequestBody CreateUserDTO user) {
@@ -74,6 +95,14 @@ public class UserResource {
     return ResponseEntity.accepted().build();
   }
 
+  /**
+   * Updates an existing user.
+   *
+   * @param user     The full user details with the changes to save
+   * @param username The username, which is expected to be the same as {@code  user.getName()}
+   * @return The {@link ResponseEntity} indicating the request has been accepted and should be
+   *     updated
+   */
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PutMapping("/{username}")
   public ResponseEntity<UserDTO> updateUser(@RequestBody UserDTO user,
@@ -82,6 +111,13 @@ public class UserResource {
     return ResponseEntity.accepted().build();
   }
 
+  /**
+   * Deletes an existing user.
+   *
+   * @param username The username of the user to delete
+   * @return The {@link ResponseEntity} indicating the request has been accepted and should be
+   *     deleted
+   */
   @PreAuthorize("hasAuthority('heeuser:delete')")
   @DeleteMapping("/{username}")
   ResponseEntity<UserDTO> deleteUser(@PathVariable String username) {
@@ -90,8 +126,9 @@ public class UserResource {
   }
 
   /**
-   * This validator has been created to encapsulate validation done in the {@link UserManagementController}.
-   * A larger refactoring would involve modifying both to use a validation service/bean.
+   * This validator has been created to encapsulate validation done in the
+   * {@link UserManagementController}. A larger refactoring would involve modifying both to use a
+   * validation service/bean.
    */
   private class CreateUserValidator {
 
@@ -102,8 +139,8 @@ public class UserResource {
       if (StringUtils.containsWhitespace(user.getEmailAddress())) {
         throw new UserCreationException("Email Address must not contain whitespace.");
       }
-      UserDTO userDTO = userFacade.getUserByNameIgnoreCase(user.getName());
-      if (userDTO != null) {
+      UserDTO userDto = userFacade.getUserByNameIgnoreCase(user.getName());
+      if (userDto != null) {
         throw new UserCreationException("Cannot create user because the username already exists.");
       }
     }
