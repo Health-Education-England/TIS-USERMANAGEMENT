@@ -83,6 +83,12 @@ public class UserManagementController {
     return "allUsers";
   }
 
+  @PreAuthorize("hasAuthority('heeuser:view')")
+  @GetMapping("/userNotification")
+  public String viewNotification() {
+    return "userNotification";
+  }
+
   /**
    * Show the roles associated with a list of users.
    *

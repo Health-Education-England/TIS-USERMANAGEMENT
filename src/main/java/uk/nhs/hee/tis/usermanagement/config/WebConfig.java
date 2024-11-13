@@ -1,5 +1,6 @@
 package uk.nhs.hee.tis.usermanagement.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
@@ -12,10 +13,9 @@ import java.util.List;
 @Configuration
 public class WebConfig extends WebMvcConfigurerAdapter {
 
-
   @Override
   public void addViewControllers(ViewControllerRegistry registry) {
-    registry.addViewController("/").setViewName("forward:/allUsers");
+    registry.addViewController("/").setViewName("forward:/userNotification");
     registry.setOrder(Ordered.HIGHEST_PRECEDENCE);
     super.addViewControllers(registry);
   }
