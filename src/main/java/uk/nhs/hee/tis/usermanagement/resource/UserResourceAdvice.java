@@ -35,7 +35,7 @@ class UserResourceAdvice {
   @ExceptionHandler({UpdateUserException.class, UserCreationException.class,
       UserNotFoundException.class})
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  String handleBadRequestDetails(RuntimeException e) {
+  String handleCustomException(RuntimeException e) {
     return e.getMessage();
   }
 }
