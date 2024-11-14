@@ -24,13 +24,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -49,8 +51,8 @@ import uk.nhs.hee.tis.usermanagement.service.ProfileService;
 import uk.nhs.hee.tis.usermanagement.service.ReferenceService;
 import uk.nhs.hee.tis.usermanagement.service.TcsService;
 
-@RunWith(MockitoJUnitRunner.class)
-public class UserManagementFacadeTest {
+@ExtendWith(MockitoExtension.class)
+class UserManagementFacadeTest {
 
   @InjectMocks
   UserManagementFacade testClass;
@@ -74,7 +76,7 @@ public class UserManagementFacadeTest {
   private HeeUserMapper userMapper;
 
   @Test
-  public void shouldGetAllAssignableRoles() {
+  void shouldGetAllAssignableRoles() {
     String adminRole = "HEE TIS Admin";
     String etlRole = "ETL";
     String roRole = "RVOfficer";
@@ -88,14 +90,14 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldGetAllEntityRoles() {
+  void shouldGetAllEntityRoles() {
     List<String> entityRoles = testClass.getAllEntityRoles();
     String hee = "HEE";
     assertThat(entityRoles, containsInAnyOrder(hee));
   }
 
   @Test
-  public void testGetNullUserByNameWhenUserNotFound() {
+  void testGetNullUserByNameWhenUserNotFound() {
     // Record expectations.
     when(profileService.getUserByUsernameIgnoreCase("testUser_1")).thenReturn(Optional.empty());
 
@@ -107,7 +109,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldGetUserByNameIgnoringCaseWhenUserFound() {
+  void shouldGetUserByNameIgnoringCaseWhenUserFound() {
     // Set up test data.
     HeeUserDTO heeUser = new HeeUserDTO();
     heeUser.setName("testUser_1");
@@ -127,7 +129,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldThrowExceptionGettingCompleteUserWhenUserNotFoundInProfile() {
+  void shouldThrowExceptionGettingCompleteUserWhenUserNotFoundInProfile() {
     when(authenticationAdminService.getUser("user1")).thenReturn(
         Optional.of(new AuthenticationUserDto()));
 
@@ -138,7 +140,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldThrowExceptionGettingCompleteUserWhenUserNotFoundInAuthService() {
+  void shouldThrowExceptionGettingCompleteUserWhenUserNotFoundInAuthService() {
     when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(new HeeUserDTO()));
     when(authenticationAdminService.getServiceName()).thenReturn("TEST");
 
@@ -149,7 +151,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldGetCompleteUserWhenUserFound() {
+  void shouldGetCompleteUserWhenUserFound() {
     HeeUserDTO heeUser = new HeeUserDTO();
     heeUser.setName("user1");
 
@@ -166,10 +168,31 @@ public class UserManagementFacadeTest {
     assertThat("Unexpected user enabled flag.", user.getActive(), is(true));
   }
 
+  @ParameterizedTest
+  @CsvSource({"false,true", "true,false"})
+  void shouldPreferActiveFromAuthenticationService(boolean profileStatus, boolean authNStatus) {
+    HeeUserDTO heeUser = new HeeUserDTO();
+    heeUser.setName("user1");
+    heeUser.setActive(profileStatus);
+
+    AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
+    authenticationUser.setId("userId1");
+    authenticationUser.setEnabled(authNStatus);
+
+    when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(heeUser));
+    when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
+
+    UserDTO user = testClass.getCompleteUser("user1");
+    assertThat("Unexpected user id.", user.getKcId(), is("userId1"));
+    assertThat("Unexpected user name.", user.getName(), is("user1"));
+    assertThat("Unexpected user enabled flag.", user.getActive(), is(authNStatus));
+  }
+
   @Test
-  public void shouldGetAllUsers() {
+  void shouldGetAllUsers() {
     HeeUserDTO profileUser1 = new HeeUserDTO();
     profileUser1.setName("user1");
+    profileUser1.setActive(true);
     HeeUserDTO profileUser2 = new HeeUserDTO();
     profileUser2.setName("user2");
     Page<HeeUserDTO> profileUsers = new PageImpl<>(Arrays.asList(profileUser1, profileUser2));
@@ -185,10 +208,15 @@ public class UserManagementFacadeTest {
         .map(UserDTO::getName)
         .collect(Collectors.toSet());
     assertThat("Unexpected user names.", allUserNames, hasItems("user1", "user2"));
+    List<Boolean> userActiveFlags = allUsersPage.stream()
+        .map(UserDTO::getActive)
+        .collect(Collectors.toList());
+    assertThat("Unexpected Active Flags", userActiveFlags, containsInAnyOrder(true, false));
+
   }
 
   @Test
-  public void shouldThrowExceptionUpdatingSingleUserWhenUsernameNotFoundInAuthService() {
+  void shouldThrowExceptionUpdatingSingleUserWhenUsernameNotFoundInAuthService() {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
@@ -201,7 +229,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldThrowExceptionUpdatingSingleUserWhenAuthServiceUpdateFails() {
+  void shouldThrowExceptionUpdatingSingleUserWhenAuthServiceUpdateFails() {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
@@ -216,7 +244,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldUpdateSingleAuthServiceUserAndThrowExceptionWhenUsernameNotFoundInProfile() {
+  void shouldUpdateSingleAuthServiceUserAndThrowExceptionWhenUsernameNotFoundInProfile() {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
@@ -232,7 +260,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldNotUpdateSingleAuthServiceUserAndThrowExceptionWhenProfileUpdateFails() {
+  void shouldNotUpdateSingleAuthServiceUserAndThrowExceptionWhenProfileUpdateFails() {
     UserDTO user = new UserDTO();
     user.setName("user1");
 
@@ -256,7 +284,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldUpdateSingleUserWhenAuthServiceAndProfileUpdatesSucceed() {
+  void shouldUpdateSingleUserWhenAuthServiceAndProfileUpdatesSucceed() {
     UserDTO user = new UserDTO();
     user.setName("user1");
     Set<String> newRoles = new HashSet<>(Arrays.asList("role1", "role2"));
@@ -291,7 +319,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldPublishUserCreationEvent() {
+  void shouldPublishUserCreationEvent() {
     CreateUserDTO createUser = new CreateUserDTO();
     createUser.setName("user1");
     createUser.setAssociatedProgrammes(new HashSet<>(Collections.singleton("1")));
@@ -327,7 +355,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldNotPublishDeleteAuthServiceUserEventWhenUserNotFound() {
+  void shouldNotPublishDeleteAuthServiceUserEventWhenUserNotFound() {
     when(authenticationAdminService.getServiceName()).thenReturn("TEST");
 
     UserNotFoundException actual = assertThrows(UserNotFoundException.class,
@@ -339,7 +367,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldPublishDeleteAuthServiceUserEventWhenUserFound() {
+  void shouldPublishDeleteAuthServiceUserEventWhenUserFound() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
 
@@ -356,7 +384,7 @@ public class UserManagementFacadeTest {
   }
 
   @Test
-  public void shouldUpdatePassword() {
+  void shouldUpdatePassword() {
     UserPasswordDTO userPassword = new UserPasswordDTO();
     userPassword.setKcId("userId1");
     userPassword.setPassword("P4$$w0rd");
