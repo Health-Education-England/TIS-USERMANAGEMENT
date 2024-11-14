@@ -56,7 +56,6 @@ public class HeeUserMapper {
         createUserDto.getEmailAddress(), createUserDto.isActive(), createUserDto.getLocalOffices(),
         createUserDto.getRoles(), createUserDto.getAssociatedTrusts(),
         createUserDto.getAssociatedProgrammes(), knownTrusts, knownProgrammes);
-
   }
 
   private HeeUserDTO mapUserAttributes(String name, String firstName, String lastName, String gmcId,
@@ -128,7 +127,7 @@ public class HeeUserMapper {
   /**
    * Used for the details page
    *
-   * @param heeUserDto The Authorization (profile) user attributes
+   * @param heeUserDto         The Authorization (profile) user attributes
    * @param authenticationUser The Authentication user attributes
    * @return A composite user from data we hold
    */
@@ -148,6 +147,7 @@ public class HeeUserMapper {
       userDto.setGmcId(heeUserDto.getGmcId());
       userDto.setPhoneNumber(heeUserDto.getPhoneNumber());
       userDto.setEmailAddress(heeUserDto.getEmailAddress());
+      userDto.setActive(heeUserDto.getActive() != null && heeUserDto.getActive());
       userDto.setLocalOffices(heeUserDto.getDesignatedBodyCodes());
       if (CollectionUtils.isNotEmpty(heeUserDto.getRoles())) {
         Set<String> setOfRoles = heeUserDto.getRoles().stream().map(RoleDTO::getName)
