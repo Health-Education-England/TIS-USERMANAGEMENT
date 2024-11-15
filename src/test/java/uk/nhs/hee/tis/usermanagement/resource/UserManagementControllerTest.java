@@ -169,4 +169,12 @@ class UserManagementControllerTest {
     verify(mockFacade).publishDeleteAuthenticationUserRequestedEvent("foo");
   }
 
+  @Test
+  void shouldReturnUserNotificationView() throws Exception {
+    mockMvc.perform(
+            get("/userNotification"))
+        .andExpectAll(
+            status().isOk(),
+            view().name("userNotification"));
+  }
 }
