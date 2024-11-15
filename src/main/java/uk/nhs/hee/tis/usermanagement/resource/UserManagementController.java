@@ -89,12 +89,6 @@ public class UserManagementController {
     return "userNotification";
   }
 
-  @PreAuthorize("hasAuthority('heeuser:add:modify')")
-  @PostMapping("/userNotification")
-  public String viewNotificationPost() {
-    return "userNotification";
-  }
-
   /**
    * Show the roles associated with a list of users.
    *
