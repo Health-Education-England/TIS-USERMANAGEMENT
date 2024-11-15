@@ -17,8 +17,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 @Configuration
 public class WebConfig extends WebMvcConfigurerAdapter {
 
-  @Value("${application.cognito-switch-over}")
-  private boolean cognitoSwitchover;
+  @Value("${application.under-maintenance}")
+  private boolean underMaintenance;
+
+  @Value("${application.maintenance-requests}")
+  private String[] maintenanceRequestArray;
 
   @Override
   public void addViewControllers(ViewControllerRegistry registry) {
@@ -37,14 +40,14 @@ public class WebConfig extends WebMvcConfigurerAdapter {
 
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
-    if (cognitoSwitchover) {
-      registry.addInterceptor(new CognitoSwitchoverInterceptor())
-          .addPathPatterns("/updateUser", "/createUser", "/updatePassword", "/deleteUser");
+    if (underMaintenance) {
+      registry.addInterceptor(new UnderMaintenanceInterceptor())
+          .addPathPatterns(maintenanceRequestArray);
       super.addInterceptors(registry);
     }
   }
 
-  private class CognitoSwitchoverInterceptor implements HandlerInterceptor {
+  private class UnderMaintenanceInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
         Object handler) throws IOException {
