@@ -60,7 +60,7 @@ public class KeyCloakAdminClientService extends AbstractAuthenticationAdminServi
     return kcUser.map(user -> mapper.toAuthenticationUser(user));
   }
 
-  /**
+/**
    * Get the keycloak user for the given username,
    *
    * @param username The username to get the user for.
@@ -115,7 +115,7 @@ public class KeyCloakAdminClientService extends AbstractAuthenticationAdminServi
     return success;
   }
 
-  /**
+/**
    * Get the user attributes attached to a keycloak user
    *
    * @param username the username of the kc user
@@ -129,7 +129,7 @@ public class KeyCloakAdminClientService extends AbstractAuthenticationAdminServi
     return getUserAttributesCommand.execute();
   }
 
-  /**
+/**
    * Get a list of groups assigned to the user
    *
    * @param username the username of the kc user

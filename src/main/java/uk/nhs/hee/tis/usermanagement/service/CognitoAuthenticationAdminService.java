@@ -27,6 +27,7 @@ import uk.nhs.hee.tis.usermanagement.mapper.CognitoResultMapper;
 /**
  * An authentication admin service implementation for Cognito.
  */
+
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "application.authentication-provider", havingValue = "cognito")

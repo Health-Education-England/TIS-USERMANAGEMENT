@@ -3,9 +3,8 @@ package uk.nhs.hee.tis.usermanagement.config;
 import com.transformuk.hee.tis.profile.client.config.JwtSpringSecurityConfig;
 import com.transformuk.hee.tis.security.JwtAuthenticationEntryPoint;
 import com.transformuk.hee.tis.security.JwtAuthenticationProvider;
-import com.transformuk.hee.tis.security.JwtAuthenticationSuccessHandler;
 import com.transformuk.hee.tis.security.RestAccessDeniedHandler;
-import com.transformuk.hee.tis.security.filter.JwtAuthenticationTokenFilter;
+import java.util.Arrays;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -17,12 +16,11 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
-
-import java.util.Arrays;
+import uk.nhs.hee.tis.usermanagement.handler.CustomAuthenticationSuccessHandler;
+import uk.nhs.hee.tis.usermanagement.service.CustomCognitoEntryPoint;
 
 @Configuration
 @EnableWebSecurity
@@ -36,6 +34,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   private RestAccessDeniedHandler accessDeniedHandler;
   @Autowired
   private JwtAuthenticationProvider authenticationProvider;
+  private final CustomAuthenticationSuccessHandler successHandler;
+
+  public WebSecurityConfig(CustomAuthenticationSuccessHandler successHandler) {
+    this.successHandler = successHandler;
+  }
 
   @Bean
   @Override
@@ -43,31 +46,31 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     return new ProviderManager(Arrays.asList(authenticationProvider));
   }
 
-  @Bean
-  public JwtAuthenticationTokenFilter authenticationTokenFilterBean() {
-    JwtAuthenticationTokenFilter authenticationTokenFilter = new JwtAuthenticationTokenFilter("/**");
-    authenticationTokenFilter.setAuthenticationManager(authenticationManager());
-    authenticationTokenFilter.setAuthenticationSuccessHandler(new JwtAuthenticationSuccessHandler());
-    return authenticationTokenFilter;
-  }
-
   @Override
   protected void configure(HttpSecurity httpSecurity) throws Exception {
-    httpSecurity
-        // to allow browser to render contents in frames
-        .headers().frameOptions().sameOrigin()
+    httpSecurity.csrf()
         .and()
-        // we don't need CSRF because our token is invulnerable
-        .csrf().disable()
-        .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).accessDeniedHandler(accessDeniedHandler)
+        .authorizeRequests()
+        .anyRequest().authenticated()
         .and()
-        // don't create session
-        .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        .and()
-        // Custom JWT based security filter
-        .addFilterBefore(authenticationTokenFilterBean(), UsernamePasswordAuthenticationFilter.class);
+        .oauth2Login()
+        .successHandler(successHandler);
   }
 
+  /*@Bean
+  public AuthenticationEntryPoint customEntryPoint() {
+    return new CustomCognitoEntryPoint();
+  }
+
+  protected void configure(HttpSecurity http) throws Exception {
+    http
+        .csrf().disable()
+        .authorizeRequests()
+        .anyRequest().authenticated()
+        .and()
+        .exceptionHandling()
+        .authenticationEntryPoint(customEntryPoint());  // Use custom entry point
+  }*/
   //npn have slashes, allowing GET requests with slashes through https://stackoverflow.com/a/41593282
   @Bean
   public HttpFirewall allowUrlEncodedSlashHttpFirewall() {
