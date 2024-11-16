@@ -1,13 +1,9 @@
 package uk.nhs.hee.tis.usermanagement.config;
 
-import com.transformuk.hee.tis.security.factory.InternalClientRequestFactory;
-import com.transformuk.hee.tis.security.util.TisSecurityHelper;
-import org.apache.http.client.methods.HttpUriRequest;
+import uk.nhs.hee.tis.usermanagement.service.InternalClientRequestFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.client.ClientHttpRequestFactory;
-import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration

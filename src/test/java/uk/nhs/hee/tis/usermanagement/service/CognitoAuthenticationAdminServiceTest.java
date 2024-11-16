@@ -448,8 +448,7 @@ public class CognitoAuthenticationAdminServiceTest {
 
     verify(eventPublisher, never()).publishEvent(any());
   }
-
-  /**
+/**
    * Build a list of standard Cognito attributes.
    *
    * @return The built list.
@@ -463,7 +462,7 @@ public class CognitoAuthenticationAdminServiceTest {
     );
   }
 
-  /**
+/**
    * Verify that the authentication user has the expected values.
    *
    * @param authenticationUser The authentication user to verify.
