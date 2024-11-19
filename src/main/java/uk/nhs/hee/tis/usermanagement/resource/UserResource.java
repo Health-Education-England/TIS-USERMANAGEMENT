@@ -76,7 +76,7 @@ public class UserResource {
    * Gets a list of users, matching a search term if one is provided.
    *
    * @param pageable Definition of the page to return
-   * @param search Search term to search for in usernames
+   * @param search   Search term to search for in usernames
    * @return A collection of users which may be a page subset of the full results
    */
   @PreAuthorize("hasAuthority('heeuser:view')")
@@ -125,7 +125,7 @@ public class UserResource {
    * @return The {@link ResponseEntity} indicating the request has been accepted and should be
    *     deleted
    */
-  @PreAuthorize("hasAuthority('heeuser:delete')")
+  @PreAuthorize("hasAuthority('heeuser:delete') and hasAuthority('profile:delete:entities') ")
   @DeleteMapping("/{username}")
   ResponseEntity<UserDTO> deleteUser(@PathVariable String username) {
     userFacade.publishDeleteAuthenticationUserRequestedEvent(username);
