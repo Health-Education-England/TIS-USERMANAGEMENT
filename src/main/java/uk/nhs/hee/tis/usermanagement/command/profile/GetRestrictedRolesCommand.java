@@ -6,6 +6,9 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Hystrix command to get all restricted roles from Profile service.
+ */
 public class GetRestrictedRolesCommand extends ProfileHystrixCommand<Set<String>> {
 
   private static final Logger LOG = LoggerFactory.getLogger(GetRestrictedRolesCommand.class);
@@ -28,8 +31,7 @@ public class GetRestrictedRolesCommand extends ProfileHystrixCommand<Set<String>
   @Override
   protected Set<String> run() {
     try {
-      Set<String> restrictedRoles = profileService.getRestrictedRoles();
-      return restrictedRoles;
+      return profileService.getRestrictedRoles();
     } catch (Throwable e) {
       this.throwable = e;
       throw e;

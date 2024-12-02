@@ -138,7 +138,8 @@ public class ProfileService {
   }
 
   public Set<String> getRestrictedRoles() {
-    GetRestrictedRolesCommand getRestrictedRolesCommand = new GetRestrictedRolesCommand(profileServiceImpl);
+    GetRestrictedRolesCommand getRestrictedRolesCommand =
+        new GetRestrictedRolesCommand(profileServiceImpl);
     return getRestrictedRolesCommand.execute();
   }
 
