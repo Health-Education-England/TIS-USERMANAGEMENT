@@ -16,16 +16,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class GetAllRolesCommand extends ProfileHystrixCommand<List<String>> {
+public class GetAllAssignableRolesCommand extends ProfileHystrixCommand<List<String>> {
 
   private static final String COMMAND_KEY = "PROFILE_COMMANDS";
-  private static final Logger LOG = LoggerFactory.getLogger(GetAllRolesCommand.class);
+  private static final Logger LOG = LoggerFactory.getLogger(GetAllAssignableRolesCommand.class);
 
   private RestTemplate profileRestTemplate;
   private String serviceUrl;
   private Throwable throwable;
 
-  public GetAllRolesCommand(RestTemplate profileRestTemplate, String serviceUrl) {
+  public GetAllAssignableRolesCommand(RestTemplate profileRestTemplate, String serviceUrl) {
     this.profileRestTemplate = profileRestTemplate;
     this.serviceUrl = serviceUrl;
   }
@@ -44,7 +44,7 @@ public class GetAllRolesCommand extends ProfileHystrixCommand<List<String>> {
       ParameterizedTypeReference<List<RoleDTO>> roleDtoListType = new ParameterizedTypeReference<List<RoleDTO>>() {
       };
 
-      UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serviceUrl + "/api/roles")
+      UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(serviceUrl + "/api/roles?excludeRestricted=true")
           .queryParam("page", 0)
           .queryParam("size", 500); //quick hack for now as we dont have nowhere near 500 roles
 

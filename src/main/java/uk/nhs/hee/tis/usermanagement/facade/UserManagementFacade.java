@@ -6,12 +6,11 @@ import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
 import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,9 +36,6 @@ import uk.nhs.hee.tis.usermanagement.service.TcsService;
 public class UserManagementFacade {
 
   private static final Logger LOG = LoggerFactory.getLogger(UserManagementFacade.class);
-
-  private static final Collection<String> restrictedRoles = Collections.unmodifiableSet(
-      new HashSet<>(Arrays.asList("RVOfficer", "Machine User", "HEE")));
 
   private static final Collection<String> entities = Collections.singleton("HEE");
 
@@ -105,6 +101,7 @@ public class UserManagementFacade {
 
     Optional<HeeUserDTO> optionalOriginalHeeUser = profileService.getUserByUsername(
         userDto.getName());
+    final Set<String> restrictedRoles = profileService.getRestrictedRoles();
     boolean success = authenticationAdminService.updateUser(userDto);
     if (success) {
       HeeUserDTO originalHeeUser = optionalOriginalHeeUser.orElseThrow(
@@ -157,8 +154,7 @@ public class UserManagementFacade {
    * @return roles - A list of roles that can be assigned from the web application
    */
   public List<String> getAllAssignableRoles() {
-    List<String> roles = profileService.getAllRoles();
-    roles.removeAll(restrictedRoles);
+    List<String> roles = profileService.getAllAssignableRoles();
     return roles;
   }
 

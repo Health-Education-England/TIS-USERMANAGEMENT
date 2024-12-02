@@ -268,7 +268,7 @@ public class ProfileServiceTest {
         typeReferenceArgumentCaptor.capture())).thenReturn(ResponseEntity.ok(rolesList));
     ReflectionTestUtils.setField(testObj, "serviceUrl", "http://profileUrl.com");
 
-    List<String> result = testObj.getAllRoles();
+    List<String> result = testObj.getAllAssignableRoles();
 
     Assert.assertEquals(3, result.size());
     Assert
@@ -282,7 +282,7 @@ public class ProfileServiceTest {
         .thenThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR));
     ReflectionTestUtils.setField(testObj, "serviceUrl", "http://profileUrl.com");
 
-    List<String> result = testObj.getAllRoles();
+    List<String> result = testObj.getAllAssignableRoles();
 
     Assert.assertEquals(0, result.size());
   }

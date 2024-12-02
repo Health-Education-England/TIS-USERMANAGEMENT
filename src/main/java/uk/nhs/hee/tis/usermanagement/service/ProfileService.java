@@ -6,6 +6,7 @@ import com.transformuk.hee.tis.profile.client.service.impl.ProfileServiceImpl;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +19,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import uk.nhs.hee.tis.usermanagement.command.profile.GetAllRolesCommand;
+import uk.nhs.hee.tis.usermanagement.command.profile.GetAllAssignableRolesCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.GetPaginatedUsersCommand;
+import uk.nhs.hee.tis.usermanagement.command.profile.GetRestrictedRolesCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.GetUserByUsernameCommand;
 import uk.nhs.hee.tis.usermanagement.command.profile.UpdateUserCommand;
 import uk.nhs.hee.tis.usermanagement.event.CreateProfileUserRequestedEvent;
@@ -129,9 +131,15 @@ public class ProfileService {
    *
    * @return
    */
-  public List<String> getAllRoles() {
-    GetAllRolesCommand getAllRolesCommand = new GetAllRolesCommand(profileRestTemplate, serviceUrl);
-    return getAllRolesCommand.execute();
+  public List<String> getAllAssignableRoles() {
+    GetAllAssignableRolesCommand getAllAssignableRolesCommand =
+        new GetAllAssignableRolesCommand(profileRestTemplate, serviceUrl);
+    return getAllAssignableRolesCommand.execute();
+  }
+
+  public Set<String> getRestrictedRoles() {
+    GetRestrictedRolesCommand getRestrictedRolesCommand = new GetRestrictedRolesCommand(profileServiceImpl);
+    return getRestrictedRolesCommand.execute();
   }
 
   @EventListener

@@ -83,10 +83,10 @@ class UserManagementFacadeTest {
     String rvAdmin = "RVAdmin";
     List<String> mockRoles = Lists.newArrayList(adminRole, rvAdmin, roRole, etlRole);
 
-    when(profileService.getAllRoles()).thenReturn(mockRoles);
+    when(profileService.getAllAssignableRoles()).thenReturn(mockRoles);
     List<String> actual = testClass.getAllAssignableRoles();
     assertThat(actual, containsInAnyOrder(adminRole, rvAdmin, etlRole));
-    verify(profileService).getAllRoles();
+    verify(profileService).getAllAssignableRoles();
   }
 
   @Test
