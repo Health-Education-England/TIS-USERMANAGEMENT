@@ -79,9 +79,8 @@ class UserManagementFacadeTest {
   void shouldGetAllAssignableRoles() {
     String adminRole = "HEE TIS Admin";
     String etlRole = "ETL";
-    String roRole = "RVOfficer";
     String rvAdmin = "RVAdmin";
-    List<String> mockRoles = Lists.newArrayList(adminRole, rvAdmin, roRole, etlRole);
+    List<String> mockRoles = Lists.newArrayList(adminRole, rvAdmin, etlRole);
 
     when(profileService.getAllAssignableRoles()).thenReturn(mockRoles);
     List<String> actual = testClass.getAllAssignableRoles();
@@ -300,6 +299,7 @@ class UserManagementFacadeTest {
     when(authenticationAdminService.updateUser(user)).thenReturn(true);
 
     when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(existingHeeUser));
+    when(profileService.getRestrictedRoles()).thenReturn(Set.of("Machine User", "RVOfficer", "HEE"));
     ArgumentCaptor<HeeUserDTO> updatedHeeUserCaptor = ArgumentCaptor.forClass(HeeUserDTO.class);
     when(profileService.updateUser(updatedHeeUserCaptor.capture())).thenReturn(
         Optional.of(new HeeUserDTO()));
