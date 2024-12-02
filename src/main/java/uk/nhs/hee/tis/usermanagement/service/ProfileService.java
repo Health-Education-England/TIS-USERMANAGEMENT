@@ -127,9 +127,9 @@ public class ProfileService {
   }
 
   /**
-   * YOLO
+   * Get all assignable from Profile service.
    *
-   * @return
+   * @return a list containing Strings of all assignable roles
    */
   public List<String> getAllAssignableRoles() {
     GetAllAssignableRolesCommand getAllAssignableRolesCommand =
@@ -137,6 +137,11 @@ public class ProfileService {
     return getAllAssignableRolesCommand.execute();
   }
 
+  /**
+   * Get all restricted roles from Profile service.
+   *
+   * @return a set containing Strings of all restricted roles
+   */
   public Set<String> getRestrictedRoles() {
     GetRestrictedRolesCommand getRestrictedRolesCommand =
         new GetRestrictedRolesCommand(profileServiceImpl);

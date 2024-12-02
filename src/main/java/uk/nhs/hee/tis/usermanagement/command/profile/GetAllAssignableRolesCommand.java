@@ -34,7 +34,8 @@ public class GetAllAssignableRolesCommand extends ProfileHystrixCommand<List<Str
   @Override
   protected List<String> getFallback() {
     LOG.warn(
-        "An occurred while getting all Roles in the Profile service, returning an empty List as fallback");
+        "An occurred while getting all Roles in the Profile service, "
+            + "returning an empty List as fallback");
     LOG.debug("Data that was sent: serviceUrl: [{}]", serviceUrl);
     LOG.warn("Exception: [{}]", ExceptionUtils.getStackTrace(throwable));
     return Lists.newArrayList();
@@ -43,8 +44,9 @@ public class GetAllAssignableRolesCommand extends ProfileHystrixCommand<List<Str
   @Override
   protected List<String> run() throws Exception {
     try {
-      ParameterizedTypeReference<List<RoleDTO>> roleDtoListType = new ParameterizedTypeReference<List<RoleDTO>>() {
-      };
+      ParameterizedTypeReference<List<RoleDTO>> roleDtoListType =
+          new ParameterizedTypeReference<>() {
+          };
 
       UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(
               serviceUrl + "/api/roles?excludeRestricted=true")

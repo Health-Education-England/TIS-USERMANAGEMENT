@@ -154,8 +154,7 @@ public class UserManagementFacade {
    * @return roles - A list of roles that can be assigned from the web application
    */
   public List<String> getAllAssignableRoles() {
-    List<String> roles = profileService.getAllAssignableRoles();
-    return roles;
+    return profileService.getAllAssignableRoles();
   }
 
   public List<String> getAllEntityRoles() {
