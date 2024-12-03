@@ -1,6 +1,7 @@
 package uk.nhs.hee.tis.usermanagement.facade;
 
 import com.transformuk.hee.tis.profile.client.service.impl.CustomPageable;
+import com.transformuk.hee.tis.profile.dto.RoleDTO;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import com.transformuk.hee.tis.reference.api.dto.DBCDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
@@ -66,6 +67,14 @@ public class UserManagementFacade {
         () -> new UserNotFoundException(username, ProfileService.NAME));
     AuthenticationUserDto authenticationUser = optionalAuthenticationUser.orElseThrow(
         () -> new UserNotFoundException(username, authenticationAdminService.getServiceName()));
+
+    // Filter out restricted roles from the user
+    Set<String>restrictedRoles = profileService.getRestrictedRoles();
+    Set<RoleDTO> heeUserRoleDtos = heeUserDTO.getRoles();
+    if (heeUserRoleDtos != null && restrictedRoles != null) {
+      heeUserRoleDtos.removeIf(roleDto -> restrictedRoles.contains(roleDto.getName()));
+    }
+
     return heeUserMapper.convert(heeUserDTO, authenticationUser);
   }
 
