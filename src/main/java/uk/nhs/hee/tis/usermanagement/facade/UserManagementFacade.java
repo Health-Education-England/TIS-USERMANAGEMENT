@@ -69,7 +69,7 @@ public class UserManagementFacade {
         () -> new UserNotFoundException(username, authenticationAdminService.getServiceName()));
 
     // Filter out restricted roles from the user
-    Set<String>restrictedRoles = profileService.getRestrictedRoles();
+    Set<String> restrictedRoles = profileService.getRestrictedRoles();
     Set<RoleDTO> heeUserRoleDtos = heeUserDTO.getRoles();
     if (heeUserRoleDtos != null && restrictedRoles != null) {
       heeUserRoleDtos.removeIf(roleDto -> restrictedRoles.contains(roleDto.getName()));

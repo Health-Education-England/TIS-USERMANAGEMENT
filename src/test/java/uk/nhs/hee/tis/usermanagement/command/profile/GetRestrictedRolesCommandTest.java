@@ -39,8 +39,7 @@ class GetRestrictedRolesCommandTest {
     when(service.getRestrictedRoles()).thenThrow(new RuntimeException(message));
 
     Exception thrown = assertThrows(
-        RuntimeException.class,
-        () -> command.run());
+        RuntimeException.class, command::run);
 
     assertEquals(message, thrown.getMessage());
   }
