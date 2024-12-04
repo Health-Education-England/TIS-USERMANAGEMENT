@@ -23,7 +23,7 @@ public class GetRestrictedRolesCommand extends ProfileHystrixCommand<Set<String>
   protected Set<String> getFallback() {
     LOG.warn("An occurred while getting all restricted roles from Profile service, "
         + "returning an empty Set as fallback");
-    LOG.warn("Exception: [{}]", exception);
+    LOG.warn("Exception: [{}]", exception.getStackTrace());
     return Set.of();
   }
 

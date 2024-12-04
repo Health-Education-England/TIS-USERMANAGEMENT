@@ -36,7 +36,7 @@ public class GetAllAssignableRolesCommand extends ProfileHystrixCommand<List<Str
         "An occurred while getting all Roles in the Profile service, "
             + "returning an empty List as fallback");
     LOG.debug("Data that was sent: serviceUrl: [{}]", serviceUrl);
-    LOG.warn("Exception: [{}]", exception);
+    LOG.warn("Exception: [{}]", exception.getStackTrace());
     return Lists.newArrayList();
   }
 
