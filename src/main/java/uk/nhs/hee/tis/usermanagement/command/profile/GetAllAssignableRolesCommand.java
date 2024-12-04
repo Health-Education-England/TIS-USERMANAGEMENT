@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
@@ -24,7 +23,7 @@ public class GetAllAssignableRolesCommand extends ProfileHystrixCommand<List<Str
 
   private final RestTemplate profileRestTemplate;
   private final String serviceUrl;
-  private Throwable throwable;
+  private Exception exception;
 
   public GetAllAssignableRolesCommand(RestTemplate profileRestTemplate, String serviceUrl) {
     this.profileRestTemplate = profileRestTemplate;
@@ -37,7 +36,7 @@ public class GetAllAssignableRolesCommand extends ProfileHystrixCommand<List<Str
         "An occurred while getting all Roles in the Profile service, "
             + "returning an empty List as fallback");
     LOG.debug("Data that was sent: serviceUrl: [{}]", serviceUrl);
-    LOG.warn("Exception: [{}]", ExceptionUtils.getStackTrace(throwable));
+    LOG.warn("Exception: [{}]", exception);
     return Lists.newArrayList();
   }
 
@@ -61,8 +60,8 @@ public class GetAllAssignableRolesCommand extends ProfileHystrixCommand<List<Str
             .collect(Collectors.toList());
       }
       return roles;
-    } catch (Throwable e) {
-      this.throwable = e;
+    } catch (Exception e) {
+      this.exception = e;
       throw e;
     }
   }
