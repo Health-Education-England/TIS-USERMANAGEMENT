@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.transformuk.hee.tis.profile.dto.RoleDTO;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
@@ -79,14 +80,13 @@ class UserManagementFacadeTest {
   void shouldGetAllAssignableRoles() {
     String adminRole = "HEE TIS Admin";
     String etlRole = "ETL";
-    String roRole = "RVOfficer";
     String rvAdmin = "RVAdmin";
-    List<String> mockRoles = Lists.newArrayList(adminRole, rvAdmin, roRole, etlRole);
+    List<String> mockRoles = Lists.newArrayList(adminRole, rvAdmin, etlRole);
 
-    when(profileService.getAllRoles()).thenReturn(mockRoles);
+    when(profileService.getAllAssignableRoles()).thenReturn(mockRoles);
     List<String> actual = testClass.getAllAssignableRoles();
     assertThat(actual, containsInAnyOrder(adminRole, rvAdmin, etlRole));
-    verify(profileService).getAllRoles();
+    verify(profileService).getAllAssignableRoles();
   }
 
   @Test
@@ -155,17 +155,28 @@ class UserManagementFacadeTest {
     HeeUserDTO heeUser = new HeeUserDTO();
     heeUser.setName("user1");
 
+    final String assignableRole = "assignableRole";
+    final String restrictedRole = "restrictedRole";
+    RoleDTO role1 = new RoleDTO();
+    role1.setName(assignableRole);
+    RoleDTO role2 = new RoleDTO();
+    role2.setName(restrictedRole);
+    heeUser.setRoles(Sets.newHashSet(role1, role2));
+
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     authenticationUser.setId("userId1");
     authenticationUser.setEnabled(true);
 
     when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(heeUser));
     when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
+    when(profileService.getRestrictedRoles()).thenReturn(Set.of(restrictedRole));
 
     UserDTO user = testClass.getCompleteUser("user1");
     assertThat("Unexpected user id.", user.getKcId(), is("userId1"));
     assertThat("Unexpected user name.", user.getName(), is("user1"));
     assertThat("Unexpected user enabled flag.", user.getActive(), is(true));
+    assertThat("Unexpected size of roles.", user.getRoles().size(), is(1));
+    assertThat("", user.getRoles().iterator().next(), is(assignableRole));
   }
 
   @ParameterizedTest
@@ -181,6 +192,7 @@ class UserManagementFacadeTest {
 
     when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(heeUser));
     when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
+    when(profileService.getRestrictedRoles()).thenReturn(Set.of());
 
     UserDTO user = testClass.getCompleteUser("user1");
     assertThat("Unexpected user id.", user.getKcId(), is("userId1"));
@@ -300,6 +312,7 @@ class UserManagementFacadeTest {
     when(authenticationAdminService.updateUser(user)).thenReturn(true);
 
     when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(existingHeeUser));
+    when(profileService.getRestrictedRoles()).thenReturn(Set.of("Machine User", "RVOfficer", "HEE"));
     ArgumentCaptor<HeeUserDTO> updatedHeeUserCaptor = ArgumentCaptor.forClass(HeeUserDTO.class);
     when(profileService.updateUser(updatedHeeUserCaptor.capture())).thenReturn(
         Optional.of(new HeeUserDTO()));
