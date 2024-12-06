@@ -95,9 +95,11 @@ public class UserManagementFacade {
     userDTOS.stream().forEach(user -> {
       Optional<AuthenticationUserDto> authUser = authenticationAdminService.getUser(
           user.getName());
-      if (authUser.isPresent()) {user.setHasAuthUser(true);}
+      if (authUser.isPresent()) {
+        user.setHasAuthUser(true);
+      }
     });
-    
+
     return new CustomPageable<>(userDTOS, pageable, heeUserDTOS.getTotalElements());
   }
 
