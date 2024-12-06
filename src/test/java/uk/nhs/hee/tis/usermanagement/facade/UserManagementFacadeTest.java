@@ -1,5 +1,6 @@
 package uk.nhs.hee.tis.usermanagement.facade;
 
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
@@ -205,17 +206,23 @@ class UserManagementFacadeTest {
     HeeUserDTO profileUser1 = new HeeUserDTO();
     profileUser1.setName("user1");
     profileUser1.setActive(true);
+    AuthenticationUserDto authenticationUser1 = new AuthenticationUserDto();
+    authenticationUser1.setUsername("user1");
     HeeUserDTO profileUser2 = new HeeUserDTO();
     profileUser2.setName("user2");
     Page<HeeUserDTO> profileUsers = new PageImpl<>(Arrays.asList(profileUser1, profileUser2));
 
     when(profileService.getAllUsers(Pageable.unpaged(), "searchString")).thenReturn(profileUsers);
+    when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser1));
+    when(authenticationAdminService.getUser("user2")).thenReturn(Optional.empty());
 
     Page<UserDTO> allUsersPage = testClass.getAllUsers(Pageable.unpaged(), "searchString");
 
     assertThat("Unexpected user count.", allUsersPage.getTotalElements(), is(2L));
     assertThat("Unexpected pageable.", allUsersPage.getPageable(), is(Pageable.unpaged()));
 
+    assertThat(allUsersPage.stream().filter(UserDTO::getHasAuthUser).map(UserDTO::getName)
+        .collect(Collectors.toSet()), not(hasItems("user2")));
     Set<String> allUserNames = allUsersPage.stream()
         .map(UserDTO::getName)
         .collect(Collectors.toSet());
@@ -312,7 +319,8 @@ class UserManagementFacadeTest {
     when(authenticationAdminService.updateUser(user)).thenReturn(true);
 
     when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(existingHeeUser));
-    when(profileService.getRestrictedRoles()).thenReturn(Set.of("Machine User", "RVOfficer", "HEE"));
+    when(profileService.getRestrictedRoles()).thenReturn(
+        Set.of("Machine User", "RVOfficer", "HEE"));
     ArgumentCaptor<HeeUserDTO> updatedHeeUserCaptor = ArgumentCaptor.forClass(HeeUserDTO.class);
     when(profileService.updateUser(updatedHeeUserCaptor.capture())).thenReturn(
         Optional.of(new HeeUserDTO()));
