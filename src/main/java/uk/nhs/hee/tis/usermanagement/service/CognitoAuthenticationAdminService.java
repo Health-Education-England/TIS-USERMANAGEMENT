@@ -10,6 +10,7 @@ import com.amazonaws.services.cognitoidp.model.AdminEnableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
+import com.amazonaws.services.cognitoidp.model.AttributeType;
 import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,9 @@ import uk.nhs.hee.tis.usermanagement.mapper.CognitoResultMapper;
 public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdminService {
 
   private static final String SERVICE_NAME = "cognito";
+
+  protected static final String EMAIL_VERIFIED_FIELD = "email_verified";
+  protected static final String EMAIL_VERIFIED_VALUE = "true";
 
   private final AWSCognitoIdentityProvider cognitoClient;
   private final String userPoolId;
@@ -62,7 +66,9 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
   @Override
   AuthenticationUserDto createUser(CreateUserDTO createUserDto) {
     AdminCreateUserRequest request = requestMapper.toCreateUserRequest(createUserDto)
-        .withUserPoolId(userPoolId);
+        .withUserPoolId(userPoolId)
+        .withUserAttributes(
+            new AttributeType().withName(EMAIL_VERIFIED_FIELD).withValue(EMAIL_VERIFIED_VALUE));
 
     AdminCreateUserResult result = cognitoClient.adminCreateUser(request);
 
