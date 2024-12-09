@@ -5,7 +5,7 @@ import java.util.Set;
 
 public class UserDTO {
 
-  private String kcId;
+  private String authId;
   private String name;
   private String firstName;
   private String lastName;
@@ -19,12 +19,12 @@ public class UserDTO {
   private Set<String> associatedProgrammes = new HashSet<>();
   private boolean hasAuthUser;
 
-  public String getKcId() {
-    return kcId;
+  public String getAuthId() {
+    return authId;
   }
 
-  public void setKcId(String kcId) {
-    this.kcId = kcId;
+  public void setAuthId(String authId) {
+    this.authId = authId;
   }
 
   public String getName() {

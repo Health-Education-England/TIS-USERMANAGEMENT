@@ -71,7 +71,7 @@ public class KeyCloakAdminClientServiceTest {
 
   private UserDTO createUserDTO() {
     UserDTO userDTO = new UserDTO();
-    userDTO.setKcId(USER_ID);
+    userDTO.setAuthId(USER_ID);
     userDTO.setFirstName(FIRST_NAME);
     userDTO.setLastName(LAST_NAME);
     userDTO.setName(NAME);

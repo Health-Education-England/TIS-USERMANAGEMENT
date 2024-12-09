@@ -173,7 +173,7 @@ class UserManagementFacadeTest {
     when(profileService.getRestrictedRoles()).thenReturn(Set.of(restrictedRole));
 
     UserDTO user = testClass.getCompleteUser("user1");
-    assertThat("Unexpected user id.", user.getKcId(), is("userId1"));
+    assertThat("Unexpected user id.", user.getAuthId(), is("userId1"));
     assertThat("Unexpected user name.", user.getName(), is("user1"));
     assertThat("Unexpected user enabled flag.", user.getActive(), is(true));
     assertThat("Unexpected size of roles.", user.getRoles().size(), is(1));
@@ -196,7 +196,7 @@ class UserManagementFacadeTest {
     when(profileService.getRestrictedRoles()).thenReturn(Set.of());
 
     UserDTO user = testClass.getCompleteUser("user1");
-    assertThat("Unexpected user id.", user.getKcId(), is("userId1"));
+    assertThat("Unexpected user id.", user.getAuthId(), is("userId1"));
     assertThat("Unexpected user name.", user.getName(), is("user1"));
     assertThat("Unexpected user enabled flag.", user.getActive(), is(authNStatus));
   }
@@ -207,7 +207,9 @@ class UserManagementFacadeTest {
     profileUser1.setName("user1");
     profileUser1.setActive(true);
     AuthenticationUserDto authenticationUser1 = new AuthenticationUserDto();
+    authenticationUser1.setId("1");
     authenticationUser1.setUsername("user1");
+    authenticationUser1.setEnabled(true);
     HeeUserDTO profileUser2 = new HeeUserDTO();
     profileUser2.setName("user2");
     Page<HeeUserDTO> profileUsers = new PageImpl<>(Arrays.asList(profileUser1, profileUser2));
@@ -222,7 +224,7 @@ class UserManagementFacadeTest {
     assertThat("Unexpected pageable.", allUsersPage.getPageable(), is(Pageable.unpaged()));
 
     assertThat(allUsersPage.stream().filter(UserDTO::getHasAuthUser).map(UserDTO::getName)
-        .collect(Collectors.toSet()), not(hasItems("user2")));
+        .collect(Collectors.toSet()), containsInAnyOrder("user1"));
     Set<String> allUserNames = allUsersPage.stream()
         .map(UserDTO::getName)
         .collect(Collectors.toSet());
