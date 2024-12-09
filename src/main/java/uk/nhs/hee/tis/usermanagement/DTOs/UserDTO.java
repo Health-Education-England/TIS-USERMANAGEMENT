@@ -4,7 +4,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class UserDTO {
-  private String kcId;
+
+  private String authId;
   private String name;
   private String firstName;
   private String lastName;
@@ -16,13 +17,14 @@ public class UserDTO {
   private Set<String> localOffices = new HashSet<>();
   private Set<String> associatedTrusts = new HashSet<>();
   private Set<String> associatedProgrammes = new HashSet<>();
+  private boolean hasAuthUser;
 
-  public String getKcId() {
-    return kcId;
+  public String getAuthId() {
+    return authId;
   }
 
-  public void setKcId(String kcId) {
-    this.kcId = kcId;
+  public void setAuthId(String authId) {
+    this.authId = authId;
   }
 
   public String getName() {
@@ -111,5 +113,13 @@ public class UserDTO {
 
   public void setAssociatedProgrammes(Set<String> associatedProgrammes) {
     this.associatedProgrammes = associatedProgrammes;
+  }
+
+  public boolean getHasAuthUser() {
+    return this.hasAuthUser;
+  }
+
+  public void setHasAuthUser(boolean hasAuthUser) {
+    this.hasAuthUser = hasAuthUser;
   }
 }

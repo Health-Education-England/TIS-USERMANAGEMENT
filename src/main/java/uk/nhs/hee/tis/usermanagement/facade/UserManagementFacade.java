@@ -90,7 +90,12 @@ public class UserManagementFacade {
 
   public Page<UserDTO> getAllUsers(Pageable pageable, String search) {
     Page<HeeUserDTO> heeUserDTOS = profileService.getAllUsers(pageable, search);
-    List<UserDTO> userDTOS = heeUserMapper.convertAll(heeUserDTOS.getContent());
+    List<UserDTO> userDTOS = new ArrayList<>();
+    heeUserDTOS.getContent().stream().forEach(profileUser ->
+        authenticationAdminService.getUser(profileUser.getName())
+            .ifPresentOrElse(authUser -> userDTOS.add(heeUserMapper.convert(profileUser, authUser)),
+                () -> userDTOS.add(heeUserMapper.convert(profileUser))));
+
     return new CustomPageable<>(userDTOS, pageable, heeUserDTOS.getTotalElements());
   }
 

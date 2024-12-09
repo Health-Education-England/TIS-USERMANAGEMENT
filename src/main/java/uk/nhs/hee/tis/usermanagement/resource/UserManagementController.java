@@ -52,7 +52,7 @@ public class UserManagementController {
 
     model.addAttribute("user", completeUserDTO);
     UserPasswordDTO userPasswordDTO = new UserPasswordDTO();
-    userPasswordDTO.setKcId(completeUserDTO.getKcId());
+    userPasswordDTO.setKcId(completeUserDTO.getAuthId());
     model.addAttribute("userPassword", userPasswordDTO);
 
     List<String> allRoles = userManagementFacade.getAllAssignableRoles();
