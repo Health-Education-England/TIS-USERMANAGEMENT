@@ -10,6 +10,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.nhs.hee.tis.usermanagement.service.CognitoAuthenticationAdminService.EMAIL_VERIFIED_FIELD;
+import static uk.nhs.hee.tis.usermanagement.service.CognitoAuthenticationAdminService.EMAIL_VERIFIED_VALUE;
 
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClient;
 import com.amazonaws.services.cognitoidp.model.AWSCognitoIdentityProviderException;
@@ -109,7 +111,7 @@ public class CognitoAuthenticationAdminServiceTest {
     assertThat("Unexpected password.", request.getTemporaryPassword(), nullValue());
 
     List<AttributeType> attributes = request.getUserAttributes();
-    assertThat("Unexpected attribute count.", attributes.size(), is(3));
+    assertThat("Unexpected attribute count.", attributes.size(), is(4));
 
     Map<String, String> attributeMap = attributes.stream()
         .collect(Collectors.toMap(AttributeType::getName, AttributeType::getValue));
@@ -117,6 +119,8 @@ public class CognitoAuthenticationAdminServiceTest {
     assertThat("Unexpected given name.", attributeMap.get(GIVEN_NAME_FIELD), is(GIVEN_NAME_VALUE));
     assertThat("Unexpected family name.", attributeMap.get(FAMILY_NAME_FIELD),
         is(FAMILY_NAME_VALUE));
+    assertThat("Unexpected email verified.", attributeMap.get(EMAIL_VERIFIED_FIELD),
+        is(EMAIL_VERIFIED_VALUE));
   }
 
   @Test
