@@ -222,7 +222,7 @@ class UserManagementFacadeTest {
     assertThat("Unexpected user count.", allUsersPage.getTotalElements(), is(2L));
     assertThat("Unexpected pageable.", allUsersPage.getPageable(), is(Pageable.unpaged()));
 
-    assertThat(allUsersPage.stream().filter(UserDTO::getHasAuthUser).map(UserDTO::getName)
+    assertThat(allUsersPage.stream().filter(u -> u.getAuthId() != null).map(UserDTO::getName)
         .collect(Collectors.toSet()), containsInAnyOrder("user1"));
     Set<String> allUserNames = allUsersPage.stream()
         .map(UserDTO::getName)

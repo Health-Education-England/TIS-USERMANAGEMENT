@@ -179,7 +179,6 @@ public class HeeUserMapper {
     if (authenticationUserDto != null) {
       userDto.setAuthId(authenticationUserDto.getId());
       userDto.setActive(authenticationUserDto.isEnabled());
-      userDto.setHasAuthUser(true);
     }
     return userDto;
   }
