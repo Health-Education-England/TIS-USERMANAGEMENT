@@ -172,7 +172,7 @@ class UserManagementFacadeTest {
     when(profileService.getRestrictedRoles()).thenReturn(Set.of(restrictedRole));
 
     UserDTO user = testClass.getCompleteUser("user1");
-    assertThat("Unexpected user id.", user.getKcId(), is("userId1"));
+    assertThat("Unexpected user id.", user.getAuthId(), is("userId1"));
     assertThat("Unexpected user name.", user.getName(), is("user1"));
     assertThat("Unexpected user enabled flag.", user.getActive(), is(true));
     assertThat("Unexpected size of roles.", user.getRoles().size(), is(1));
@@ -195,7 +195,7 @@ class UserManagementFacadeTest {
     when(profileService.getRestrictedRoles()).thenReturn(Set.of());
 
     UserDTO user = testClass.getCompleteUser("user1");
-    assertThat("Unexpected user id.", user.getKcId(), is("userId1"));
+    assertThat("Unexpected user id.", user.getAuthId(), is("userId1"));
     assertThat("Unexpected user name.", user.getName(), is("user1"));
     assertThat("Unexpected user enabled flag.", user.getActive(), is(authNStatus));
   }
@@ -205,17 +205,25 @@ class UserManagementFacadeTest {
     HeeUserDTO profileUser1 = new HeeUserDTO();
     profileUser1.setName("user1");
     profileUser1.setActive(true);
+    AuthenticationUserDto authenticationUser1 = new AuthenticationUserDto();
+    authenticationUser1.setId("1");
+    authenticationUser1.setUsername("user1");
+    authenticationUser1.setEnabled(true);
     HeeUserDTO profileUser2 = new HeeUserDTO();
     profileUser2.setName("user2");
     Page<HeeUserDTO> profileUsers = new PageImpl<>(Arrays.asList(profileUser1, profileUser2));
 
     when(profileService.getAllUsers(Pageable.unpaged(), "searchString")).thenReturn(profileUsers);
+    when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser1));
+    when(authenticationAdminService.getUser("user2")).thenReturn(Optional.empty());
 
     Page<UserDTO> allUsersPage = testClass.getAllUsers(Pageable.unpaged(), "searchString");
 
     assertThat("Unexpected user count.", allUsersPage.getTotalElements(), is(2L));
     assertThat("Unexpected pageable.", allUsersPage.getPageable(), is(Pageable.unpaged()));
 
+    assertThat(allUsersPage.stream().filter(u -> u.getAuthId() != null).map(UserDTO::getName)
+        .collect(Collectors.toSet()), containsInAnyOrder("user1"));
     Set<String> allUserNames = allUsersPage.stream()
         .map(UserDTO::getName)
         .collect(Collectors.toSet());
@@ -312,7 +320,8 @@ class UserManagementFacadeTest {
     when(authenticationAdminService.updateUser(user)).thenReturn(true);
 
     when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(existingHeeUser));
-    when(profileService.getRestrictedRoles()).thenReturn(Set.of("Machine User", "RVOfficer", "HEE"));
+    when(profileService.getRestrictedRoles()).thenReturn(
+        Set.of("Machine User", "RVOfficer", "HEE"));
     ArgumentCaptor<HeeUserDTO> updatedHeeUserCaptor = ArgumentCaptor.forClass(HeeUserDTO.class);
     when(profileService.updateUser(updatedHeeUserCaptor.capture())).thenReturn(
         Optional.of(new HeeUserDTO()));

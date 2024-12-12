@@ -29,7 +29,7 @@ public interface AuthenticationUserMapper {
    * @param userDto The user dto to convert.
    * @return The converted authentication user.
    */
-  @Mapping(target = "id", source = "kcId")
+  @Mapping(target = "id", source = "authId")
   @Mapping(target = "username", source = "name")
   @Mapping(target = "givenName", source = "firstName")
   @Mapping(target = "familyName", source = "lastName")

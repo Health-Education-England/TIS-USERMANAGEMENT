@@ -151,7 +151,7 @@ public class KeyCloakAdminClientService extends AbstractAuthenticationAdminServi
     Map<String, List<String>> attributes = new HashMap<>();
     List<String> dbcs = new ArrayList<>();
     attributes.put("DBC", dbcs);
-    return User.create(userDTO.getKcId(), userDTO.getFirstName(), userDTO.getLastName(),
+    return User.create(userDTO.getAuthId(), userDTO.getFirstName(), userDTO.getLastName(),
         userDTO.getName(),
         userDTO.getEmailAddress(), null, null, attributes, userDTO.getActive());
   }

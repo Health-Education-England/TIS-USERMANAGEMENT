@@ -177,7 +177,7 @@ public class HeeUserMapper {
   private UserDTO mapAuthUserAttributes(UserDTO userDto,
       AuthenticationUserDto authenticationUserDto) {
     if (authenticationUserDto != null) {
-      userDto.setKcId(authenticationUserDto.getId());
+      userDto.setAuthId(authenticationUserDto.getId());
       userDto.setActive(authenticationUserDto.isEnabled());
     }
     return userDto;

@@ -59,6 +59,7 @@
             <th>Forenames</th>
             <th>Surname</th>
             <th>Email Address</th>
+            <th>Exists In Authentication Provider</th>
             <th></th>
          </tr>
          </thead>
@@ -68,6 +69,7 @@
             <td th:text="${user.firstName}">firstName</td>
             <td th:text="${user.lastName}">firstName</td>
             <td th:text="${user.emailAddress}">email</td>
+            <td><span th:if="${user.authId !== null}">&#10003;</span></td>
             <td><a class="pure-button" th:href="@{'/user?userName=' + ${user.name}}">Edit</a></td>
          </tr>
          </tbody>
