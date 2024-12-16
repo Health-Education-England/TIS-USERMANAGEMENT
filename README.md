@@ -21,10 +21,12 @@ It is built using:
     ```shell
     mvn spring-boot:run
     ```
-1.  Use the docker container from the latest build on Prod
+2. Use the docker container from the latest build on Prod
     ```shell
     docker pull ${DOCKER_REPO}:latest
     docker run 
     ```
+Note that there are some additional dependencies (Apache, Keycloak) whose setup and configuration are detailed [here][2].
     
 [1]: https://en.wikipedia.org/wiki/Decorator_pattern
+[2]: https://hee-tis.atlassian.net/wiki/spaces/NTCS/pages/1129775105/Setup+Apache+Keycloak+locally+on+Windows
