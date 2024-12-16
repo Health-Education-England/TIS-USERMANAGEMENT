@@ -93,7 +93,7 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
       AdminGetUserResult result = cognitoClient.adminGetUser(request);
       return Optional.of(resultMapper.toAuthenticationUser(result));
     } catch (UserNotFoundException e) {
-      log.warn(e.getMessage(), e);
+      log.info(e.getMessage());
       return Optional.empty();
     }
   }
