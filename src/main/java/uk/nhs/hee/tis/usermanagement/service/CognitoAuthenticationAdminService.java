@@ -11,6 +11,7 @@ import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
+import com.amazonaws.services.cognitoidp.model.InvalidParameterException;
 import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -92,8 +93,8 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
     try {
       AdminGetUserResult result = cognitoClient.adminGetUser(request);
       return Optional.of(resultMapper.toAuthenticationUser(result));
-    } catch (UserNotFoundException e) {
-      log.info(e.getMessage());
+    } catch (InvalidParameterException | UserNotFoundException e) {
+      log.info(e.getMessage(), e);
       return Optional.empty();
     }
   }
