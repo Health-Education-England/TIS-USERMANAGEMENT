@@ -24,6 +24,7 @@ import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
+import com.amazonaws.services.cognitoidp.model.InvalidParameterException;
 import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import com.amazonaws.services.cognitoidp.model.UserType;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
@@ -35,8 +36,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.junit.Before;
-import org.junit.Test;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
@@ -50,7 +54,7 @@ import uk.nhs.hee.tis.usermanagement.mapper.AuthenticationUserMapperImpl;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoRequestMapperImpl;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoResultMapperImpl;
 
-public class CognitoAuthenticationAdminServiceTest {
+class CognitoAuthenticationAdminServiceTest {
 
   private static final String USER_POOL_ID = "region-1_userPool123";
 
@@ -71,8 +75,13 @@ public class CognitoAuthenticationAdminServiceTest {
   private AWSCognitoIdentityProviderClient cognitoClient;
   private ApplicationEventPublisher eventPublisher;
 
-  @Before
-  public void setUp() {
+  private static Stream<Exception> catchableExceptionProvider() {
+    return Stream.of(new UserNotFoundException("User does not exist."),
+        new InvalidParameterException("Limited characters are permitted"));
+  }
+
+  @BeforeEach
+  void setUp() {
     cognitoClient = mock(AWSCognitoIdentityProviderClient.class);
     eventPublisher = mock(ApplicationEventPublisher.class);
     service = new CognitoAuthenticationAdminService(
@@ -86,7 +95,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldSendCreateUserRequest() {
+  void shouldSendCreateUserRequest() {
     CreateUserDTO dto = new CreateUserDTO();
     dto.setName(USERNAME);
     dto.setEmailAddress(EMAIL_VALUE);
@@ -124,7 +133,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldNotDisableCreatedUserWhenActiveTrue() {
+  void shouldNotDisableCreatedUserWhenActiveTrue() {
     CreateUserDTO dto = new CreateUserDTO();
     dto.setActive(true);
 
@@ -140,7 +149,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldDisableCreatedUserWhenActiveFalse() {
+  void shouldDisableCreatedUserWhenActiveFalse() {
     CreateUserDTO dto = new CreateUserDTO();
     dto.setActive(false);
 
@@ -162,7 +171,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldPublishCreatedUserWhenUserCreated() {
+  void shouldPublishCreatedUserWhenUserCreated() {
     UserType cognitoUser = new UserType();
     cognitoUser.setUsername(USERNAME);
     cognitoUser.setAttributes(buildStandardCognitoAttributes());
@@ -188,7 +197,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldPublishProfileUserToBeCreatedWhenUserCreated() {
+  void shouldPublishProfileUserToBeCreatedWhenUserCreated() {
     CreateUserDTO createUserDto = new CreateUserDTO();
     createUserDto.setActive(true);
 
@@ -207,7 +216,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldSendGetCognitoUserRequest() {
+  void shouldSendGetCognitoUserRequest() {
     AdminGetUserResult result = new AdminGetUserResult();
     result.setUserAttributes(Collections.emptyList());
 
@@ -223,7 +232,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldReturnGetCognitoUserResultWhenUsernameFound() {
+  void shouldReturnGetCognitoUserResultWhenUsernameFound() {
     AdminGetUserResult result = new AdminGetUserResult();
     result.setUsername(USERNAME);
     result.setUserAttributes(buildStandardCognitoAttributes());
@@ -237,10 +246,10 @@ public class CognitoAuthenticationAdminServiceTest {
     verifyAuthenticationUser(optionalAuthenticationUser.get());
   }
 
-  @Test
-  public void shouldReturnEmptyGetCognitoUserResultWhenUsernameNotFound() {
-    when(cognitoClient.adminGetUser(any())).thenThrow(
-        new UserNotFoundException("User does not exist."));
+  @ParameterizedTest
+  @MethodSource("catchableExceptionProvider")
+  void shouldReturnEmptyGetCognitoUserResultWhenUsernameNotFound(Exception e) {
+    when(cognitoClient.adminGetUser(any())).thenThrow(e);
 
     Optional<AuthenticationUserDto> optionalAuthenticationUser = service.getUser(USERNAME);
 
@@ -248,7 +257,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldSendUpdateCognitoUserRequestWhenAuthenticationUserProvided() {
+  void shouldSendUpdateCognitoUserRequestWhenAuthenticationUserProvided() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     authenticationUser.setUsername(USERNAME);
     authenticationUser.setGivenName(GIVEN_NAME_VALUE);
@@ -279,7 +288,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldEnableUserWhenUpdatingUserAndEnabledTrue() {
+  void shouldEnableUserWhenUpdatingUserAndEnabledTrue() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     authenticationUser.setUsername(USERNAME);
     authenticationUser.setEnabled(true);
@@ -296,7 +305,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldDisableWhenUpdatingUserAndEnabledFalse() {
+  void shouldDisableWhenUpdatingUserAndEnabledFalse() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     authenticationUser.setUsername(USERNAME);
     authenticationUser.setEnabled(false);
@@ -313,7 +322,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldOverwriteOriginalAttributesWhenUpdatingUser() {
+  void shouldOverwriteOriginalAttributesWhenUpdatingUser() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     authenticationUser.setUsername(USERNAME);
     authenticationUser.setGivenName(GIVEN_NAME_VALUE);
@@ -345,14 +354,14 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldReturnTrueWhenUserUpdatedByAuthenticationUser() {
+  void shouldReturnTrueWhenUserUpdatedByAuthenticationUser() {
     boolean updated = service.updateUser(new AuthenticationUserDto());
 
     assertThat("Unexpected updated state.", updated, is(true));
   }
 
   @Test
-  public void shouldReturnFalseWhenUserUpdateFailsByAuthenticationUser() {
+  void shouldReturnFalseWhenUserUpdateFailsByAuthenticationUser() {
     when(cognitoClient.adminUpdateUserAttributes(any())).thenThrow(
         new AWSCognitoIdentityProviderException("Dummy Exception."));
 
@@ -362,7 +371,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldSendUpdateCognitoUserRequestWhenUserDtoProvided() {
+  void shouldSendUpdateCognitoUserRequestWhenUserDtoProvided() {
     UserDTO userDto = new UserDTO();
     userDto.setName(USERNAME);
     userDto.setFirstName(GIVEN_NAME_VALUE);
@@ -391,14 +400,14 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldReturnTrueWhenUserUpdatedByUserDto() {
+  void shouldReturnTrueWhenUserUpdatedByUserDto() {
     boolean updated = service.updateUser(new UserDTO());
 
     assertThat("Unexpected updated state.", updated, is(true));
   }
 
   @Test
-  public void shouldReturnFalseWhenUserUpdateFailsByUserDto() {
+  void shouldReturnFalseWhenUserUpdateFailsByUserDto() {
     when(cognitoClient.adminUpdateUserAttributes(any())).thenThrow(
         new AWSCognitoIdentityProviderException("Dummy Exception."));
 
@@ -408,7 +417,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldSendDeleteCognitoUserRequest() {
+  void shouldSendDeleteCognitoUserRequest() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     authenticationUser.setUsername(USERNAME);
 
@@ -426,7 +435,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldPublishDeleteProfileUserEventWhenPublishIsTrue() {
+  void shouldPublishDeleteProfileUserEventWhenPublishIsTrue() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     authenticationUser.setUsername(USERNAME);
 
@@ -442,7 +451,7 @@ public class CognitoAuthenticationAdminServiceTest {
   }
 
   @Test
-  public void shouldNotPublishDeleteProfileUserEventWhenPublishIsFalse() {
+  void shouldNotPublishDeleteProfileUserEventWhenPublishIsFalse() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     authenticationUser.setUsername(USERNAME);
 
