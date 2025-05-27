@@ -1,7 +1,7 @@
 package uk.nhs.hee.tis.usermanagement.service;
 
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
@@ -55,7 +55,7 @@ public interface AuthenticationAdminService {
   /**
    * Get authentication event logs for user.
    *
-   * @param username       The username to get the auth event logs for.
+   * @param username The username to get the auth event logs for.
    */
   List<UserAuthEventDto> getUserAuthEvents(String username);
 }
