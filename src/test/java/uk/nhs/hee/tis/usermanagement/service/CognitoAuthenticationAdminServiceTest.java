@@ -5,7 +5,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -34,6 +34,8 @@ import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import com.amazonaws.services.cognitoidp.model.UserType;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -473,8 +475,9 @@ class CognitoAuthenticationAdminServiceTest {
 
   @Test
   void shouldGetAuthEventsForUser() {
+    Instant startTime = Instant.now();
 
-    List<AuthEventType> events = createAuthEventsList();
+    List<AuthEventType> events = createAuthEventsList(startTime);
     AdminListUserAuthEventsResult requestResult = new AdminListUserAuthEventsResult()
         .withAuthEvents(events);
     AdminListUserAuthEventsRequest request = new AdminListUserAuthEventsRequest()
@@ -487,20 +490,22 @@ class CognitoAuthenticationAdminServiceTest {
     List<UserAuthEventDto> results = service.getUserAuthEvents(USERNAME);
 
     assertThat(results.size(), is(MAX_AUTH_EVENTS));
-    results.stream().forEach(
-        result -> {
-          assertNotNull(result.getEventId());
-          assertNotNull(result.getCreationDate());
-          assertThat(result.getEventType(), is("SignIn"));
-          assertThat(result.getEventResponse(), is("Pass"));
-          assertThat(result.getChallenges(), is("Password:Success, Mfa:Success"));
-          assertThat(result.getDevice(), is("Chrome 126, Windows 10"));
-        }
-    );
+
+    for (int i = 0; i < results.size(); i++) {
+      UserAuthEventDto result = results.get(i);
+      assertThat(result.getEventId(), is(String.valueOf(i)));
+      assertThat(result.getEventDateTime().truncatedTo(ChronoUnit.SECONDS),
+          is(startTime.plusSeconds(i).atZone(ZoneId.systemDefault()).toLocalDateTime()
+              .truncatedTo(ChronoUnit.SECONDS)));
+      assertThat(result.getEvent(), is("SignIn"));
+      assertThat(result.getResult(), is("Pass"));
+      assertThat(result.getChallenges(), is("Password:Success, Mfa:Success"));
+      assertThat(result.getDevice(), is("Chrome 126, Windows 10"));
+    }
   }
 
   @Test
-  void shouldReturnNoResultsForIdentityProviderException() {
+  void shouldThrowIdentityProviderExceptionIn() {
 
     AdminListUserAuthEventsRequest request = new AdminListUserAuthEventsRequest()
         .withUserPoolId(USER_POOL_ID)
@@ -510,9 +515,8 @@ class CognitoAuthenticationAdminServiceTest {
     // e.g. User Not Found
     when(cognitoClient.adminListUserAuthEvents(request)).thenThrow(UserNotFoundException.class);
 
-    List<UserAuthEventDto> results = service.getUserAuthEvents(USERNAME);
-
-    assertThat(results.size(), is(0));
+    assertThrows(AWSCognitoIdentityProviderException.class,
+        () -> service.getUserAuthEvents(USERNAME));
   }
 
   /**
@@ -554,7 +558,7 @@ class CognitoAuthenticationAdminServiceTest {
         is(singletonList(FAMILY_NAME_VALUE)));
   }
 
-  private List<AuthEventType> createAuthEventsList() {
+  private List<AuthEventType> createAuthEventsList(Instant startTime) {
     ChallengeResponseType challengeResponseType1 = new ChallengeResponseType().withChallengeName(
         "Password").withChallengeResponse("Success");
     ChallengeResponseType challengeResponseType2 = new ChallengeResponseType().withChallengeName(
@@ -564,7 +568,7 @@ class CognitoAuthenticationAdminServiceTest {
 
     return IntStream.range(0, MAX_AUTH_EVENTS)
         .mapToObj(n -> new AuthEventType().withEventId(String.valueOf(n)).withEventType("SignIn")
-            .withCreationDate(Date.from(Instant.now().plusSeconds(n))).withEventResponse("Pass")
+            .withCreationDate(Date.from(startTime.plusSeconds(n))).withEventResponse("Pass")
             .withChallengeResponses(List.of(challengeResponseType1, challengeResponseType2))
             .withEventContextData(eventContextDataType))
         .collect(Collectors.toList());

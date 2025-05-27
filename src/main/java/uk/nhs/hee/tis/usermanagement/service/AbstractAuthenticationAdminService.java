@@ -5,13 +5,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
-import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.event.CreateAuthenticationUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.CreateProfileUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.DeleteAuthenticationUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.DeleteProfileUserRequestEvent;
-
-import java.util.List;
 
 /**
  * An abstract class containing behaviour common across different authentication providers.

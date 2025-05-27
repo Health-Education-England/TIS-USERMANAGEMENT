@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.Instant;
-import java.util.Date;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -45,6 +45,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
+import uk.nhs.hee.tis.usermanagement.exception.IdentityProviderException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 
@@ -250,13 +251,15 @@ class UserResourceTest {
 
   @Test
   void shouldGetAuthEventsForUser() throws Exception {
+    Instant startTime = Instant.now();
 
     List<UserAuthEventDto> events = IntStream.range(0, 20)
         .mapToObj(n -> UserAuthEventDto.builder()
             .eventId(String.valueOf(n))
-            .eventType("SignIn")
-            .creationDate(Date.from(Instant.now().plusSeconds(n)))
-            .eventResponse("Pass")
+            .event("SignIn")
+            .eventDateTime(
+                startTime.plusSeconds(n).atZone(ZoneId.systemDefault()).toLocalDateTime())
+            .result("Pass")
             .challenges("Password:Success, Mfa:Success")
             .device("Chrome 126, Windows 10")
             .build())
@@ -268,5 +271,14 @@ class UserResourceTest {
             get("/api/users/foo/authevents"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.length()").value(20));
+  }
+
+  @Test
+  void shouldRespondErrorWhenIdentityProviderThrowsException() throws Exception {
+    doThrow(IdentityProviderException.class).when(mockFacade).getUserAuthEvents("foo");
+
+    mockMvc.perform(
+            get("/api/users/foo/authevents"))
+        .andExpect(status().isInternalServerError());
   }
 }

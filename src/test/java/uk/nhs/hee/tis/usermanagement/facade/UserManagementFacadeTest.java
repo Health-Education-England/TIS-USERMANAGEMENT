@@ -44,6 +44,7 @@ import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
 import uk.nhs.hee.tis.usermanagement.event.CreateAuthenticationUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.DeleteAuthenticationUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.exception.IdentityProviderException;
 import uk.nhs.hee.tis.usermanagement.exception.UpdateUserException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.mapper.HeeUserMapper;
@@ -422,8 +423,16 @@ class UserManagementFacadeTest {
   @Test
   void shouldGetAuthEventsForUser() {
     testClass.getUserAuthEvents(USERNAME);
-    
+
     verify(authenticationAdminService).getUserAuthEvents(USERNAME);
+  }
+
+  @Test
+  void shouldThrowIdentityProviderExceptionOnGetAuthEventsForUser() {
+    when(authenticationAdminService.getUserAuthEvents(USERNAME)).thenThrow(
+        UserNotFoundException.class);
+
+    assertThrows(IdentityProviderException.class, () -> testClass.getUserAuthEvents(USERNAME));
   }
 
   /**

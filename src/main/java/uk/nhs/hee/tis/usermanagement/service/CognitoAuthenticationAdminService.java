@@ -15,7 +15,6 @@ import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
 import com.amazonaws.services.cognitoidp.model.InvalidParameterException;
 import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -156,17 +155,16 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   @Override
   public List<UserAuthEventDto> getUserAuthEvents(String username) {
-    List<UserAuthEventDto> events = new ArrayList<>();
     try {
       AdminListUserAuthEventsRequest request = new AdminListUserAuthEventsRequest()
           .withUserPoolId(userPoolId)
           .withUsername(username)
           .withMaxResults(MAX_AUTH_EVENTS);
       AdminListUserAuthEventsResult result = cognitoClient.adminListUserAuthEvents(request);
-      events = resultMapper.toUserAuthEventDtos(result.getAuthEvents());
+      return resultMapper.toUserAuthEventDtos(result.getAuthEvents());
     } catch (AWSCognitoIdentityProviderException e) {
       log.error(e.getMessage(), e);
+      throw e;
     }
-    return events;
   }
 }

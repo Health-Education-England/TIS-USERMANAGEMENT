@@ -26,6 +26,7 @@ import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
 import uk.nhs.hee.tis.usermanagement.event.CreateAuthenticationUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.DeleteAuthenticationUserRequestedEvent;
+import uk.nhs.hee.tis.usermanagement.exception.IdentityProviderException;
 import uk.nhs.hee.tis.usermanagement.exception.UpdateUserException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.mapper.HeeUserMapper;
@@ -201,9 +202,13 @@ public class UserManagementFacade {
   /**
    * Get authentication event logs for user.
    *
-   * @param username       The username to get the auth event logs for.
+   * @param username The username to get the auth event logs for.
    */
   public List<UserAuthEventDto> getUserAuthEvents(String username) {
-    return authenticationAdminService.getUserAuthEvents(username);
+    try {
+      return authenticationAdminService.getUserAuthEvents(username);
+    } catch (Exception e) {
+      throw new IdentityProviderException(e.getMessage());
+    }
   }
 }

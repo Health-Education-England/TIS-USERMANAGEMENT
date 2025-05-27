@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import uk.nhs.hee.tis.usermanagement.exception.IdentityProviderException;
 import uk.nhs.hee.tis.usermanagement.exception.UpdateUserException;
 import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
@@ -33,7 +34,7 @@ import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 class UserResourceAdvice {
 
   @ExceptionHandler({UpdateUserException.class, UserCreationException.class,
-      UserNotFoundException.class})
+      UserNotFoundException.class, IdentityProviderException.class})
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   String handleCustomException(RuntimeException e) {
     return e.getMessage();
