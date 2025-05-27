@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import org.apache.commons.lang.NotImplementedException;
 import org.keycloak.representations.idm.GroupRepresentation;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

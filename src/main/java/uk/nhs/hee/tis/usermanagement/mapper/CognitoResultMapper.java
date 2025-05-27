@@ -8,7 +8,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import com.amazonaws.services.cognitoidp.model.AuthEventType;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
@@ -22,8 +21,6 @@ import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDTO;
  */
 @Mapper(componentModel = "spring")
 public abstract class CognitoResultMapper {
-
-
 
   /**
    * Convert a  Cognito {@link AuthEventType} to a DTO.
