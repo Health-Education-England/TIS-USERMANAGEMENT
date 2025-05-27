@@ -9,10 +9,14 @@ import com.amazonaws.services.cognitoidp.model.AdminDisableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminEnableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
+import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsRequest;
+import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsResult;
 import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
 import com.amazonaws.services.cognitoidp.model.InvalidParameterException;
 import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +25,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.mapper.AuthenticationUserMapper;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoRequestMapper;
@@ -38,6 +43,8 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   protected static final String EMAIL_VERIFIED_FIELD = "email_verified";
   protected static final String EMAIL_VERIFIED_VALUE = "true";
+
+  protected static final int MAX_AUTH_EVENTS = 20;
 
   private final AWSCognitoIdentityProvider cognitoClient;
   private final String userPoolId;
@@ -145,5 +152,21 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
         .withUsername(authenticationUser.getUsername());
 
     cognitoClient.adminDeleteUser(request);
+  }
+
+  @Override
+  public List<UserAuthEventDTO> getUserAuthEvents(String username) {
+    List<UserAuthEventDTO> events = new ArrayList<>();
+    try{
+      AdminListUserAuthEventsRequest request = new AdminListUserAuthEventsRequest()
+          .withUserPoolId(userPoolId)
+          .withUsername(username)
+          .withMaxResults(MAX_AUTH_EVENTS);
+      AdminListUserAuthEventsResult result = cognitoClient.adminListUserAuthEvents(request);
+      events = resultMapper.toUserAuthEventDtos(result.getAuthEvents());
+    } catch (AWSCognitoIdentityProviderException e){
+      log.error(e.getMessage(), e);
+    }
+    return events;
   }
 }

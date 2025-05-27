@@ -55,6 +55,8 @@ import uk.nhs.hee.tis.usermanagement.service.TcsService;
 @ExtendWith(MockitoExtension.class)
 class UserManagementFacadeTest {
 
+  private final String USERNAME = "user1";
+
   @InjectMocks
   UserManagementFacade testClass;
 
@@ -130,30 +132,30 @@ class UserManagementFacadeTest {
 
   @Test
   void shouldThrowExceptionGettingCompleteUserWhenUserNotFoundInProfile() {
-    when(authenticationAdminService.getUser("user1")).thenReturn(
+    when(authenticationAdminService.getUser(USERNAME)).thenReturn(
         Optional.of(new AuthenticationUserDto()));
 
     UserNotFoundException actual = assertThrows(UserNotFoundException.class,
-        () -> testClass.getCompleteUser("user1"));
-    assertThat(actual.getMessage(), containsString("user1"));
+        () -> testClass.getCompleteUser(USERNAME));
+    assertThat(actual.getMessage(), containsString(USERNAME));
     assertThat(actual.getMessage(), containsString(ProfileService.NAME));
   }
 
   @Test
   void shouldThrowExceptionGettingCompleteUserWhenUserNotFoundInAuthService() {
-    when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(new HeeUserDTO()));
+    when(profileService.getUserByUsername(USERNAME)).thenReturn(Optional.of(new HeeUserDTO()));
     when(authenticationAdminService.getServiceName()).thenReturn("TEST");
 
     UserNotFoundException actual = assertThrows(UserNotFoundException.class,
-        () -> testClass.getCompleteUser("user1"));
-    assertThat(actual.getMessage(), containsString("user1"));
+        () -> testClass.getCompleteUser(USERNAME));
+    assertThat(actual.getMessage(), containsString(USERNAME));
     assertThat(actual.getMessage(), containsString(authenticationAdminService.getServiceName()));
   }
 
   @Test
   void shouldGetCompleteUserWhenUserFound() {
     HeeUserDTO heeUser = new HeeUserDTO();
-    heeUser.setName("user1");
+    heeUser.setName(USERNAME);
 
     final String assignableRole = "assignableRole";
     final String restrictedRole = "restrictedRole";
@@ -167,13 +169,13 @@ class UserManagementFacadeTest {
     authenticationUser.setId("userId1");
     authenticationUser.setEnabled(true);
 
-    when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(heeUser));
-    when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
+    when(profileService.getUserByUsername(USERNAME)).thenReturn(Optional.of(heeUser));
+    when(authenticationAdminService.getUser(USERNAME)).thenReturn(Optional.of(authenticationUser));
     when(profileService.getRestrictedRoles()).thenReturn(Set.of(restrictedRole));
 
-    UserDTO user = testClass.getCompleteUser("user1");
+    UserDTO user = testClass.getCompleteUser(USERNAME);
     assertThat("Unexpected user id.", user.getAuthId(), is("userId1"));
-    assertThat("Unexpected user name.", user.getName(), is("user1"));
+    assertThat("Unexpected user name.", user.getName(), is(USERNAME));
     assertThat("Unexpected user enabled flag.", user.getActive(), is(true));
     assertThat("Unexpected size of roles.", user.getRoles().size(), is(1));
     assertThat("", user.getRoles().iterator().next(), is(assignableRole));
@@ -183,38 +185,38 @@ class UserManagementFacadeTest {
   @CsvSource({"false,true", "true,false"})
   void shouldPreferActiveFromAuthenticationService(boolean profileStatus, boolean authNStatus) {
     HeeUserDTO heeUser = new HeeUserDTO();
-    heeUser.setName("user1");
+    heeUser.setName(USERNAME);
     heeUser.setActive(profileStatus);
 
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     authenticationUser.setId("userId1");
     authenticationUser.setEnabled(authNStatus);
 
-    when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(heeUser));
-    when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
+    when(profileService.getUserByUsername(USERNAME)).thenReturn(Optional.of(heeUser));
+    when(authenticationAdminService.getUser(USERNAME)).thenReturn(Optional.of(authenticationUser));
     when(profileService.getRestrictedRoles()).thenReturn(Set.of());
 
-    UserDTO user = testClass.getCompleteUser("user1");
+    UserDTO user = testClass.getCompleteUser(USERNAME);
     assertThat("Unexpected user id.", user.getAuthId(), is("userId1"));
-    assertThat("Unexpected user name.", user.getName(), is("user1"));
+    assertThat("Unexpected user name.", user.getName(), is(USERNAME));
     assertThat("Unexpected user enabled flag.", user.getActive(), is(authNStatus));
   }
 
   @Test
   void shouldGetAllUsers() {
     HeeUserDTO profileUser1 = new HeeUserDTO();
-    profileUser1.setName("user1");
+    profileUser1.setName(USERNAME);
     profileUser1.setActive(true);
     AuthenticationUserDto authenticationUser1 = new AuthenticationUserDto();
     authenticationUser1.setId("1");
-    authenticationUser1.setUsername("user1");
+    authenticationUser1.setUsername(USERNAME);
     authenticationUser1.setEnabled(true);
     HeeUserDTO profileUser2 = new HeeUserDTO();
     profileUser2.setName("user2");
     Page<HeeUserDTO> profileUsers = new PageImpl<>(Arrays.asList(profileUser1, profileUser2));
 
     when(profileService.getAllUsers(Pageable.unpaged(), "searchString")).thenReturn(profileUsers);
-    when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser1));
+    when(authenticationAdminService.getUser(USERNAME)).thenReturn(Optional.of(authenticationUser1));
     when(authenticationAdminService.getUser("user2")).thenReturn(Optional.empty());
 
     Page<UserDTO> allUsersPage = testClass.getAllUsers(Pageable.unpaged(), "searchString");
@@ -223,11 +225,11 @@ class UserManagementFacadeTest {
     assertThat("Unexpected pageable.", allUsersPage.getPageable(), is(Pageable.unpaged()));
 
     assertThat(allUsersPage.stream().filter(u -> u.getAuthId() != null).map(UserDTO::getName)
-        .collect(Collectors.toSet()), containsInAnyOrder("user1"));
+        .collect(Collectors.toSet()), containsInAnyOrder(USERNAME));
     Set<String> allUserNames = allUsersPage.stream()
         .map(UserDTO::getName)
         .collect(Collectors.toSet());
-    assertThat("Unexpected user names.", allUserNames, hasItems("user1", "user2"));
+    assertThat("Unexpected user names.", allUserNames, hasItems(USERNAME, "user2"));
     List<Boolean> userActiveFlags = allUsersPage.stream()
         .map(UserDTO::getActive)
         .collect(Collectors.toList());
@@ -238,43 +240,43 @@ class UserManagementFacadeTest {
   @Test
   void shouldThrowExceptionUpdatingSingleUserWhenUsernameNotFoundInAuthService() {
     UserDTO user = new UserDTO();
-    user.setName("user1");
+    user.setName(USERNAME);
 
     when(authenticationAdminService.getServiceName()).thenReturn("TEST");
 
     UserNotFoundException actual = assertThrows(UserNotFoundException.class,
         () -> testClass.updateSingleUser(user));
-    assertThat(actual.getMessage(), containsString("user1"));
+    assertThat(actual.getMessage(), containsString(USERNAME));
     assertThat(actual.getMessage(), containsString(authenticationAdminService.getServiceName()));
   }
 
   @Test
   void shouldThrowExceptionUpdatingSingleUserWhenAuthServiceUpdateFails() {
     UserDTO user = new UserDTO();
-    user.setName("user1");
+    user.setName(USERNAME);
 
-    when(authenticationAdminService.getUser("user1")).thenReturn(
+    when(authenticationAdminService.getUser(USERNAME)).thenReturn(
         Optional.of(new AuthenticationUserDto()));
     when(authenticationAdminService.getServiceName()).thenReturn("TEST");
 
     UpdateUserException actual = assertThrows(UpdateUserException.class,
         () -> testClass.updateSingleUser(user));
-    assertThat(actual.getMessage(), containsString("user1"));
+    assertThat(actual.getMessage(), containsString(USERNAME));
     assertThat(actual.getMessage(), containsString(authenticationAdminService.getServiceName()));
   }
 
   @Test
   void shouldUpdateSingleAuthServiceUserAndThrowExceptionWhenUsernameNotFoundInProfile() {
     UserDTO user = new UserDTO();
-    user.setName("user1");
+    user.setName(USERNAME);
 
-    when(authenticationAdminService.getUser("user1")).thenReturn(
+    when(authenticationAdminService.getUser(USERNAME)).thenReturn(
         Optional.of(new AuthenticationUserDto()));
     when(authenticationAdminService.updateUser(user)).thenReturn(true);
 
     UserNotFoundException actual = assertThrows(UserNotFoundException.class,
         () -> testClass.updateSingleUser(user));
-    assertThat(actual.getMessage(), containsString("user1"));
+    assertThat(actual.getMessage(), containsString(USERNAME));
     assertThat(actual.getMessage(), containsString(ProfileService.NAME));
     verify(authenticationAdminService).updateUser(user);
   }
@@ -282,7 +284,7 @@ class UserManagementFacadeTest {
   @Test
   void shouldNotUpdateSingleAuthServiceUserAndThrowExceptionWhenProfileUpdateFails() {
     UserDTO user = new UserDTO();
-    user.setName("user1");
+    user.setName(USERNAME);
 
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     authenticationUser.setId("userId1");
@@ -290,14 +292,14 @@ class UserManagementFacadeTest {
     HeeUserDTO heeUser = new HeeUserDTO();
     heeUser.setRoles(Collections.emptySet());
 
-    when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
+    when(authenticationAdminService.getUser(USERNAME)).thenReturn(Optional.of(authenticationUser));
     when(authenticationAdminService.updateUser(user)).thenReturn(true);
 
-    when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(heeUser));
+    when(profileService.getUserByUsername(USERNAME)).thenReturn(Optional.of(heeUser));
 
     UpdateUserException actual = assertThrows(UpdateUserException.class,
         () -> testClass.updateSingleUser(user));
-    assertThat(actual.getMessage(), containsString("user1"));
+    assertThat(actual.getMessage(), containsString(USERNAME));
     assertThat(actual.getMessage(), containsString(ProfileService.NAME));
     // Verify the rollback.
     verify(authenticationAdminService).updateUser(authenticationUser);
@@ -306,7 +308,7 @@ class UserManagementFacadeTest {
   @Test
   void shouldUpdateSingleUserWhenAuthServiceAndProfileUpdatesSucceed() {
     UserDTO user = new UserDTO();
-    user.setName("user1");
+    user.setName(USERNAME);
     Set<String> newRoles = new HashSet<>(Arrays.asList("role1", "role2"));
     user.setRoles(newRoles);
 
@@ -316,10 +318,10 @@ class UserManagementFacadeTest {
     HeeUserDTO existingHeeUser = new HeeUserDTO();
     existingHeeUser.setRoles(buildRoleDtos("role1", "role3", "Machine User"));
 
-    when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
+    when(authenticationAdminService.getUser(USERNAME)).thenReturn(Optional.of(authenticationUser));
     when(authenticationAdminService.updateUser(user)).thenReturn(true);
 
-    when(profileService.getUserByUsername("user1")).thenReturn(Optional.of(existingHeeUser));
+    when(profileService.getUserByUsername(USERNAME)).thenReturn(Optional.of(existingHeeUser));
     when(profileService.getRestrictedRoles()).thenReturn(
         Set.of("Machine User", "RVOfficer", "HEE"));
     ArgumentCaptor<HeeUserDTO> updatedHeeUserCaptor = ArgumentCaptor.forClass(HeeUserDTO.class);
@@ -329,7 +331,7 @@ class UserManagementFacadeTest {
     testClass.updateSingleUser(user);
 
     HeeUserDTO updatedHeeUser = updatedHeeUserCaptor.getValue();
-    assertThat("Unexpected user name.", updatedHeeUser.getName(), is("user1"));
+    assertThat("Unexpected user name.", updatedHeeUser.getName(), is(USERNAME));
 
     Set<String> updatedRoles = updatedHeeUser.getRoles().stream().map(RoleDTO::getName)
         .collect(Collectors.toSet());
@@ -343,7 +345,7 @@ class UserManagementFacadeTest {
   @Test
   void shouldPublishUserCreationEvent() {
     CreateUserDTO createUser = new CreateUserDTO();
-    createUser.setName("user1");
+    createUser.setName(USERNAME);
     createUser.setAssociatedProgrammes(new HashSet<>(Collections.singleton("1")));
     createUser.setAssociatedTrusts(new HashSet<>(Collections.singleton("2")));
 
@@ -365,7 +367,7 @@ class UserManagementFacadeTest {
     assertThat("Unexpected user.", event.getUserDTO(), is(createUser));
 
     HeeUserDTO profileUser = event.getUserToCreateInProfileService();
-    assertThat("Unexpected user name.", profileUser.getName(), is("user1"));
+    assertThat("Unexpected user name.", profileUser.getName(), is(USERNAME));
     assertThat("Unexpected associated programme count.",
         profileUser.getAssociatedProgrammes().size(), is(1));
     assertThat("Unexpected associated programme id.",
@@ -381,8 +383,8 @@ class UserManagementFacadeTest {
     when(authenticationAdminService.getServiceName()).thenReturn("TEST");
 
     UserNotFoundException actual = assertThrows(UserNotFoundException.class,
-        () -> testClass.publishDeleteAuthenticationUserRequestedEvent("user1"));
-    assertThat(actual.getMessage(), containsString("user1"));
+        () -> testClass.publishDeleteAuthenticationUserRequestedEvent(USERNAME));
+    assertThat(actual.getMessage(), containsString(USERNAME));
     assertThat(actual.getMessage(), containsString(authenticationAdminService.getServiceName()));
 
     verify(applicationEventPublisher, never()).publishEvent(any());
@@ -391,9 +393,9 @@ class UserManagementFacadeTest {
   @Test
   void shouldPublishDeleteAuthServiceUserEventWhenUserFound() {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
-    when(authenticationAdminService.getUser("user1")).thenReturn(Optional.of(authenticationUser));
+    when(authenticationAdminService.getUser(USERNAME)).thenReturn(Optional.of(authenticationUser));
 
-    testClass.publishDeleteAuthenticationUserRequestedEvent("user1");
+    testClass.publishDeleteAuthenticationUserRequestedEvent(USERNAME);
 
     ArgumentCaptor<DeleteAuthenticationUserRequestedEvent> eventCaptor = ArgumentCaptor.forClass(
         DeleteAuthenticationUserRequestedEvent.class);
@@ -415,6 +417,13 @@ class UserManagementFacadeTest {
     testClass.updatePassword(userPassword);
 
     verify(authenticationAdminService).updatePassword("userId1", "P4$$w0rd", true);
+  }
+
+  @Test
+  void shouldGetAuthEventsForUser() {
+    testClass.getUserAuthEvents(USERNAME);
+    
+    verify(authenticationAdminService).getUserAuthEvents(USERNAME);
   }
 
   /**

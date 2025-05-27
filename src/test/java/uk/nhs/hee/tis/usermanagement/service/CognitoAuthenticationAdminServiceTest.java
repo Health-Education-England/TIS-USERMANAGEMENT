@@ -5,13 +5,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.nhs.hee.tis.usermanagement.service.CognitoAuthenticationAdminService.EMAIL_VERIFIED_FIELD;
-import static uk.nhs.hee.tis.usermanagement.service.CognitoAuthenticationAdminService.EMAIL_VERIFIED_VALUE;
+import static uk.nhs.hee.tis.usermanagement.service.CognitoAuthenticationAdminService.*;
 
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClient;
 import com.amazonaws.services.cognitoidp.model.AWSCognitoIdentityProviderException;
@@ -22,20 +22,28 @@ import com.amazonaws.services.cognitoidp.model.AdminDisableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminEnableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
+import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsRequest;
+import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsResult;
 import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
+import com.amazonaws.services.cognitoidp.model.AuthEventType;
+import com.amazonaws.services.cognitoidp.model.ChallengeResponseType;
+import com.amazonaws.services.cognitoidp.model.EventContextDataType;
 import com.amazonaws.services.cognitoidp.model.InvalidParameterException;
 import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import com.amazonaws.services.cognitoidp.model.UserType;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,6 +51,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
@@ -462,6 +471,51 @@ class CognitoAuthenticationAdminServiceTest {
     verify(eventPublisher, never()).publishEvent(any());
   }
 
+  @Test
+  void shouldGetAuthEventsForUser() {
+
+    List<AuthEventType> events = createAuthEventsList();
+    AdminListUserAuthEventsResult requestResult = new AdminListUserAuthEventsResult()
+        .withAuthEvents(events);
+    AdminListUserAuthEventsRequest request = new AdminListUserAuthEventsRequest()
+        .withUserPoolId(USER_POOL_ID)
+        .withUsername(USERNAME)
+        .withMaxResults(MAX_AUTH_EVENTS);
+
+    when(cognitoClient.adminListUserAuthEvents(request)).thenReturn(requestResult);
+
+    List<UserAuthEventDTO> results = service.getUserAuthEvents(USERNAME);
+
+    assertThat(results.size(), is(MAX_AUTH_EVENTS));
+    results.stream().forEach(
+        result -> {
+          assertNotNull(result.getEventId());
+          assertNotNull(result.getCreationDate());
+          assertThat(result.getEventType(), is("SignIn"));
+          assertThat(result.getEventResponse(), is("Pass"));
+          assertThat(result.getChallenges(), is("Password:Success, Mfa:Success"));
+          assertThat(result.getDevice(), is("Chrome 126, Windows 10"));
+        }
+    );
+  }
+
+  @Test
+  void shouldReturnNoResultsForIdentityProviderException() {
+
+    List<AuthEventType> events = createAuthEventsList();
+    AdminListUserAuthEventsRequest request = new AdminListUserAuthEventsRequest()
+        .withUserPoolId(USER_POOL_ID)
+        .withUsername(USERNAME)
+        .withMaxResults(MAX_AUTH_EVENTS);
+
+    // e.g. User Not Found
+    when(cognitoClient.adminListUserAuthEvents(request)).thenThrow(UserNotFoundException.class);
+
+    List<UserAuthEventDTO> results = service.getUserAuthEvents(USERNAME);
+
+    assertThat(results.size(), is(0));
+  }
+
   /**
    * Build a list of standard Cognito attributes.
    *
@@ -499,5 +553,21 @@ class CognitoAuthenticationAdminServiceTest {
         is(singletonList(GIVEN_NAME_VALUE)));
     assertThat("Unexpected family name.", attributes.get(FAMILY_NAME_FIELD),
         is(singletonList(FAMILY_NAME_VALUE)));
+  }
+
+  private List<AuthEventType> createAuthEventsList() {
+    ChallengeResponseType challengeResponseType1 = new ChallengeResponseType().withChallengeName(
+        "Password").withChallengeResponse("Success");
+    ChallengeResponseType challengeResponseType2 = new ChallengeResponseType().withChallengeName(
+        "Mfa").withChallengeResponse("Success");
+    EventContextDataType eventContextDataType = new EventContextDataType().withDeviceName(
+        "Chrome 126, Windows 10");
+
+    return IntStream.range(0, MAX_AUTH_EVENTS)
+        .mapToObj(n -> new AuthEventType().withEventId(String.valueOf(n)).withEventType("SignIn")
+            .withCreationDate(Date.from(Instant.now().plusSeconds(n))).withEventResponse("Pass")
+            .withChallengeResponses(List.of(challengeResponseType1, challengeResponseType2))
+            .withEventContextData(eventContextDataType))
+        .collect(Collectors.toList());
   }
 }

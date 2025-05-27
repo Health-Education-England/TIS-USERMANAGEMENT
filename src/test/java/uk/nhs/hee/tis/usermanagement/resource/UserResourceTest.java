@@ -18,7 +18,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +43,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
@@ -241,5 +246,27 @@ class UserResourceTest {
         .andExpect(status().isInternalServerError())
         .andExpect(
             content().string(stringContainsInOrder("Could not find user", "bah", "testSvc")));
+  }
+
+  @Test
+  void shouldGetAuthEventsForUser() throws Exception {
+
+    List<UserAuthEventDTO> events = IntStream.range(0, 20)
+        .mapToObj(n -> UserAuthEventDTO.builder()
+            .eventId(String.valueOf(n))
+            .eventType("SignIn")
+            .creationDate(Date.from(Instant.now().plusSeconds(n)))
+            .eventResponse("Pass")
+            .challenges("Password:Success, Mfa:Success")
+            .device("Chrome 126, Windows 10")
+            .build())
+        .collect(Collectors.toList());
+
+    when(mockFacade.getUserAuthEvents("foo")).thenReturn(events);
+
+    mockMvc.perform(
+            get("/api/users/foo/logs"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(20));
   }
 }
