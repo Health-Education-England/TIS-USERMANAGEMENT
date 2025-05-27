@@ -1,6 +1,6 @@
 package uk.nhs.hee.tis.usermanagement.DTOs;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import lombok.Builder;
 import lombok.Data;
 
@@ -13,7 +13,7 @@ public class UserAuthEventDto {
 
   private String eventId;
   private String event;
-  private LocalDateTime eventDateTime;
+  private Date eventDate;
   private String result;
   private String challenges;
   private String device;

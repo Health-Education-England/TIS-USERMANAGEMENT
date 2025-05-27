@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.Instant;
-import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -257,8 +257,8 @@ class UserResourceTest {
         .mapToObj(n -> UserAuthEventDto.builder()
             .eventId(String.valueOf(n))
             .event("SignIn")
-            .eventDateTime(
-                startTime.plusSeconds(n).atZone(ZoneId.systemDefault()).toLocalDateTime())
+            .eventDate(
+                Date.from(startTime.plusSeconds(n)))
             .result("Pass")
             .challenges("Password:Success, Mfa:Success")
             .device("Chrome 126, Windows 10")

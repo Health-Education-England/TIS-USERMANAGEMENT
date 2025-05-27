@@ -34,8 +34,6 @@ import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
 import com.amazonaws.services.cognitoidp.model.UserType;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -494,9 +492,8 @@ class CognitoAuthenticationAdminServiceTest {
     for (int i = 0; i < results.size(); i++) {
       UserAuthEventDto result = results.get(i);
       assertThat(result.getEventId(), is(String.valueOf(i)));
-      assertThat(result.getEventDateTime().truncatedTo(ChronoUnit.SECONDS),
-          is(startTime.plusSeconds(i).atZone(ZoneId.systemDefault()).toLocalDateTime()
-              .truncatedTo(ChronoUnit.SECONDS)));
+      assertThat(result.getEventDate(),
+          is(Date.from(startTime.plusSeconds(i))));
       assertThat(result.getEvent(), is("SignIn"));
       assertThat(result.getResult(), is("Pass"));
       assertThat(result.getChallenges(), is("Password:Success, Mfa:Success"));

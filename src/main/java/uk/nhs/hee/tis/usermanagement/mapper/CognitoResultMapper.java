@@ -5,10 +5,7 @@ import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
 import com.amazonaws.services.cognitoidp.model.AuthEventType;
 import com.amazonaws.services.cognitoidp.model.ChallengeResponseType;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,18 +27,10 @@ public abstract class CognitoResultMapper {
    */
   @Mapping(target = "event", source = "eventType")
   @Mapping(target = "result", source = "eventResponse")
-  @Mapping(target = "eventDateTime", source = "creationDate")
+  @Mapping(target = "eventDate", source = "creationDate")
   @Mapping(target = "device", source = "eventContextData.deviceName")
   @Mapping(target = "challenges", source = "challengeResponses")
   public abstract UserAuthEventDto toUserAuthEventDto(AuthEventType authEventTypes);
-
-  /**
-   * Convert AWS provided {@link Date} to {@link LocalDateTime}.
-   */
-  LocalDateTime creationDateToEventDateTime(Date creationDate) {
-    return creationDate.toInstant().atZone(ZoneId.systemDefault())
-        .toLocalDateTime();
-  }
 
   /**
    * Convert a list of Cognito {@link ChallengeResponseType} to a comma separated string.
