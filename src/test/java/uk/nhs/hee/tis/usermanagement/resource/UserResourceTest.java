@@ -265,7 +265,7 @@ class UserResourceTest {
     when(mockFacade.getUserAuthEvents("foo")).thenReturn(events);
 
     mockMvc.perform(
-            get("/api/users/foo/logs"))
+            get("/api/users/foo/authevents"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.length()").value(20));
   }

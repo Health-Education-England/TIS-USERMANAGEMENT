@@ -140,7 +140,7 @@ public class UserResource {
    * @return A list of auth event logs
    */
   @PreAuthorize("hasAuthority('heeuser:view')")
-  @GetMapping("/{username}/logs")
+  @GetMapping("/{username}/authevents")
   public List<UserAuthEventDto> getUserAuthEventLogs(@PathVariable String username) {
     return userFacade.getUserAuthEvents(username);
   }
