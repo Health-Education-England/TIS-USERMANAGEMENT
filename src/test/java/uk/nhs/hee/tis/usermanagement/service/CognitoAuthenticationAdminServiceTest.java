@@ -51,7 +51,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
-import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
@@ -484,7 +484,7 @@ class CognitoAuthenticationAdminServiceTest {
 
     when(cognitoClient.adminListUserAuthEvents(request)).thenReturn(requestResult);
 
-    List<UserAuthEventDTO> results = service.getUserAuthEvents(USERNAME);
+    List<UserAuthEventDto> results = service.getUserAuthEvents(USERNAME);
 
     assertThat(results.size(), is(MAX_AUTH_EVENTS));
     results.stream().forEach(
@@ -502,7 +502,6 @@ class CognitoAuthenticationAdminServiceTest {
   @Test
   void shouldReturnNoResultsForIdentityProviderException() {
 
-    List<AuthEventType> events = createAuthEventsList();
     AdminListUserAuthEventsRequest request = new AdminListUserAuthEventsRequest()
         .withUserPoolId(USER_POOL_ID)
         .withUsername(USERNAME)
@@ -511,7 +510,7 @@ class CognitoAuthenticationAdminServiceTest {
     // e.g. User Not Found
     when(cognitoClient.adminListUserAuthEvents(request)).thenThrow(UserNotFoundException.class);
 
-    List<UserAuthEventDTO> results = service.getUserAuthEvents(USERNAME);
+    List<UserAuthEventDto> results = service.getUserAuthEvents(USERNAME);
 
     assertThat(results.size(), is(0));
   }

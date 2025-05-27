@@ -15,7 +15,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
-import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserAttributesCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserCommand;
@@ -175,7 +175,7 @@ public class KeyCloakAdminClientService extends AbstractAuthenticationAdminServi
   }
 
   @Override
-  public List<UserAuthEventDTO> getUserAuthEvents(String username) {
+  public List<UserAuthEventDto> getUserAuthEvents(String username) {
     throw new NotImplementedException();
   }
 }

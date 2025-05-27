@@ -43,7 +43,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
-import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
@@ -251,8 +251,8 @@ class UserResourceTest {
   @Test
   void shouldGetAuthEventsForUser() throws Exception {
 
-    List<UserAuthEventDTO> events = IntStream.range(0, 20)
-        .mapToObj(n -> UserAuthEventDTO.builder()
+    List<UserAuthEventDto> events = IntStream.range(0, 20)
+        .mapToObj(n -> UserAuthEventDto.builder()
             .eventId(String.valueOf(n))
             .eventType("SignIn")
             .creationDate(Date.from(Instant.now().plusSeconds(n)))

@@ -21,7 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
-import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
 import uk.nhs.hee.tis.usermanagement.event.CreateAuthenticationUserRequestedEvent;
@@ -199,11 +199,11 @@ public class UserManagementFacade {
   }
 
   /**
-   * Get authentication event logs for user
+   * Get authentication event logs for user.
    *
    * @param username       The username to get the auth event logs for.
    */
-  public List<UserAuthEventDTO> getUserAuthEvents(String username) {
+  public List<UserAuthEventDto> getUserAuthEvents(String username) {
     return authenticationAdminService.getUserAuthEvents(username);
   }
 }

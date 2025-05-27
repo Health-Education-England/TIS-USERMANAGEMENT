@@ -55,7 +55,7 @@ import uk.nhs.hee.tis.usermanagement.service.TcsService;
 @ExtendWith(MockitoExtension.class)
 class UserManagementFacadeTest {
 
-  private final String USERNAME = "user1";
+  private static final String USERNAME = "user1";
 
   @InjectMocks
   UserManagementFacade testClass;

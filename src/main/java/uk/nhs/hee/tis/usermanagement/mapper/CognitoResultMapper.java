@@ -3,18 +3,18 @@ package uk.nhs.hee.tis.usermanagement.mapper;
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
+import com.amazonaws.services.cognitoidp.model.AuthEventType;
 import com.amazonaws.services.cognitoidp.model.ChallengeResponseType;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import com.amazonaws.services.cognitoidp.model.AuthEventType;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
-import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 
 /**
  * A mapper to convert from a Cognito result object.
@@ -27,7 +27,7 @@ public abstract class CognitoResultMapper {
    */
   @Mapping(target = "device", source = "eventContextData.deviceName")
   @Mapping(target = "challenges", source = "challengeResponses")
-  public abstract UserAuthEventDTO toUserAuthEventDto(AuthEventType authEventTypes);
+  public abstract UserAuthEventDto toUserAuthEventDto(AuthEventType authEventTypes);
 
   /**
    * Convert a list of Cognito {@link ChallengeResponseType} to a comma separated string.
@@ -35,14 +35,14 @@ public abstract class CognitoResultMapper {
   String challengeResponsesToChallenges(
       List<ChallengeResponseType> challengeResponses) {
     return challengeResponses.stream()
-        .map(c -> c.getChallengeName() + ":" + c.getChallengeResponse())
+        .map(c -> String.format("%s:%s", c.getChallengeName(), c.getChallengeResponse()))
         .collect(Collectors.joining(", "));
   }
 
   /**
    * Convert a list of Cognito {@link AuthEventType} to a list of DTOs.
    */
-  public abstract List<UserAuthEventDTO> toUserAuthEventDtos(List<AuthEventType> authEventTypes);
+  public abstract List<UserAuthEventDto> toUserAuthEventDtos(List<AuthEventType> authEventTypes);
 
   /**
    * Convert a cognito admin-create-user result to an authentication user.

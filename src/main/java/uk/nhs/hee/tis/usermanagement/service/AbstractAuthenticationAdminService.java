@@ -5,7 +5,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
-import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.event.CreateAuthenticationUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.CreateProfileUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.DeleteAuthenticationUserRequestedEvent;
@@ -39,13 +39,6 @@ public abstract class AbstractAuthenticationAdminService implements Authenticati
    * @param authenticationUser The user to delete.
    */
   abstract void deleteUser(AuthenticationUserDto authenticationUser);
-
-  /**
-   * Get authentication event logs for user
-   *
-   * @param username       The username to get the auth event logs for.
-   */
-  public abstract List<UserAuthEventDTO> getUserAuthEvents(String username);
 
   /**
    * Create user in the authentication provider and publish profile create event.

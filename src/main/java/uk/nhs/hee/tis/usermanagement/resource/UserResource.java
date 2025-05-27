@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
-import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
@@ -141,7 +141,7 @@ public class UserResource {
    */
   @PreAuthorize("hasAuthority('heeuser:view')")
   @GetMapping("/{username}/logs")
-  public List<UserAuthEventDTO> getUserAuthEventLogs(@PathVariable String username) {
+  public List<UserAuthEventDto> getUserAuthEventLogs(@PathVariable String username) {
     return userFacade.getUserAuthEvents(username);
   }
 
