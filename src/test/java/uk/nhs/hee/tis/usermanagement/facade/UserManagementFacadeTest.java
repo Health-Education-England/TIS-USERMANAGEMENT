@@ -12,7 +12,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.amazonaws.services.cognitoidp.model.AWSCognitoIdentityProviderException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.transformuk.hee.tis.profile.dto.RoleDTO;
@@ -431,7 +430,7 @@ class UserManagementFacadeTest {
   @Test
   void shouldThrowIdentityProviderExceptionOnGetAuthEventsForUser() {
     when(authenticationAdminService.getUserAuthEvents(USERNAME)).thenThrow(
-        AWSCognitoIdentityProviderException.class);
+        RuntimeException.class);
 
     assertThrows(IdentityProviderException.class, () -> testClass.getUserAuthEvents(USERNAME));
   }
