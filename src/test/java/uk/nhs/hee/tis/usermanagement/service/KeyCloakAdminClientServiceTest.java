@@ -2,6 +2,7 @@ package uk.nhs.hee.tis.usermanagement.service;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -19,6 +20,7 @@ import com.transform.hee.tis.keycloak.User;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang.NotImplementedException;
 import org.assertj.core.util.Lists;
 import org.junit.Assert;
 import org.junit.Test;
@@ -319,5 +321,10 @@ public class KeyCloakAdminClientServiceTest {
 
     User kcUser = kcUserCaptor.getValue();
     assertThat("Unexpected user id.", kcUser.getId(), is("userId1"));
+  }
+
+  @Test
+  public void getUserAuthEventsNotImplemented() {
+    assertThrows(NotImplementedException.class, () -> testObj.getUserAuthEvents("user"));
   }
 }

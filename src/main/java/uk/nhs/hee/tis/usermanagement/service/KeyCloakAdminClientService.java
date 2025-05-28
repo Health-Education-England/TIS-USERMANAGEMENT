@@ -8,12 +8,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.apache.commons.lang.NotImplementedException;
 import org.keycloak.representations.idm.GroupRepresentation;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserAttributesCommand;
 import uk.nhs.hee.tis.usermanagement.command.keycloak.GetUserCommand;
@@ -170,5 +172,10 @@ public class KeyCloakAdminClientService extends AbstractAuthenticationAdminServi
   void deleteUser(AuthenticationUserDto authenticationUser) {
     User kcUser = mapper.toKeycloakUser(authenticationUser);
     keycloakAdminClient.removeUser(REALM_LIN, kcUser);
+  }
+
+  @Override
+  public List<UserAuthEventDto> getUserAuthEvents(String username) {
+    throw new NotImplementedException();
   }
 }

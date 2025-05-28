@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
@@ -130,6 +131,18 @@ public class UserResource {
   ResponseEntity<UserDTO> deleteUser(@PathVariable String username) {
     userFacade.publishDeleteAuthenticationUserRequestedEvent(username);
     return ResponseEntity.accepted().build();
+  }
+
+  /**
+   * Gets user auth event logs.
+   *
+   * @param username The name of the user to find auth event logs for
+   * @return A list of auth event logs
+   */
+  @PreAuthorize("hasAuthority('heeuser:view')")
+  @GetMapping("/{username}/authevents")
+  public List<UserAuthEventDto> getUserAuthEventLogs(@PathVariable String username) {
+    return userFacade.getUserAuthEvents(username);
   }
 
   /**
