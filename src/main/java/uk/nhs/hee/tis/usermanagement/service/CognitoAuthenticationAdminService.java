@@ -154,17 +154,13 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
   }
 
   @Override
-  public List<UserAuthEventDto> getUserAuthEvents(String username) {
-    try {
-      AdminListUserAuthEventsRequest request = new AdminListUserAuthEventsRequest()
-          .withUserPoolId(userPoolId)
-          .withUsername(username)
-          .withMaxResults(MAX_AUTH_EVENTS);
-      AdminListUserAuthEventsResult result = cognitoClient.adminListUserAuthEvents(request);
-      return resultMapper.toUserAuthEventDtos(result.getAuthEvents());
-    } catch (AWSCognitoIdentityProviderException e) {
-      log.error(e.getMessage(), e);
-      throw e;
-    }
+  public List<UserAuthEventDto> getUserAuthEvents(String username)
+      throws AWSCognitoIdentityProviderException {
+    AdminListUserAuthEventsRequest request = new AdminListUserAuthEventsRequest()
+        .withUserPoolId(userPoolId)
+        .withUsername(username)
+        .withMaxResults(MAX_AUTH_EVENTS);
+    AdminListUserAuthEventsResult result = cognitoClient.adminListUserAuthEvents(request);
+    return resultMapper.toUserAuthEventDtos(result.getAuthEvents());
   }
 }

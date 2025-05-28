@@ -18,11 +18,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +46,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
@@ -267,10 +273,26 @@ class UserResourceTest {
 
     when(mockFacade.getUserAuthEvents("foo")).thenReturn(events);
 
-    mockMvc.perform(
+    MvcResult result = mockMvc.perform(
             get("/api/users/foo/authevents"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.length()").value(20));
+        .andExpect(jsonPath("$.length()").value(20))
+        .andReturn();
+
+    String resultJson = result.getResponse().getContentAsString();
+    Type type = new TypeToken<ArrayList<UserAuthEventDto>>(){}.getType();
+    List<UserAuthEventDto> returnedData = new Gson().fromJson(resultJson, type);
+
+    for (int i = 0; i < returnedData.size(); i++) {
+      UserAuthEventDto data = returnedData.get(i);
+      assertThat(data.getEventId(), CoreMatchers.is(String.valueOf(i)));
+      assertThat(data.getEventDate(),
+          CoreMatchers.is(Date.from(startTime.plusSeconds(i))));
+      assertThat(data.getEvent(), CoreMatchers.is("SignIn"));
+      assertThat(data.getResult(), CoreMatchers.is("Pass"));
+      assertThat(data.getChallenges(), CoreMatchers.is("Password:Success, Mfa:Success"));
+      assertThat(data.getDevice(), CoreMatchers.is("Chrome 126, Windows 10"));
+    }
   }
 
   @Test

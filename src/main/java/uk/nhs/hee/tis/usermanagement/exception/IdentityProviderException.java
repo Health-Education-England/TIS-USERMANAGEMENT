@@ -6,7 +6,7 @@ package uk.nhs.hee.tis.usermanagement.exception;
  */
 public class IdentityProviderException extends RuntimeException {
 
-  public IdentityProviderException(String message) {
+  public IdentityProviderException(String message, Throwable cause) {
     super(message);
   }
 }

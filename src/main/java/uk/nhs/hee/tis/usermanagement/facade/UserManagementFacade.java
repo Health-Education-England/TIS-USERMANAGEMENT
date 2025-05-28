@@ -208,7 +208,7 @@ public class UserManagementFacade {
     try {
       return authenticationAdminService.getUserAuthEvents(username);
     } catch (Exception e) {
-      throw new IdentityProviderException(e.getMessage());
+      throw new IdentityProviderException(e.getMessage(), e.getCause());
     }
   }
 }
