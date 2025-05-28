@@ -155,7 +155,7 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   @Override
   public List<UserAuthEventDto> getUserAuthEvents(String username)
-      throws AWSCognitoIdentityProviderException {
+      throws RuntimeException {
     AdminListUserAuthEventsRequest request = new AdminListUserAuthEventsRequest()
         .withUserPoolId(userPoolId)
         .withUsername(username)
