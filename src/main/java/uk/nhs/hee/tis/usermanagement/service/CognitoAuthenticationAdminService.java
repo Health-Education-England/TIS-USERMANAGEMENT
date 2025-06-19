@@ -111,7 +111,8 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
       return Optional.of(resultMapper.toAuthenticationUser(result.getUsers().get(0)));
     } catch (InvalidParameterException e) {
-      log.warn("Invalid parameter when querying user with email {}: {}", username, e.getMessage(), e);
+      log.warn("Invalid parameter when querying user with email {}: {}", username, e.getMessage(),
+          e);
       return Optional.empty();
     }
   }
