@@ -1,6 +1,7 @@
 package uk.nhs.hee.tis.usermanagement.service;
 
 import static java.util.Collections.singletonList;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
@@ -20,8 +21,6 @@ import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminDisableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminEnableUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsRequest;
 import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsResult;
 import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
@@ -30,7 +29,8 @@ import com.amazonaws.services.cognitoidp.model.AuthEventType;
 import com.amazonaws.services.cognitoidp.model.ChallengeResponseType;
 import com.amazonaws.services.cognitoidp.model.EventContextDataType;
 import com.amazonaws.services.cognitoidp.model.InvalidParameterException;
-import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
+import com.amazonaws.services.cognitoidp.model.ListUsersRequest;
+import com.amazonaws.services.cognitoidp.model.ListUsersResult;
 import com.amazonaws.services.cognitoidp.model.UserType;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import java.time.Instant;
@@ -85,8 +85,7 @@ class CognitoAuthenticationAdminServiceTest {
   private ApplicationEventPublisher eventPublisher;
 
   private static Stream<Exception> catchableExceptionProvider() {
-    return Stream.of(new UserNotFoundException("User does not exist."),
-        new InvalidParameterException("Limited characters are permitted"));
+    return Stream.of(new InvalidParameterException("Limited characters are permitted"));
   }
 
   @BeforeEach
@@ -226,28 +225,30 @@ class CognitoAuthenticationAdminServiceTest {
 
   @Test
   void shouldSendGetCognitoUserRequest() {
-    AdminGetUserResult result = new AdminGetUserResult();
-    result.setUserAttributes(Collections.emptyList());
+    ListUsersResult result = new ListUsersResult();
+    result.setUsers(Collections.emptyList());
 
-    ArgumentCaptor<AdminGetUserRequest> requestCaptor = ArgumentCaptor.forClass(
-        AdminGetUserRequest.class);
-    when(cognitoClient.adminGetUser(requestCaptor.capture())).thenReturn(result);
+    ArgumentCaptor<ListUsersRequest> requestCaptor = ArgumentCaptor.forClass(
+        ListUsersRequest.class);
+    when(cognitoClient.listUsers(requestCaptor.capture())).thenReturn(result);
 
     service.getUser(USERNAME);
 
-    AdminGetUserRequest request = requestCaptor.getValue();
+    ListUsersRequest request = requestCaptor.getValue();
     assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
-    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
+    assertThat("Unexpected username.", request.getFilter(), containsString(USERNAME));
   }
 
   @Test
   void shouldReturnGetCognitoUserResultWhenUsernameFound() {
-    AdminGetUserResult result = new AdminGetUserResult();
-    result.setUsername(USERNAME);
-    result.setUserAttributes(buildStandardCognitoAttributes());
-    result.setEnabled(true);
+    ListUsersResult result = new ListUsersResult();
+    UserType user = new UserType();
+    user.setEnabled(true);
+    user.setUsername(USERNAME);
+    user.setAttributes(buildStandardCognitoAttributes());
+    result.setUsers(Collections.singletonList(user));
 
-    when(cognitoClient.adminGetUser(any())).thenReturn(result);
+    when(cognitoClient.listUsers(any())).thenReturn(result);
 
     Optional<AuthenticationUserDto> optionalAuthenticationUser = service.getUser(USERNAME);
 
@@ -258,7 +259,7 @@ class CognitoAuthenticationAdminServiceTest {
   @ParameterizedTest
   @MethodSource("catchableExceptionProvider")
   void shouldReturnEmptyGetCognitoUserResultWhenUsernameNotFound(Exception e) {
-    when(cognitoClient.adminGetUser(any())).thenThrow(e);
+    when(cognitoClient.listUsers(any())).thenThrow(e);
 
     Optional<AuthenticationUserDto> optionalAuthenticationUser = service.getUser(USERNAME);
 

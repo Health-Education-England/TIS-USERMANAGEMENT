@@ -1,10 +1,10 @@
 package uk.nhs.hee.tis.usermanagement.mapper;
 
 import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
-import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
 import com.amazonaws.services.cognitoidp.model.AuthEventType;
 import com.amazonaws.services.cognitoidp.model.ChallengeResponseType;
+import com.amazonaws.services.cognitoidp.model.UserType;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -58,13 +58,12 @@ public abstract class CognitoResultMapper {
   public abstract AuthenticationUserDto toAuthenticationUser(AdminCreateUserResult cognitoResult);
 
   /**
-   * Convert a cognito admin-get-user result to an authentication user.
+   * Convert a UserType to an authentication user.
    *
-   * @param cognitoResult the cognito result to convert.
-   * @return The converted authentication user.
+   * @param user the User Type to convert.
+   * @return the converted authentication user.
    */
-  @Mapping(target = "attributes", source = "userAttributes")
-  public abstract AuthenticationUserDto toAuthenticationUser(AdminGetUserResult cognitoResult);
+  public abstract AuthenticationUserDto toAuthenticationUser(UserType user);
 
   /**
    * Convert a list of Cognito {@link AttributeType} to a generic map.

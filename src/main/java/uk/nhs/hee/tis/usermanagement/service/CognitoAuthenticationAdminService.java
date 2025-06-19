@@ -7,14 +7,15 @@ import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminDisableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminEnableUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsRequest;
 import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsResult;
 import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
 import com.amazonaws.services.cognitoidp.model.InvalidParameterException;
-import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
+import com.amazonaws.services.cognitoidp.model.ListUsersRequest;
+import com.amazonaws.services.cognitoidp.model.ListUsersResult;
+import com.amazonaws.services.cognitoidp.model.UserType;
+import java.util.List;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -91,16 +92,25 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
   }
 
   @Override
-  public Optional<AuthenticationUserDto> getUser(String username) {
-    AdminGetUserRequest request = new AdminGetUserRequest()
+  public Optional<AuthenticationUserDto> getUser(String email) {
+    final String emailFilter = String.format("email=\"%s\"", email);
+
+    ListUsersRequest request = new ListUsersRequest()
         .withUserPoolId(userPoolId)
-        .withUsername(username);
+        .withFilter(emailFilter);
 
     try {
-      AdminGetUserResult result = cognitoClient.adminGetUser(request);
-      return Optional.of(resultMapper.toAuthenticationUser(result));
-    } catch (InvalidParameterException | UserNotFoundException e) {
-      log.info(e.getMessage(), e);
+      ListUsersResult result = cognitoClient.listUsers(request);
+
+      List<UserType> users = result.getUsers();
+
+      if (users == null || users.isEmpty()) {
+        log.info("No user found with email: {}", email);
+        return Optional.empty();
+      }
+      return Optional.of(resultMapper.toAuthenticationUser(result.getUsers().get(0)));
+    } catch (InvalidParameterException e) {
+      log.warn("Invalid parameter when querying user with email {}: {}", email, e.getMessage(), e);
       return Optional.empty();
     }
   }
