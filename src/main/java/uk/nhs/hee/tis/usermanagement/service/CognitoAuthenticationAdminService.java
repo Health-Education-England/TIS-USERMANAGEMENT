@@ -16,7 +16,6 @@ import com.amazonaws.services.cognitoidp.model.ListUsersRequest;
 import com.amazonaws.services.cognitoidp.model.ListUsersResult;
 import com.amazonaws.services.cognitoidp.model.UserType;
 import java.util.List;
-import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,13 +38,10 @@ import uk.nhs.hee.tis.usermanagement.mapper.CognitoResultMapper;
 @ConditionalOnProperty(name = "application.authentication-provider", havingValue = "cognito")
 public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdminService {
 
-  private static final String SERVICE_NAME = "cognito";
-
   protected static final String EMAIL_VERIFIED_FIELD = "email_verified";
   protected static final String EMAIL_VERIFIED_VALUE = "true";
-
   protected static final int MAX_AUTH_EVENTS = 20;
-
+  private static final String SERVICE_NAME = "cognito";
   private final AWSCognitoIdentityProvider cognitoClient;
   private final String userPoolId;
 
