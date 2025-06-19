@@ -88,8 +88,8 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
   }
 
   @Override
-  public Optional<AuthenticationUserDto> getUser(String email) {
-    final String emailFilter = String.format("email=\"%s\"", email);
+  public Optional<AuthenticationUserDto> getUser(String username) {
+    final String emailFilter = String.format("email=\"%s\"", username);
 
     ListUsersRequest request = new ListUsersRequest()
         .withUserPoolId(userPoolId)
@@ -97,16 +97,21 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
     try {
       ListUsersResult result = cognitoClient.listUsers(request);
-
       List<UserType> users = result.getUsers();
 
       if (users == null || users.isEmpty()) {
-        log.info("No user found with email: {}", email);
+        log.info("No user found with email: {}", username);
         return Optional.empty();
       }
+
+      if (users.size() > 1) {
+        log.warn("Multiple users found with email: {}", username);
+        return Optional.empty();
+      }
+
       return Optional.of(resultMapper.toAuthenticationUser(result.getUsers().get(0)));
     } catch (InvalidParameterException e) {
-      log.warn("Invalid parameter when querying user with email {}: {}", email, e.getMessage(), e);
+      log.warn("Invalid parameter when querying user with email {}: {}", username, e.getMessage(), e);
       return Optional.empty();
     }
   }

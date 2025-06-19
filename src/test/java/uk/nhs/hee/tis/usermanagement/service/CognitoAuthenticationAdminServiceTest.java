@@ -12,7 +12,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.nhs.hee.tis.usermanagement.service.CognitoAuthenticationAdminService.*;
+import static uk.nhs.hee.tis.usermanagement.service.CognitoAuthenticationAdminService.EMAIL_VERIFIED_FIELD;
+import static uk.nhs.hee.tis.usermanagement.service.CognitoAuthenticationAdminService.EMAIL_VERIFIED_VALUE;
+import static uk.nhs.hee.tis.usermanagement.service.CognitoAuthenticationAdminService.MAX_AUTH_EVENTS;
 
 import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClient;
 import com.amazonaws.services.cognitoidp.model.AWSCognitoIdentityProviderException;
@@ -52,9 +54,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
-import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.event.CreateAuthenticationUserRequestedEvent;
 import uk.nhs.hee.tis.usermanagement.event.CreateProfileUserRequestedEvent;
@@ -243,10 +245,8 @@ class CognitoAuthenticationAdminServiceTest {
   @Test
   void shouldReturnGetCognitoUserResultWhenUsernameFound() {
     ListUsersResult result = new ListUsersResult();
-    UserType user = new UserType();
-    user.setEnabled(true);
-    user.setUsername(USERNAME);
-    user.setAttributes(buildStandardCognitoAttributes());
+    UserType user = new UserType().withEnabled(true).withUsername(USERNAME)
+        .withAttributes(buildStandardCognitoAttributes());
     result.setUsers(Collections.singletonList(user));
 
     when(cognitoClient.listUsers(any())).thenReturn(result);
@@ -255,6 +255,21 @@ class CognitoAuthenticationAdminServiceTest {
 
     assertThat("Expected user not found.", optionalAuthenticationUser.isPresent(), is(true));
     verifyAuthenticationUser(optionalAuthenticationUser.get());
+  }
+
+  @Test
+  void shouldReturnEmptyResultWhenUsernameFoundMultiple() {
+    ListUsersResult result = new ListUsersResult();
+    UserType user1 = new UserType().withEnabled(true).withUsername(USERNAME)
+        .withAttributes(buildStandardCognitoAttributes());
+    UserType user2 = new UserType().withEnabled(false).withUsername(USERNAME)
+        .withAttributes(buildStandardCognitoAttributes());
+    result.setUsers(Arrays.asList(user1, user2));
+
+    when(cognitoClient.listUsers(any())).thenReturn(result);
+    Optional<AuthenticationUserDto> optionalAuthenticationUser = service.getUser(USERNAME);
+
+    assertThat("Unexpected user found.", optionalAuthenticationUser.isPresent(), is(false));
   }
 
   @ParameterizedTest

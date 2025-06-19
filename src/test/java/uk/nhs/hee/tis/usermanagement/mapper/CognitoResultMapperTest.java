@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.amazonaws.services.cognitoidp.model.AttributeType;
 import com.amazonaws.services.cognitoidp.model.UserType;
-import org.assertj.core.util.Lists;
+import java.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
@@ -50,7 +50,7 @@ class CognitoResultMapperTest {
         .withValue(EMAIL_VERIFIED);
 
     userType.setAttributes(
-        Lists.newArrayList(attrPreferredName, attrGivenName, attrFamilyName, attrEmail, attrSub,
+        Arrays.asList(attrPreferredName, attrGivenName, attrFamilyName, attrEmail, attrSub,
             attrEmailVerified));
 
     AuthenticationUserDto userDto = mapper.toAuthenticationUser(userType);
