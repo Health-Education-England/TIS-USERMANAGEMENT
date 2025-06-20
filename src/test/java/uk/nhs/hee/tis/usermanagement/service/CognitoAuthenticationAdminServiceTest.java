@@ -38,6 +38,7 @@ import com.amazonaws.services.cognitoidp.model.UserType;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -89,6 +90,10 @@ class CognitoAuthenticationAdminServiceTest {
 
   private static Stream<Exception> catchableExceptionProvider() {
     return Stream.of(new InvalidParameterException("Limited characters are permitted"));
+  }
+
+  private static Stream<Collection<UserType>> userTypeCollectionProvider() {
+    return Stream.of(null, Collections.emptyList());
   }
 
   @BeforeEach
@@ -257,6 +262,18 @@ class CognitoAuthenticationAdminServiceTest {
     verifyAuthenticationUser(optionalAuthenticationUser.get());
   }
 
+  @ParameterizedTest
+  @MethodSource("userTypeCollectionProvider")
+  void shouldReturnEmptyResultWhenUserNotFound(Collection<UserType> userTypes) {
+    ListUsersResult result = new ListUsersResult();
+    result.setUsers(userTypes);
+
+    when(cognitoClient.listUsers(any())).thenReturn(result);
+    Optional<AuthenticationUserDto> optionalAuthenticationUser = service.getUser(USERNAME);
+
+    assertThat("Unexpected user found.", optionalAuthenticationUser.isPresent(), is(false));
+  }
+
   @Test
   void shouldReturnEmptyResultWhenUsernameFoundMultiple() {
     ListUsersResult result = new ListUsersResult();
@@ -274,7 +291,7 @@ class CognitoAuthenticationAdminServiceTest {
 
   @ParameterizedTest
   @MethodSource("catchableExceptionProvider")
-  void shouldReturnEmptyGetCognitoUserResultWhenUsernameNotFound(Exception e) {
+  void shouldReturnEmptyGetCognitoUserResultWhenExceptionHappens(Exception e) {
     when(cognitoClient.listUsers(any())).thenThrow(e);
 
     Optional<AuthenticationUserDto> optionalAuthenticationUser = service.getUser(USERNAME);
