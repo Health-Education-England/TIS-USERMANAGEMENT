@@ -7,14 +7,14 @@ import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminDisableUserRequest;
 import com.amazonaws.services.cognitoidp.model.AdminEnableUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminGetUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminGetUserResult;
 import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsRequest;
 import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsResult;
 import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
 import com.amazonaws.services.cognitoidp.model.AttributeType;
 import com.amazonaws.services.cognitoidp.model.InvalidParameterException;
-import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
+import com.amazonaws.services.cognitoidp.model.ListUsersRequest;
+import com.amazonaws.services.cognitoidp.model.ListUsersResult;
+import com.amazonaws.services.cognitoidp.model.UserType;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -38,13 +38,10 @@ import uk.nhs.hee.tis.usermanagement.mapper.CognitoResultMapper;
 @ConditionalOnProperty(name = "application.authentication-provider", havingValue = "cognito")
 public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdminService {
 
-  private static final String SERVICE_NAME = "cognito";
-
   protected static final String EMAIL_VERIFIED_FIELD = "email_verified";
   protected static final String EMAIL_VERIFIED_VALUE = "true";
-
   protected static final int MAX_AUTH_EVENTS = 20;
-
+  private static final String SERVICE_NAME = "cognito";
   private final AWSCognitoIdentityProvider cognitoClient;
   private final String userPoolId;
 
@@ -92,15 +89,30 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   @Override
   public Optional<AuthenticationUserDto> getUser(String username) {
-    AdminGetUserRequest request = new AdminGetUserRequest()
+    final String emailFilter = String.format("email=\"%s\"", username);
+
+    ListUsersRequest request = new ListUsersRequest()
         .withUserPoolId(userPoolId)
-        .withUsername(username);
+        .withFilter(emailFilter);
 
     try {
-      AdminGetUserResult result = cognitoClient.adminGetUser(request);
-      return Optional.of(resultMapper.toAuthenticationUser(result));
-    } catch (InvalidParameterException | UserNotFoundException e) {
-      log.info(e.getMessage(), e);
+      ListUsersResult result = cognitoClient.listUsers(request);
+      List<UserType> users = result.getUsers();
+
+      if (users == null || users.isEmpty()) {
+        log.info("No user found with email: {}", username);
+        return Optional.empty();
+      }
+
+      if (users.size() > 1) {
+        log.warn("Multiple users found with email: {}", username);
+        return Optional.empty();
+      }
+
+      return Optional.of(resultMapper.toAuthenticationUser(result.getUsers().get(0)));
+    } catch (InvalidParameterException e) {
+      log.warn("Invalid parameter when querying user with email {}: {}", username, e.getMessage(),
+          e);
       return Optional.empty();
     }
   }
