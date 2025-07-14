@@ -1,8 +1,5 @@
 package uk.nhs.hee.tis.usermanagement.mapper;
 
-import com.amazonaws.services.cognitoidp.model.AdminCreateUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
-import com.amazonaws.services.cognitoidp.model.AttributeType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,15 +7,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 
 /**
  * A mapper for converting to Cognito requests.
  */
-@Mapper(componentModel = "spring")
 public abstract class CognitoRequestMapper {
 
   private static final String GIVEN_NAME = "given_name";
@@ -49,17 +47,20 @@ public abstract class CognitoRequestMapper {
   protected List<AttributeType> extractAttributes(CreateUserDTO createUserDto) {
     List<AttributeType> attributes = new ArrayList<>();
     attributes.add(
-        new AttributeType()
-            .withName(GIVEN_NAME)
-            .withValue(createUserDto.getFirstName()));
+        AttributeType.builder()
+            .name(GIVEN_NAME)
+            .value(createUserDto.getFirstName())
+            .build());
     attributes.add(
-        new AttributeType()
-            .withName(FAMILY_NAME)
-            .withValue(createUserDto.getLastName()));
+        AttributeType.builder()
+            .name(FAMILY_NAME)
+            .value(createUserDto.getLastName())
+            .build());
     attributes.add(
-        new AttributeType()
-            .withName(EMAIL)
-            .withValue(createUserDto.getEmailAddress()));
+        AttributeType.builder()
+            .name(EMAIL)
+            .value(createUserDto.getEmailAddress())
+            .build());
 
     return attributes;
   }
@@ -89,7 +90,10 @@ public abstract class CognitoRequestMapper {
   protected List<AttributeType> convertAttributes(Map<String, List<String>> attributes) {
     return attributes.entrySet().stream()
         .filter(e -> !Objects.equals(e.getKey(), "sub"))
-        .map(e -> new AttributeType().withName(e.getKey()).withValue(e.getValue().get(0)))
+        .map(e -> AttributeType.builder()
+            .name(e.getKey())
+            .value(e.getValue().get(0))
+            .build())
         .collect(Collectors.toList());
   }
 }

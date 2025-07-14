@@ -2,11 +2,11 @@ package uk.nhs.hee.tis.usermanagement.mapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.amazonaws.services.cognitoidp.model.AttributeType;
-import com.amazonaws.services.cognitoidp.model.UserType;
-import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 
 class CognitoResultMapperTest {
@@ -35,23 +35,36 @@ class CognitoResultMapperTest {
 
   @Test
   void shouldMapUserTypetoAuthenticationUser() {
-    UserType userType = new UserType();
-    userType.setEnabled(ENABLED);
+    AttributeType attrPreferredName = AttributeType.builder().
+        name(ATTR_NAME_PREFERRED_USERNAME)
+        .value(PREFERRED_USERNAME)
+        .build();
+    AttributeType attrGivenName = AttributeType.builder()
+        .name(ATTR_NAME_GIVEN_NAME)
+        .value(GIVEN_NAME)
+        .build();
+    AttributeType attrFamilyName = AttributeType.builder()
+        .name(ATTR_NAME_FAMILY_NAME)
+        .value(FAMILY_NAME)
+        .build();
+    AttributeType attrEmail = AttributeType.builder()
+        .name(ATTR_NAME_EMAIL)
+        .value(EMAIL)
+        .build();
+    AttributeType attrSub = AttributeType.builder()
+        .name(ATTR_NAME_SUB)
+        .value(SUB)
+        .build();
+    AttributeType attrEmailVerified = AttributeType.builder()
+        .name(ATTR_EMAIL_VERIFIED)
+        .value(EMAIL_VERIFIED)
+        .build();
 
-    AttributeType attrPreferredName = new AttributeType().withName(ATTR_NAME_PREFERRED_USERNAME)
-        .withValue(PREFERRED_USERNAME);
-    AttributeType attrGivenName = new AttributeType().withName(ATTR_NAME_GIVEN_NAME)
-        .withValue(GIVEN_NAME);
-    AttributeType attrFamilyName = new AttributeType().withName(ATTR_NAME_FAMILY_NAME)
-        .withValue(FAMILY_NAME);
-    AttributeType attrEmail = new AttributeType().withName(ATTR_NAME_EMAIL).withValue(EMAIL);
-    AttributeType attrSub = new AttributeType().withName(ATTR_NAME_SUB).withValue(SUB);
-    AttributeType attrEmailVerified = new AttributeType().withName(ATTR_EMAIL_VERIFIED)
-        .withValue(EMAIL_VERIFIED);
-
-    userType.setAttributes(
-        Arrays.asList(attrPreferredName, attrGivenName, attrFamilyName, attrEmail, attrSub,
-            attrEmailVerified));
+    UserType userType = UserType.builder()
+        .enabled(ENABLED)
+        .attributes(List.of(attrPreferredName, attrGivenName, attrFamilyName, attrEmail, attrSub,
+            attrEmailVerified))
+        .build();
 
     AuthenticationUserDto userDto = mapper.toAuthenticationUser(userType);
 
