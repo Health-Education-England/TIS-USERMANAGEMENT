@@ -1,20 +1,6 @@
 package uk.nhs.hee.tis.usermanagement.service;
 
-import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
-import com.amazonaws.services.cognitoidp.model.AWSCognitoIdentityProviderException;
-import com.amazonaws.services.cognitoidp.model.AdminCreateUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
-import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminDisableUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminEnableUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsRequest;
-import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsResult;
-import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
-import com.amazonaws.services.cognitoidp.model.AttributeType;
-import com.amazonaws.services.cognitoidp.model.InvalidParameterException;
-import com.amazonaws.services.cognitoidp.model.ListUsersRequest;
-import com.amazonaws.services.cognitoidp.model.ListUsersResult;
-import com.amazonaws.services.cognitoidp.model.UserType;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +8,21 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDeleteUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDisableUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminEnableUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CognitoIdentityProviderException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.InvalidParameterException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
@@ -42,7 +43,7 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
   protected static final String EMAIL_VERIFIED_VALUE = "true";
   protected static final int MAX_AUTH_EVENTS = 20;
   private static final String SERVICE_NAME = "cognito";
-  private final AWSCognitoIdentityProvider cognitoClient;
+  private final CognitoIdentityProviderClient cognitoClient;
   private final String userPoolId;
 
   private final CognitoRequestMapper requestMapper;
@@ -50,7 +51,7 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
   private final AuthenticationUserMapper userMapper;
 
   CognitoAuthenticationAdminService(ApplicationEventPublisher applicationEventPublisher,
-      AWSCognitoIdentityProvider cognitoClient,
+      CognitoIdentityProviderClient cognitoClient,
       @Value("${application.cognito.user-pool-id}") String userPoolId,
       CognitoRequestMapper requestMapper, CognitoResultMapper resultMapper,
       AuthenticationUserMapper userMapper) {
@@ -69,18 +70,20 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   @Override
   AuthenticationUserDto createUser(CreateUserDTO createUserDto) {
-    AdminCreateUserRequest request = requestMapper.toCreateUserRequest(createUserDto)
-        .withUserPoolId(userPoolId)
-        .withUserAttributes(
-            new AttributeType().withName(EMAIL_VERIFIED_FIELD).withValue(EMAIL_VERIFIED_VALUE));
+    AdminCreateUserRequest request = requestMapper.toCreateUserRequest(createUserDto);
+    List<AttributeType> allAttributes = new ArrayList<>(request.userAttributes());
+    allAttributes.add(AttributeType.builder().name(EMAIL_VERIFIED_FIELD).value(EMAIL_VERIFIED_VALUE)
+        .build());
+    request = request.toBuilder().userPoolId(userPoolId).userAttributes(allAttributes).build();
 
-    AdminCreateUserResult result = cognitoClient.adminCreateUser(request);
+    AdminCreateUserResponse result = cognitoClient.adminCreateUser(request);
 
     // Users are enabled by default, disable if required.
     if (!createUserDto.isActive()) {
-      AdminDisableUserRequest disableRequest = new AdminDisableUserRequest()
-          .withUserPoolId(userPoolId)
-          .withUsername(result.getUser().getUsername());
+      AdminDisableUserRequest disableRequest = AdminDisableUserRequest.builder()
+          .userPoolId(userPoolId)
+          .username(result.user().username())
+          .build();
       cognitoClient.adminDisableUser(disableRequest);
     }
 
@@ -91,13 +94,14 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
   public Optional<AuthenticationUserDto> getUser(String username) {
     final String emailFilter = String.format("email=\"%s\"", username);
 
-    ListUsersRequest request = new ListUsersRequest()
-        .withUserPoolId(userPoolId)
-        .withFilter(emailFilter);
+    ListUsersRequest request = ListUsersRequest.builder()
+        .userPoolId(userPoolId)
+        .filter(emailFilter)
+        .build();
 
     try {
-      ListUsersResult result = cognitoClient.listUsers(request);
-      List<UserType> users = result.getUsers();
+      ListUsersResponse result = cognitoClient.listUsers(request);
+      List<UserType> users = result.users();
 
       if (users == null || users.isEmpty()) {
         log.info("No user found with email: {}", username);
@@ -109,7 +113,7 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
         return Optional.empty();
       }
 
-      return Optional.of(resultMapper.toAuthenticationUser(result.getUsers().get(0)));
+      return Optional.of(resultMapper.toAuthenticationUser(result.users().get(0)));
     } catch (InvalidParameterException e) {
       log.warn("Invalid parameter when querying user with email {}: {}", username, e.getMessage(),
           e);
@@ -122,24 +126,26 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
     try {
       if (authenticationUser.isEnabled()) {
-        AdminEnableUserRequest enableRequest = new AdminEnableUserRequest()
-            .withUserPoolId(userPoolId)
-            .withUsername(authenticationUser.getUsername());
+        AdminEnableUserRequest enableRequest = AdminEnableUserRequest.builder()
+            .userPoolId(userPoolId)
+            .username(authenticationUser.getUsername())
+            .build();
         cognitoClient.adminEnableUser(enableRequest);
       } else {
-        AdminDisableUserRequest disableRequest = new AdminDisableUserRequest()
-            .withUserPoolId(userPoolId)
-            .withUsername(authenticationUser.getUsername());
+        AdminDisableUserRequest disableRequest = AdminDisableUserRequest.builder()
+            .userPoolId(userPoolId)
+            .username(authenticationUser.getUsername())
+            .build();
         cognitoClient.adminDisableUser(disableRequest);
       }
 
       AdminUpdateUserAttributesRequest request =
-          requestMapper.toUpdateUserRequest(authenticationUser)
-              .withUserPoolId(userPoolId);
+          requestMapper.toUpdateUserRequest(authenticationUser).toBuilder()
+              .userPoolId(userPoolId).build();
       cognitoClient.adminUpdateUserAttributes(request);
 
       return true;
-    } catch (AWSCognitoIdentityProviderException e) {
+    } catch (CognitoIdentityProviderException e) {
       log.error(e.getMessage(), e);
       return false;
     }
@@ -158,21 +164,22 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   @Override
   void deleteUser(AuthenticationUserDto authenticationUser) {
-    AdminDeleteUserRequest request = new AdminDeleteUserRequest()
-        .withUserPoolId(userPoolId)
-        .withUsername(authenticationUser.getUsername());
-
+    AdminDeleteUserRequest request = AdminDeleteUserRequest.builder()
+        .userPoolId(userPoolId)
+        .username(authenticationUser.getUsername())
+        .build();
     cognitoClient.adminDeleteUser(request);
   }
 
   @Override
   public List<UserAuthEventDto> getUserAuthEvents(String username)
       throws RuntimeException {
-    AdminListUserAuthEventsRequest request = new AdminListUserAuthEventsRequest()
-        .withUserPoolId(userPoolId)
-        .withUsername(username)
-        .withMaxResults(MAX_AUTH_EVENTS);
-    AdminListUserAuthEventsResult result = cognitoClient.adminListUserAuthEvents(request);
-    return resultMapper.toUserAuthEventDtos(result.getAuthEvents());
+    AdminListUserAuthEventsRequest request = AdminListUserAuthEventsRequest.builder()
+        .userPoolId(userPoolId)
+        .username(username)
+        .maxResults(MAX_AUTH_EVENTS)
+        .build();
+    AdminListUserAuthEventsResponse result = cognitoClient.adminListUserAuthEvents(request);
+    return resultMapper.toUserAuthEventDtos(result.authEvents());
   }
 }

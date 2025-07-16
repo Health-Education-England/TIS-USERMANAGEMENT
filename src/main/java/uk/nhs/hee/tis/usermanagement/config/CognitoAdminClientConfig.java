@@ -1,10 +1,9 @@
 package uk.nhs.hee.tis.usermanagement.config;
 
-import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProvider;
-import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClientBuilder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
 
 /**
  * Configuration for Cognito.
@@ -17,7 +16,7 @@ public class CognitoAdminClientConfig {
    * Create a default Cognito IDP client.
    */
   @Bean
-  public AWSCognitoIdentityProvider awsCognitoIdentityProvider() {
-    return AWSCognitoIdentityProviderClientBuilder.defaultClient();
+  public CognitoIdentityProviderClient awsCognitoIdentityProvider() {
+    return CognitoIdentityProviderClient.create();
   }
 }

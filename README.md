@@ -9,10 +9,10 @@ This has meant it doesn't expose a REST API like most other services.
 
 It is built using:
 
-- Java (8)
+- Java (11)
 - Spring Boot 
 - Maven
-- Junit (4)
+- Junit
 - Thymeleaf
 
 # Running locally

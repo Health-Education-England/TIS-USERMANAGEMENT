@@ -16,25 +16,6 @@ import static uk.nhs.hee.tis.usermanagement.service.CognitoAuthenticationAdminSe
 import static uk.nhs.hee.tis.usermanagement.service.CognitoAuthenticationAdminService.EMAIL_VERIFIED_VALUE;
 import static uk.nhs.hee.tis.usermanagement.service.CognitoAuthenticationAdminService.MAX_AUTH_EVENTS;
 
-import com.amazonaws.services.cognitoidp.AWSCognitoIdentityProviderClient;
-import com.amazonaws.services.cognitoidp.model.AWSCognitoIdentityProviderException;
-import com.amazonaws.services.cognitoidp.model.AdminCreateUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminCreateUserResult;
-import com.amazonaws.services.cognitoidp.model.AdminDeleteUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminDisableUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminEnableUserRequest;
-import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsRequest;
-import com.amazonaws.services.cognitoidp.model.AdminListUserAuthEventsResult;
-import com.amazonaws.services.cognitoidp.model.AdminUpdateUserAttributesRequest;
-import com.amazonaws.services.cognitoidp.model.AttributeType;
-import com.amazonaws.services.cognitoidp.model.AuthEventType;
-import com.amazonaws.services.cognitoidp.model.ChallengeResponseType;
-import com.amazonaws.services.cognitoidp.model.EventContextDataType;
-import com.amazonaws.services.cognitoidp.model.InvalidParameterException;
-import com.amazonaws.services.cognitoidp.model.ListUsersRequest;
-import com.amazonaws.services.cognitoidp.model.ListUsersResult;
-import com.amazonaws.services.cognitoidp.model.UserNotFoundException;
-import com.amazonaws.services.cognitoidp.model.UserType;
 import com.transformuk.hee.tis.profile.service.dto.HeeUserDTO;
 import java.time.Instant;
 import java.util.Arrays;
@@ -55,6 +36,25 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDeleteUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDisableUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminEnableUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AuthEventType;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.ChallengeResponseType;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CognitoIdentityProviderException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.EventContextDataType;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.InvalidParameterException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserNotFoundException;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
@@ -85,11 +85,12 @@ class CognitoAuthenticationAdminServiceTest {
 
   private CognitoAuthenticationAdminService service;
 
-  private AWSCognitoIdentityProviderClient cognitoClient;
+  private CognitoIdentityProviderClient cognitoClient;
   private ApplicationEventPublisher eventPublisher;
 
   private static Stream<Exception> catchableExceptionProvider() {
-    return Stream.of(new InvalidParameterException("Limited characters are permitted"));
+    return Stream.of(
+        InvalidParameterException.builder().message("Limited characters are permitted").build());
   }
 
   private static Stream<Collection<UserType>> userTypeCollectionProvider() {
@@ -98,7 +99,7 @@ class CognitoAuthenticationAdminServiceTest {
 
   @BeforeEach
   void setUp() {
-    cognitoClient = mock(AWSCognitoIdentityProviderClient.class);
+    cognitoClient = mock(CognitoIdentityProviderClient.class);
     eventPublisher = mock(ApplicationEventPublisher.class);
     service = new CognitoAuthenticationAdminService(
         eventPublisher,
@@ -131,15 +132,15 @@ class CognitoAuthenticationAdminServiceTest {
     verify(cognitoClient).adminCreateUser(requestCaptor.capture());
 
     AdminCreateUserRequest request = requestCaptor.getValue();
-    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
-    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
-    assertThat("Unexpected password.", request.getTemporaryPassword(), nullValue());
+    assertThat("Unexpected user pool id.", request.userPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.username(), is(USERNAME));
+    assertThat("Unexpected password.", request.temporaryPassword(), nullValue());
 
-    List<AttributeType> attributes = request.getUserAttributes();
+    List<AttributeType> attributes = request.userAttributes();
     assertThat("Unexpected attribute count.", attributes.size(), is(4));
 
     Map<String, String> attributeMap = attributes.stream()
-        .collect(Collectors.toMap(AttributeType::getName, AttributeType::getValue));
+        .collect(Collectors.toMap(AttributeType::name, AttributeType::value));
     assertThat("Unexpected email.", attributeMap.get(EMAIL_FIELD), is(EMAIL_VALUE));
     assertThat("Unexpected given name.", attributeMap.get(GIVEN_NAME_FIELD), is(GIVEN_NAME_VALUE));
     assertThat("Unexpected family name.", attributeMap.get(FAMILY_NAME_FIELD),
@@ -153,15 +154,17 @@ class CognitoAuthenticationAdminServiceTest {
     CreateUserDTO dto = new CreateUserDTO();
     dto.setActive(true);
 
-    AdminCreateUserResult result = new AdminCreateUserResult()
-        .withUser(new UserType()
-            .withUsername(USERNAME)
-            .withAttributes(Collections.emptyList()));
-    when(cognitoClient.adminCreateUser(any())).thenReturn(result);
+    AdminCreateUserResponse result = AdminCreateUserResponse.builder()
+        .user(UserType.builder()
+            .username(USERNAME)
+            .attributes(Collections.emptyList())
+            .build())
+        .build();
+    when(cognitoClient.adminCreateUser(any(AdminCreateUserRequest.class))).thenReturn(result);
 
     service.createUser(dto);
 
-    verify(cognitoClient, never()).adminDisableUser(any());
+    verify(cognitoClient, never()).adminDisableUser(any(AdminDisableUserRequest.class));
   }
 
   @Test
@@ -169,11 +172,13 @@ class CognitoAuthenticationAdminServiceTest {
     CreateUserDTO dto = new CreateUserDTO();
     dto.setActive(false);
 
-    AdminCreateUserResult result = new AdminCreateUserResult()
-        .withUser(new UserType()
-            .withUsername(USERNAME)
-            .withAttributes(Collections.emptyList()));
-    when(cognitoClient.adminCreateUser(any())).thenReturn(result);
+    AdminCreateUserResponse result = AdminCreateUserResponse.builder()
+        .user(UserType.builder()
+            .username(USERNAME)
+            .attributes(Collections.emptyList())
+            .build())
+        .build();
+    when(cognitoClient.adminCreateUser(any(AdminCreateUserRequest.class))).thenReturn(result);
 
     service.createUser(dto);
 
@@ -182,21 +187,21 @@ class CognitoAuthenticationAdminServiceTest {
     verify(cognitoClient).adminDisableUser(requestCaptor.capture());
 
     AdminDisableUserRequest request = requestCaptor.getValue();
-    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
-    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
+    assertThat("Unexpected user pool id.", request.userPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.username(), is(USERNAME));
   }
 
   @Test
   void shouldPublishCreatedUserWhenUserCreated() {
-    UserType cognitoUser = new UserType();
-    cognitoUser.setUsername(USERNAME);
-    cognitoUser.setAttributes(buildStandardCognitoAttributes());
-    cognitoUser.setEnabled(true);
+    UserType cognitoUser = UserType.builder()
+        .username(USERNAME)
+        .attributes(buildStandardCognitoAttributes())
+        .enabled(true).build();
 
-    AdminCreateUserResult result = new AdminCreateUserResult();
-    result.setUser(cognitoUser);
+    AdminCreateUserResponse result = AdminCreateUserResponse.builder()
+        .user(cognitoUser).build();
 
-    when(cognitoClient.adminCreateUser(any())).thenReturn(result);
+    when(cognitoClient.adminCreateUser(any(AdminCreateUserRequest.class))).thenReturn(result);
 
     CreateUserDTO createUserDto = new CreateUserDTO();
     createUserDto.setActive(true);
@@ -233,8 +238,7 @@ class CognitoAuthenticationAdminServiceTest {
 
   @Test
   void shouldSendGetCognitoUserRequest() {
-    ListUsersResult result = new ListUsersResult();
-    result.setUsers(Collections.emptyList());
+    ListUsersResponse result = ListUsersResponse.builder().users(Collections.emptyList()).build();
 
     ArgumentCaptor<ListUsersRequest> requestCaptor = ArgumentCaptor.forClass(
         ListUsersRequest.class);
@@ -243,18 +247,22 @@ class CognitoAuthenticationAdminServiceTest {
     service.getUser(USERNAME);
 
     ListUsersRequest request = requestCaptor.getValue();
-    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
-    assertThat("Unexpected username.", request.getFilter(), containsString(USERNAME));
+    assertThat("Unexpected user pool id.", request.userPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.filter(), containsString(USERNAME));
   }
 
   @Test
   void shouldReturnGetCognitoUserResultWhenUsernameFound() {
-    ListUsersResult result = new ListUsersResult();
-    UserType user = new UserType().withEnabled(true).withUsername(USERNAME)
-        .withAttributes(buildStandardCognitoAttributes());
-    result.setUsers(Collections.singletonList(user));
+    UserType user = UserType.builder()
+        .enabled(true)
+        .username(USERNAME)
+        .attributes(buildStandardCognitoAttributes())
+        .build();
+    ListUsersResponse result = ListUsersResponse.builder()
+        .users(Collections.singletonList(user))
+        .build();
 
-    when(cognitoClient.listUsers(any())).thenReturn(result);
+    when(cognitoClient.listUsers(any(ListUsersRequest.class))).thenReturn(result);
 
     Optional<AuthenticationUserDto> optionalAuthenticationUser = service.getUser(USERNAME);
 
@@ -265,10 +273,9 @@ class CognitoAuthenticationAdminServiceTest {
   @ParameterizedTest
   @MethodSource("userTypeCollectionProvider")
   void shouldReturnEmptyResultWhenUserNotFound(Collection<UserType> userTypes) {
-    ListUsersResult result = new ListUsersResult();
-    result.setUsers(userTypes);
+    ListUsersResponse result = ListUsersResponse.builder().users(userTypes).build();
 
-    when(cognitoClient.listUsers(any())).thenReturn(result);
+    when(cognitoClient.listUsers(any(ListUsersRequest.class))).thenReturn(result);
     Optional<AuthenticationUserDto> optionalAuthenticationUser = service.getUser(USERNAME);
 
     assertThat("Unexpected user found.", optionalAuthenticationUser.isPresent(), is(false));
@@ -276,14 +283,20 @@ class CognitoAuthenticationAdminServiceTest {
 
   @Test
   void shouldReturnEmptyResultWhenUsernameFoundMultiple() {
-    ListUsersResult result = new ListUsersResult();
-    UserType user1 = new UserType().withEnabled(true).withUsername(USERNAME)
-        .withAttributes(buildStandardCognitoAttributes());
-    UserType user2 = new UserType().withEnabled(false).withUsername(USERNAME)
-        .withAttributes(buildStandardCognitoAttributes());
-    result.setUsers(Arrays.asList(user1, user2));
+    UserType user1 = UserType.builder()
+        .enabled(true)
+        .username(USERNAME)
+        .attributes(buildStandardCognitoAttributes())
+        .build();
+    UserType user2 = UserType.builder()
+        .enabled(false)
+        .username(USERNAME)
+        .attributes(buildStandardCognitoAttributes())
+        .build();
+    ListUsersResponse result = ListUsersResponse.builder()
+        .users(Arrays.asList(user1, user2)).build();
 
-    when(cognitoClient.listUsers(any())).thenReturn(result);
+    when(cognitoClient.listUsers(any(ListUsersRequest.class))).thenReturn(result);
     Optional<AuthenticationUserDto> optionalAuthenticationUser = service.getUser(USERNAME);
 
     assertThat("Unexpected user found.", optionalAuthenticationUser.isPresent(), is(false));
@@ -292,7 +305,7 @@ class CognitoAuthenticationAdminServiceTest {
   @ParameterizedTest
   @MethodSource("catchableExceptionProvider")
   void shouldReturnEmptyGetCognitoUserResultWhenExceptionHappens(Exception e) {
-    when(cognitoClient.listUsers(any())).thenThrow(e);
+    when(cognitoClient.listUsers(any(ListUsersRequest.class))).thenThrow(e);
 
     Optional<AuthenticationUserDto> optionalAuthenticationUser = service.getUser(USERNAME);
 
@@ -316,14 +329,14 @@ class CognitoAuthenticationAdminServiceTest {
     verify(cognitoClient).adminUpdateUserAttributes(requestCaptor.capture());
 
     AdminUpdateUserAttributesRequest request = requestCaptor.getValue();
-    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
-    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
+    assertThat("Unexpected user pool id.", request.userPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.username(), is(USERNAME));
 
-    List<AttributeType> attributes = request.getUserAttributes();
+    List<AttributeType> attributes = request.userAttributes();
     assertThat("Unexpected attribute count.", attributes.size(), is(3));
 
     Map<String, String> attributeMap = attributes.stream()
-        .collect(Collectors.toMap(AttributeType::getName, AttributeType::getValue));
+        .collect(Collectors.toMap(AttributeType::name, AttributeType::value));
     assertThat("Unexpected email.", attributeMap.get(EMAIL_FIELD), is(EMAIL_VALUE));
     assertThat("Unexpected given name.", attributeMap.get(GIVEN_NAME_FIELD), is(GIVEN_NAME_VALUE));
     assertThat("Unexpected family name.", attributeMap.get(FAMILY_NAME_FIELD),
@@ -343,8 +356,8 @@ class CognitoAuthenticationAdminServiceTest {
     verify(cognitoClient).adminEnableUser(requestCaptor.capture());
 
     AdminEnableUserRequest request = requestCaptor.getValue();
-    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
-    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
+    assertThat("Unexpected user pool id.", request.userPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.username(), is(USERNAME));
   }
 
   @Test
@@ -360,8 +373,8 @@ class CognitoAuthenticationAdminServiceTest {
     verify(cognitoClient).adminDisableUser(requestCaptor.capture());
 
     AdminDisableUserRequest request = requestCaptor.getValue();
-    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
-    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
+    assertThat("Unexpected user pool id.", request.userPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.username(), is(USERNAME));
   }
 
   @Test
@@ -385,11 +398,11 @@ class CognitoAuthenticationAdminServiceTest {
         AdminUpdateUserAttributesRequest.class);
     verify(cognitoClient).adminUpdateUserAttributes(requestCaptor.capture());
 
-    List<AttributeType> attributes = requestCaptor.getValue().getUserAttributes();
+    List<AttributeType> attributes = requestCaptor.getValue().userAttributes();
     assertThat("Unexpected attribute count.", attributes.size(), is(3));
 
     Map<String, String> attributeMap = attributes.stream()
-        .collect(Collectors.toMap(AttributeType::getName, AttributeType::getValue));
+        .collect(Collectors.toMap(AttributeType::name, AttributeType::value));
     assertThat("Unexpected email.", attributeMap.get(EMAIL_FIELD), is(EMAIL_VALUE));
     assertThat("Unexpected given name.", attributeMap.get(GIVEN_NAME_FIELD), is(GIVEN_NAME_VALUE));
     assertThat("Unexpected family name.", attributeMap.get(FAMILY_NAME_FIELD),
@@ -405,8 +418,8 @@ class CognitoAuthenticationAdminServiceTest {
 
   @Test
   void shouldReturnFalseWhenUserUpdateFailsByAuthenticationUser() {
-    when(cognitoClient.adminUpdateUserAttributes(any())).thenThrow(
-        new AWSCognitoIdentityProviderException("Dummy Exception."));
+    when(cognitoClient.adminUpdateUserAttributes(any(AdminUpdateUserAttributesRequest.class)))
+        .thenThrow(CognitoIdentityProviderException.builder().message("Dummy Exception.").build());
 
     boolean updated = service.updateUser(new AuthenticationUserDto());
 
@@ -428,14 +441,14 @@ class CognitoAuthenticationAdminServiceTest {
     verify(cognitoClient).adminUpdateUserAttributes(requestCaptor.capture());
 
     AdminUpdateUserAttributesRequest request = requestCaptor.getValue();
-    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
-    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
+    assertThat("Unexpected user pool id.", request.userPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.username(), is(USERNAME));
 
-    List<AttributeType> attributes = request.getUserAttributes();
+    List<AttributeType> attributes = request.userAttributes();
     assertThat("Unexpected attribute count.", attributes.size(), is(3));
 
     Map<String, String> attributeMap = attributes.stream()
-        .collect(Collectors.toMap(AttributeType::getName, AttributeType::getValue));
+        .collect(Collectors.toMap(AttributeType::name, AttributeType::value));
     assertThat("Unexpected email.", attributeMap.get(EMAIL_FIELD), is(EMAIL_VALUE));
     assertThat("Unexpected given name.", attributeMap.get(GIVEN_NAME_FIELD), is(GIVEN_NAME_VALUE));
     assertThat("Unexpected family name.", attributeMap.get(FAMILY_NAME_FIELD),
@@ -451,8 +464,8 @@ class CognitoAuthenticationAdminServiceTest {
 
   @Test
   void shouldReturnFalseWhenUserUpdateFailsByUserDto() {
-    when(cognitoClient.adminUpdateUserAttributes(any())).thenThrow(
-        new AWSCognitoIdentityProviderException("Dummy Exception."));
+    when(cognitoClient.adminUpdateUserAttributes(any(AdminUpdateUserAttributesRequest.class)))
+        .thenThrow(CognitoIdentityProviderException.builder().message("Dummy Exception.").build());
 
     boolean updated = service.updateUser(new UserDTO());
 
@@ -473,8 +486,8 @@ class CognitoAuthenticationAdminServiceTest {
     verify(cognitoClient).adminDeleteUser(requestCaptor.capture());
 
     AdminDeleteUserRequest request = requestCaptor.getValue();
-    assertThat("Unexpected user pool id.", request.getUserPoolId(), is(USER_POOL_ID));
-    assertThat("Unexpected username.", request.getUsername(), is(USERNAME));
+    assertThat("Unexpected user pool id.", request.userPoolId(), is(USER_POOL_ID));
+    assertThat("Unexpected username.", request.username(), is(USERNAME));
   }
 
   @Test
@@ -510,12 +523,14 @@ class CognitoAuthenticationAdminServiceTest {
     Instant startTime = Instant.now();
 
     List<AuthEventType> events = createAuthEventsList(startTime);
-    AdminListUserAuthEventsResult requestResult = new AdminListUserAuthEventsResult()
-        .withAuthEvents(events);
-    AdminListUserAuthEventsRequest request = new AdminListUserAuthEventsRequest()
-        .withUserPoolId(USER_POOL_ID)
-        .withUsername(USERNAME)
-        .withMaxResults(MAX_AUTH_EVENTS);
+    AdminListUserAuthEventsResponse requestResult = AdminListUserAuthEventsResponse.builder()
+        .authEvents(events)
+        .build();
+    AdminListUserAuthEventsRequest request = AdminListUserAuthEventsRequest.builder()
+        .userPoolId(USER_POOL_ID)
+        .username(USERNAME)
+        .maxResults(MAX_AUTH_EVENTS)
+        .build();
 
     when(cognitoClient.adminListUserAuthEvents(request)).thenReturn(requestResult);
 
@@ -538,15 +553,16 @@ class CognitoAuthenticationAdminServiceTest {
   @Test
   void shouldThrowIdentityProviderExceptionIn() {
 
-    AdminListUserAuthEventsRequest request = new AdminListUserAuthEventsRequest()
-        .withUserPoolId(USER_POOL_ID)
-        .withUsername(USERNAME)
-        .withMaxResults(MAX_AUTH_EVENTS);
+    AdminListUserAuthEventsRequest request = AdminListUserAuthEventsRequest.builder()
+        .userPoolId(USER_POOL_ID)
+        .username(USERNAME)
+        .maxResults(MAX_AUTH_EVENTS)
+        .build();
 
     // e.g. User Not Found
     when(cognitoClient.adminListUserAuthEvents(request)).thenThrow(UserNotFoundException.class);
 
-    assertThrows(AWSCognitoIdentityProviderException.class,
+    assertThrows(CognitoIdentityProviderException.class,
         () -> service.getUserAuthEvents(USERNAME));
   }
 
@@ -557,10 +573,10 @@ class CognitoAuthenticationAdminServiceTest {
    */
   private List<AttributeType> buildStandardCognitoAttributes() {
     return Arrays.asList(
-        new AttributeType().withName(SUB_FIELD).withValue(SUB_VALUE),
-        new AttributeType().withName(GIVEN_NAME_FIELD).withValue(GIVEN_NAME_VALUE),
-        new AttributeType().withName(FAMILY_NAME_FIELD).withValue(FAMILY_NAME_VALUE),
-        new AttributeType().withName(EMAIL_FIELD).withValue(EMAIL_VALUE)
+        AttributeType.builder().name(SUB_FIELD).value(SUB_VALUE).build(),
+        AttributeType.builder().name(GIVEN_NAME_FIELD).value(GIVEN_NAME_VALUE).build(),
+        AttributeType.builder().name(FAMILY_NAME_FIELD).value(FAMILY_NAME_VALUE).build(),
+        AttributeType.builder().name(EMAIL_FIELD).value(EMAIL_VALUE).build()
     );
   }
 
@@ -590,18 +606,28 @@ class CognitoAuthenticationAdminServiceTest {
   }
 
   private List<AuthEventType> createAuthEventsList(Instant startTime) {
-    ChallengeResponseType challengeResponseType1 = new ChallengeResponseType().withChallengeName(
-        "Password").withChallengeResponse("Success");
-    ChallengeResponseType challengeResponseType2 = new ChallengeResponseType().withChallengeName(
-        "Mfa").withChallengeResponse("Success");
-    EventContextDataType eventContextDataType = new EventContextDataType().withDeviceName(
-        "Chrome 126, Windows 10");
+    ChallengeResponseType challengeResponseType1 = ChallengeResponseType.builder()
+        .challengeName("Password")
+        .challengeResponse("Success")
+        .build();
+    ChallengeResponseType challengeResponseType2 = ChallengeResponseType.builder()
+        .challengeName("Mfa")
+        .challengeResponse("Success")
+        .build();
+    EventContextDataType eventContextDataType = EventContextDataType.builder()
+        .deviceName("Chrome 126, Windows 10")
+        .build();
 
     return IntStream.range(0, MAX_AUTH_EVENTS)
-        .mapToObj(n -> new AuthEventType().withEventId(String.valueOf(n)).withEventType("SignIn")
-            .withCreationDate(Date.from(startTime.plusSeconds(n))).withEventResponse("Pass")
-            .withChallengeResponses(List.of(challengeResponseType1, challengeResponseType2))
-            .withEventContextData(eventContextDataType))
+        .mapToObj(n -> AuthEventType.builder()
+            .eventId(String.valueOf(n))
+            .eventType("SignIn")
+            .creationDate(Date.from(startTime.plusSeconds(n)).toInstant())
+            .eventResponse("Pass")
+            .challengeResponses(List.of(challengeResponseType1, challengeResponseType2))
+            .eventContextData(eventContextDataType)
+            .build()
+        )
         .collect(Collectors.toList());
   }
 }
