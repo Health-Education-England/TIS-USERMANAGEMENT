@@ -50,21 +50,18 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
   private final CognitoRequestMapper requestMapper;
   private final CognitoResultMapper resultMapper;
   private final AuthenticationUserMapper userMapper;
-  private final EmailService emailService;
 
   CognitoAuthenticationAdminService(ApplicationEventPublisher applicationEventPublisher,
       CognitoIdentityProviderClient cognitoClient,
       @Value("${application.cognito.user-pool-id}") String userPoolId,
       CognitoRequestMapper requestMapper, CognitoResultMapper resultMapper,
-      AuthenticationUserMapper userMapper,
-      EmailService emailService) {
+      AuthenticationUserMapper userMapper) {
     super(applicationEventPublisher);
     this.cognitoClient = cognitoClient;
     this.userPoolId = userPoolId;
     this.requestMapper = requestMapper;
     this.resultMapper = resultMapper;
     this.userMapper = userMapper;
-    this.emailService = emailService;
   }
 
   @Override
@@ -169,9 +166,13 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
         .password(password)
         .permanent(!tempPassword)
         .build();
-    cognitoClient.adminSetUserPassword(request);
-    emailService.sendTemporaryPasswordEmail(userId, password);
-    return true;
+    try {
+      cognitoClient.adminSetUserPassword(request);
+      return true;
+    } catch (Exception e) {
+      log.error("Setting temp password for {} failed.", userId, e);
+      throw e;
+    }
   }
 
   @Override

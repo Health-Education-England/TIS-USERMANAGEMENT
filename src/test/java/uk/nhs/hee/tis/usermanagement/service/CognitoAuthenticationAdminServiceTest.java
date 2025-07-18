@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -35,12 +36,9 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest;
@@ -74,7 +72,6 @@ import uk.nhs.hee.tis.usermanagement.mapper.AuthenticationUserMapperImpl;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoRequestMapperImpl;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoResultMapperImpl;
 
-@ExtendWith(MockitoExtension.class)
 class CognitoAuthenticationAdminServiceTest {
 
   private static final String USER_POOL_ID = "region-1_userPool123";
@@ -95,8 +92,6 @@ class CognitoAuthenticationAdminServiceTest {
 
   private CognitoIdentityProviderClient cognitoClient;
   private ApplicationEventPublisher eventPublisher;
-  @Mock
-  private EmailService emailService;
 
   private static Stream<Exception> catchableExceptionProvider() {
     return Stream.of(
@@ -117,8 +112,7 @@ class CognitoAuthenticationAdminServiceTest {
         USER_POOL_ID,
         new CognitoRequestMapperImpl(),
         new CognitoResultMapperImpl(),
-        new AuthenticationUserMapperImpl(),
-        emailService
+        new AuthenticationUserMapperImpl()
     );
   }
 
@@ -581,7 +575,13 @@ class CognitoAuthenticationAdminServiceTest {
     assertEquals(USERNAME, optionalUsername.get());
     assertEquals(PASSWORD, optionalPassword.get());
     assertFalse(optionalPermanent.get());
-    verify(emailService).sendTemporaryPasswordEmail(USERNAME, PASSWORD);
+  }
+
+  @Test
+  void shouldThrowExceptionWhenUpdatePasswordFails() {
+    doThrow(InvalidParameterException.class).when(cognitoClient).adminSetUserPassword(any(AdminSetUserPasswordRequest.class));
+
+    assertThrows(InvalidParameterException.class, () -> service.updatePassword(USERNAME, PASSWORD, true));
   }
 
   @Test

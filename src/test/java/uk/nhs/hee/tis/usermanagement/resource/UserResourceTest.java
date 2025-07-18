@@ -48,12 +48,16 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.InvalidParameterException;
+import software.amazon.awssdk.services.ses.model.MessageRejectedException;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.exception.IdentityProviderException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
+import uk.nhs.hee.tis.usermanagement.service.EmailService;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -63,6 +67,8 @@ class UserResourceTest {
 
   @MockBean
   private UserManagementFacade mockFacade;
+  @MockBean
+  private EmailService emailServiceMock;
   @Mock
   private Page<UserDTO> mockUsersPage;
 
@@ -85,7 +91,7 @@ class UserResourceTest {
 
   @BeforeEach
   void setUp() {
-    mockMvc = MockMvcBuilders.standaloneSetup(new UserResource(mockFacade))
+    mockMvc = MockMvcBuilders.standaloneSetup(new UserResource(mockFacade, emailServiceMock))
         .setCustomArgumentResolvers(pageableArgumentResolver)
         .setControllerAdvice(advice)
         .setMessageConverters(jacksonMessageConverter).build();
@@ -93,7 +99,6 @@ class UserResourceTest {
     defaultUser = new UserDTO();
     defaultUser.setName("testuser");
     defaultUser.setEmailAddress("urtu@tis.nhs.uk");
-
   }
 
   @Test
@@ -302,5 +307,59 @@ class UserResourceTest {
     mockMvc.perform(
             get("/api/users/foo/authevents"))
         .andExpect(status().isInternalServerError());
+  }
+
+  @Test
+  void shouldTriggerPasswordReset() throws Exception {
+    when(mockFacade.triggerPasswordReset("foo")).thenReturn("password");
+
+    mockMvc.perform(post("/api/users/foo/trigger-password-reset"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.message").value("Password reset successfully"));
+  }
+
+  @Test
+  void shouldTriggerPasswordResetReturnCognitoError() throws Exception {
+    final String errorCode = "Invalid parameter";
+    final String message = "error message";
+    AwsErrorDetails errorDetails = AwsErrorDetails.builder().errorCode(errorCode).errorMessage(message).build();
+    InvalidParameterException exception = InvalidParameterException.builder().statusCode(500).awsErrorDetails(errorDetails).build();
+
+    doThrow(exception).when(mockFacade).triggerPasswordReset("foo");
+
+    mockMvc.perform(post("/api/users/foo/trigger-password-reset"))
+        .andExpect(status().is5xxServerError())
+        .andExpect(jsonPath("$.errorCode").value(errorCode))
+        .andExpect(jsonPath("$.errorType").value("Cognito Error"))
+        .andExpect(jsonPath("$.message").value(message));
+  }
+
+  @Test
+  void shouldTriggerPasswordResetReturnSesError() throws Exception {
+    final String errorCode = "Message rejected";
+    final String message = "error message";
+    AwsErrorDetails errorDetails = AwsErrorDetails.builder().errorCode(errorCode).errorMessage(message).build();
+    MessageRejectedException exception = MessageRejectedException.builder().statusCode(500).awsErrorDetails(errorDetails).build();
+
+    doThrow(exception).when(mockFacade).triggerPasswordReset("foo");
+
+    mockMvc.perform(post("/api/users/foo/trigger-password-reset"))
+        .andExpect(status().is5xxServerError())
+        .andExpect(jsonPath("$.errorCode").value(errorCode))
+        .andExpect(jsonPath("$.errorType").value("SES Error"))
+        .andExpect(jsonPath("$.message").value(message));
+  }
+
+  @Test
+  void shouldTriggerPasswordResetReturnOtherError() throws Exception {
+    final String message = "error message";
+    RuntimeException exception = new RuntimeException(message);
+    doThrow(exception).when(mockFacade).triggerPasswordReset("foo");
+
+    mockMvc.perform(post("/api/users/foo/trigger-password-reset"))
+        .andExpect(status().is5xxServerError())
+        .andExpect(jsonPath("$.errorCode").value("Internal Server Error"))
+        .andExpect(jsonPath("$.errorType").value("Internal Server Error"))
+        .andExpect(jsonPath("$.message").value(message));
   }
 }

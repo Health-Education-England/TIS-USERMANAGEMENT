@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -438,8 +439,9 @@ class UserManagementFacadeTest {
 
   @Test
   void shouldTriggerPasswordReset() {
-    testClass.triggerPasswordReset(USERNAME);
+    String password = testClass.triggerPasswordReset(USERNAME);
     verify(authenticationAdminService).updatePassword(eq(USERNAME), any(String.class), eq(true));
+    Assertions.assertNotNull(password);
   }
 
   /**

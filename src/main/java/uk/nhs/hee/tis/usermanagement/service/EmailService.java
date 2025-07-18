@@ -1,13 +1,15 @@
 package uk.nhs.hee.tis.usermanagement.service;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.ses.SesClient;
-import software.amazon.awssdk.services.ses.model.*;
+import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 
+@Slf4j
 @Service
-@ConditionalOnProperty(name = "application.authentication-provider", havingValue = "cognito")
 public class EmailService {
+
+  protected static final String TIS_SENDER = "no-reply@tis.nhs.uk";
 
   private final SesClient sesClient;
 
@@ -15,27 +17,28 @@ public class EmailService {
     this.sesClient = sesClient;
   }
 
-  public void sendTemporaryPasswordEmail(String toEmail, String temporaryPassword) {
+  public void sendTempPasswordEmail(String toEmail, String temporaryPassword) {
     String subject = "Your temporary password for Trainee Information System (TIS)";
     String bodyText = String.format(
         "Dear User,\n\n"
             + "Your temporary password is: %s\n\n"
-            + "Please log in and reset your password as soon as possible.",
+            + "Please note, this temporary password is only valid for 7 days. "
+            + "Please login before then to reset your password.",
         temporaryPassword
     );
 
     SendEmailRequest emailRequest = SendEmailRequest.builder()
-        .destination(Destination.builder().toAddresses(toEmail).build())
-        .message(Message.builder()
-            .subject(Content.builder().data(subject).build())
-            .body(Body.builder()
-                .text(Content.builder().data(bodyText).build())
-                .build())
-            .build())
-        .source("no-reply@tis.nhs.uk")
+        .destination(d -> d.toAddresses(toEmail))
+        .message(m -> m.subject(c -> c.data(subject)).body(b -> b.text(c -> c.data(bodyText))))
+        .source(TIS_SENDER)
         .build();
 
-    sesClient.sendEmail(emailRequest);
+    try {
+      sesClient.sendEmail(emailRequest);
+    } catch (Exception e) {
+      log.error("Sending temp password to {} failed.", toEmail, e);
+      throw e;
+    }
   }
 }
 
