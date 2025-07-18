@@ -6,7 +6,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -32,9 +35,12 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest;
@@ -44,6 +50,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDisabl
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminEnableUserRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminSetUserPasswordRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AuthEventType;
@@ -67,6 +74,7 @@ import uk.nhs.hee.tis.usermanagement.mapper.AuthenticationUserMapperImpl;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoRequestMapperImpl;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoResultMapperImpl;
 
+@ExtendWith(MockitoExtension.class)
 class CognitoAuthenticationAdminServiceTest {
 
   private static final String USER_POOL_ID = "region-1_userPool123";
@@ -87,6 +95,8 @@ class CognitoAuthenticationAdminServiceTest {
 
   private CognitoIdentityProviderClient cognitoClient;
   private ApplicationEventPublisher eventPublisher;
+  @Mock
+  private EmailService emailService;
 
   private static Stream<Exception> catchableExceptionProvider() {
     return Stream.of(
@@ -107,7 +117,8 @@ class CognitoAuthenticationAdminServiceTest {
         USER_POOL_ID,
         new CognitoRequestMapperImpl(),
         new CognitoResultMapperImpl(),
-        new AuthenticationUserMapperImpl()
+        new AuthenticationUserMapperImpl(),
+        emailService
     );
   }
 
@@ -548,6 +559,29 @@ class CognitoAuthenticationAdminServiceTest {
       assertThat(result.getChallenges(), is("Password:Success, Mfa:Success"));
       assertThat(result.getDevice(), is("Chrome 126, Windows 10"));
     }
+  }
+
+  @Test
+  void shouldUpdatePassword() {
+    service.updatePassword(USERNAME, PASSWORD, true);
+
+    ArgumentCaptor<AdminSetUserPasswordRequest> requestCaptor = ArgumentCaptor.forClass(
+        AdminSetUserPasswordRequest.class);
+    verify(cognitoClient).adminSetUserPassword(requestCaptor.capture());
+    AdminSetUserPasswordRequest request = requestCaptor.getValue();
+    Optional<String> optionalUserPoolId = request.getValueForField("UserPoolId", String.class);
+    Optional<String> optionalUsername = request.getValueForField("Username", String.class);
+    Optional<String> optionalPassword = request.getValueForField("Password", String.class);
+    Optional<Boolean> optionalPermanent = request.getValueForField("Permanent", Boolean.class);
+    assertTrue(optionalUsername.isPresent());
+    assertTrue(optionalUserPoolId.isPresent());
+    assertTrue(optionalPassword.isPresent());
+    assertTrue(optionalPermanent.isPresent());
+    assertEquals(USER_POOL_ID, optionalUserPoolId.get());
+    assertEquals(USERNAME, optionalUsername.get());
+    assertEquals(PASSWORD, optionalPassword.get());
+    assertFalse(optionalPermanent.get());
+    verify(emailService).sendTemporaryPasswordEmail(USERNAME, PASSWORD);
   }
 
   @Test

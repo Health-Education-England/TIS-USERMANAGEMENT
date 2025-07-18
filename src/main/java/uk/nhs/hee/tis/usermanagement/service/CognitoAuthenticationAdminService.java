@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDisabl
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminEnableUserRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminSetUserPasswordRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.CognitoIdentityProviderException;
@@ -49,18 +50,21 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
   private final CognitoRequestMapper requestMapper;
   private final CognitoResultMapper resultMapper;
   private final AuthenticationUserMapper userMapper;
+  private final EmailService emailService;
 
   CognitoAuthenticationAdminService(ApplicationEventPublisher applicationEventPublisher,
       CognitoIdentityProviderClient cognitoClient,
       @Value("${application.cognito.user-pool-id}") String userPoolId,
       CognitoRequestMapper requestMapper, CognitoResultMapper resultMapper,
-      AuthenticationUserMapper userMapper) {
+      AuthenticationUserMapper userMapper,
+      EmailService emailService) {
     super(applicationEventPublisher);
     this.cognitoClient = cognitoClient;
     this.userPoolId = userPoolId;
     this.requestMapper = requestMapper;
     this.resultMapper = resultMapper;
     this.userMapper = userMapper;
+    this.emailService = emailService;
   }
 
   @Override
@@ -159,7 +163,15 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   @Override
   public boolean updatePassword(String userId, String password, boolean tempPassword) {
-    throw new UnsupportedOperationException("Users must reset their own password.");
+    AdminSetUserPasswordRequest request = AdminSetUserPasswordRequest.builder()
+        .userPoolId(userPoolId)
+        .username(userId)
+        .password(password)
+        .permanent(!tempPassword)
+        .build();
+    cognitoClient.adminSetUserPassword(request);
+    emailService.sendTemporaryPasswordEmail(userId, password);
+    return true;
   }
 
   @Override

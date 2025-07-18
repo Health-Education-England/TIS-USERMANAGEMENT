@@ -19,6 +19,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.TooManyRequestsException;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
@@ -34,6 +35,7 @@ import uk.nhs.hee.tis.usermanagement.service.AuthenticationAdminService;
 import uk.nhs.hee.tis.usermanagement.service.ProfileService;
 import uk.nhs.hee.tis.usermanagement.service.ReferenceService;
 import uk.nhs.hee.tis.usermanagement.service.TcsService;
+import uk.nhs.hee.tis.usermanagement.util.PasswordUtil;
 
 @Component
 public class UserManagementFacade {
@@ -210,5 +212,15 @@ public class UserManagementFacade {
     } catch (Exception e) {
       throw new IdentityProviderException(e.getMessage(), e);
     }
+  }
+
+  /**
+   * Trigger password reset for a user.
+   *
+   * @param username  the username to be password reset triggered
+   */
+  public void triggerPasswordReset(String username) {
+    String password = PasswordUtil.generatePassword();
+    authenticationAdminService.updatePassword(username, password, true);
   }
 }

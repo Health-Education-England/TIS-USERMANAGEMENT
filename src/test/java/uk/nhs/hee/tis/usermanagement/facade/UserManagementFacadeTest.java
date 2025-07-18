@@ -8,6 +8,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -433,6 +434,12 @@ class UserManagementFacadeTest {
         RuntimeException.class);
 
     assertThrows(IdentityProviderException.class, () -> testClass.getUserAuthEvents(USERNAME));
+  }
+
+  @Test
+  void shouldTriggerPasswordReset() {
+    testClass.triggerPasswordReset(USERNAME);
+    verify(authenticationAdminService).updatePassword(eq(USERNAME), any(String.class), eq(true));
   }
 
   /**

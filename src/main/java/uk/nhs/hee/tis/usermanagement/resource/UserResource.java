@@ -22,7 +22,10 @@
 package uk.nhs.hee.tis.usermanagement.resource;
 
 import java.util.List;
+import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +39,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CognitoIdentityProviderException;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
@@ -52,6 +56,11 @@ import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 @RestController
 @RequestMapping("/api/users")
 public class UserResource {
+
+  private static final Logger LOG = LoggerFactory.getLogger(UserResource.class);
+
+  private static final String ERROR_CODE = "errorCode";
+  private static final String MESSAGE = "message";
 
   private final UserManagementFacade userFacade;
 
@@ -128,7 +137,7 @@ public class UserResource {
    */
   @PreAuthorize("hasAuthority('heeuser:delete') and hasAuthority('profile:delete:entities') ")
   @DeleteMapping("/{username}")
-  ResponseEntity<UserDTO> deleteUser(@PathVariable String username) {
+  public ResponseEntity<UserDTO> deleteUser(@PathVariable String username) {
     userFacade.publishDeleteAuthenticationUserRequestedEvent(username);
     return ResponseEntity.accepted().build();
   }
@@ -143,6 +152,39 @@ public class UserResource {
   @GetMapping("/{username}/authevents")
   public List<UserAuthEventDto> getUserAuthEventLogs(@PathVariable String username) {
     return userFacade.getUserAuthEvents(username);
+  }
+
+  @PreAuthorize("hasAuthority('heeuser:add:modify')")
+  @PostMapping("/{username}/trigger-password-reset")
+  public ResponseEntity<Map<String, String>> triggerPasswordReset(@PathVariable String username) {
+    try {
+      userFacade.triggerPasswordReset(username);
+      return ResponseEntity.ok().body(
+          Map.of(
+              MESSAGE, "Password reset successfully!"
+          )
+      );
+
+    } catch (CognitoIdentityProviderException e) { // Capture Cognito exceptions
+      String awsErrorCode = e.awsErrorDetails().errorCode(); // eg.UserNotFoundException
+      String awsErrorMsg = e.awsErrorDetails().errorMessage();
+
+      LOG.error("Cognito error: [{}] {}", awsErrorCode, awsErrorMsg);
+
+      return ResponseEntity.status(e.statusCode()).body(
+          Map.of(
+              ERROR_CODE, awsErrorCode,
+              MESSAGE, awsErrorMsg
+          )
+      );
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(
+          Map.of(
+              ERROR_CODE, "InternalServerError",
+              MESSAGE, e.getMessage()
+          )
+      );
+    }
   }
 
   /**
