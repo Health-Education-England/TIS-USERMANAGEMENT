@@ -5,6 +5,9 @@ import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 
+/**
+ * A email sending service.
+ */
 @Slf4j
 @Service
 public class EmailService {
@@ -17,6 +20,12 @@ public class EmailService {
     this.sesClient = sesClient;
   }
 
+  /**
+   * Send temporary password to an email address.
+   *
+   * @param toEmail the email to be sent to
+   * @param temporaryPassword the temporary password
+   */
   public void sendTempPasswordEmail(String toEmail, String temporaryPassword) {
     String subject = "Your temporary password for Trainee Information System (TIS)";
     String bodyText = String.format(

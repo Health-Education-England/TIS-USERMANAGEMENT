@@ -157,6 +157,13 @@ public class UserResource {
     return userFacade.getUserAuthEvents(username);
   }
 
+  /**
+   * Trigger password reset.
+   * The service will generate a random a password and send to the user's email.
+   *
+   * @param username the name of the user to reset password for
+   * @return a map containing successful/failing messages
+   */
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PostMapping("/{username}/trigger-password-reset")
   public ResponseEntity<Map<String, String>> triggerPasswordReset(@PathVariable String username) {
