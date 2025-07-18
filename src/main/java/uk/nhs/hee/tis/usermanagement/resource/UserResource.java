@@ -22,6 +22,8 @@
 package uk.nhs.hee.tis.usermanagement.resource;
 
 import java.util.List;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,11 +38,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.CognitoIdentityProviderException;
+import software.amazon.awssdk.services.ses.model.SesException;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
+import uk.nhs.hee.tis.usermanagement.service.EmailService;
 
 /**
  * Resource that exposes user functionality which is expected to be supported. It operates slightly
@@ -49,16 +54,23 @@ import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
  * <p>Exceptions are not handled explicitly so
  * {@link org.springframework.web.bind.annotation.ControllerAdvice} can map to a Response.
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/users")
 public class UserResource {
 
+  private static final String ERROR_TYPE = "errorType";
+  private static final String ERROR_CODE = "errorCode";
+  private static final String MESSAGE = "message";
+
   private final UserManagementFacade userFacade;
+  private final EmailService emailService;
 
   private final CreateUserValidator createUserValidator = new CreateUserValidator();
 
-  public UserResource(UserManagementFacade userFacade) {
+  public UserResource(UserManagementFacade userFacade, EmailService emailService) {
     this.userFacade = userFacade;
+    this.emailService = emailService;
   }
 
   /**
@@ -128,7 +140,7 @@ public class UserResource {
    */
   @PreAuthorize("hasAuthority('heeuser:delete') and hasAuthority('profile:delete:entities') ")
   @DeleteMapping("/{username}")
-  ResponseEntity<UserDTO> deleteUser(@PathVariable String username) {
+  public ResponseEntity<UserDTO> deleteUser(@PathVariable String username) {
     userFacade.publishDeleteAuthenticationUserRequestedEvent(username);
     return ResponseEntity.accepted().build();
   }
@@ -143,6 +155,54 @@ public class UserResource {
   @GetMapping("/{username}/authevents")
   public List<UserAuthEventDto> getUserAuthEventLogs(@PathVariable String username) {
     return userFacade.getUserAuthEvents(username);
+  }
+
+  /**
+   * Trigger password reset.
+   * The service will generate a random a password and send to the user's email.
+   *
+   * @param username the name of the user to reset password for
+   * @return a map containing successful/failing messages
+   */
+  @PreAuthorize("hasAuthority('heeuser:add:modify')")
+  @PostMapping("/{username}/trigger-password-reset")
+  public ResponseEntity<Map<String, String>> triggerPasswordReset(@PathVariable String username) {
+    try {
+      String tempPwd = userFacade.triggerPasswordReset(username);
+      emailService.sendTempPasswordEmail(username, tempPwd);
+      return ResponseEntity.ok().body(
+          Map.of(
+              MESSAGE, "Password reset successfully"
+          )
+      );
+    } catch (CognitoIdentityProviderException | SesException e) { // Capture Cognito exceptions
+      String awsErrorCode = e.awsErrorDetails().errorCode(); // eg.UserNotFoundException
+      String awsErrorMsg = e.awsErrorDetails().errorMessage();
+
+      String errType;
+      if (e instanceof CognitoIdentityProviderException) {
+        errType = "Cognito Error";
+      } else {
+        errType = "SES Error";
+      }
+      log.error("{}: [{}] {}", errType, awsErrorCode, awsErrorMsg);
+
+      return ResponseEntity.status(e.statusCode()).body(
+          Map.of(
+              ERROR_TYPE, errType,
+              ERROR_CODE, awsErrorCode,
+              MESSAGE, awsErrorMsg
+          )
+      );
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body(
+          Map.of(
+              ERROR_TYPE, "Internal Server Error",
+              ERROR_CODE, "Internal Server Error",
+              MESSAGE, e.getMessage()
+          )
+      );
+    }
   }
 
   /**

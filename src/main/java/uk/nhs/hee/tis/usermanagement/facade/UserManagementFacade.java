@@ -34,6 +34,7 @@ import uk.nhs.hee.tis.usermanagement.service.AuthenticationAdminService;
 import uk.nhs.hee.tis.usermanagement.service.ProfileService;
 import uk.nhs.hee.tis.usermanagement.service.ReferenceService;
 import uk.nhs.hee.tis.usermanagement.service.TcsService;
+import uk.nhs.hee.tis.usermanagement.util.PasswordUtil;
 
 @Component
 public class UserManagementFacade {
@@ -210,5 +211,17 @@ public class UserManagementFacade {
     } catch (Exception e) {
       throw new IdentityProviderException(e.getMessage(), e);
     }
+  }
+
+  /**
+   * Trigger password reset for a user.
+   *
+   * @param username the username to be password reset triggered
+   * @return the updated temporary password
+   */
+  public String triggerPasswordReset(String username) {
+    String tempPassword = PasswordUtil.generatePassword();
+    authenticationAdminService.updatePassword(username, tempPassword, true);
+    return tempPassword;
   }
 }

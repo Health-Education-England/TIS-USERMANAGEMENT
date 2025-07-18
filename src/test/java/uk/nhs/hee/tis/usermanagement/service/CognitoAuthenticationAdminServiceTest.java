@@ -6,8 +6,12 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -44,6 +48,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDisabl
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminEnableUserRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminSetUserPasswordRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AuthEventType;
@@ -548,6 +553,35 @@ class CognitoAuthenticationAdminServiceTest {
       assertThat(result.getChallenges(), is("Password:Success, Mfa:Success"));
       assertThat(result.getDevice(), is("Chrome 126, Windows 10"));
     }
+  }
+
+  @Test
+  void shouldUpdatePassword() {
+    service.updatePassword(USERNAME, PASSWORD, true);
+
+    ArgumentCaptor<AdminSetUserPasswordRequest> requestCaptor = ArgumentCaptor.forClass(
+        AdminSetUserPasswordRequest.class);
+    verify(cognitoClient).adminSetUserPassword(requestCaptor.capture());
+    AdminSetUserPasswordRequest request = requestCaptor.getValue();
+    Optional<String> optionalUserPoolId = request.getValueForField("UserPoolId", String.class);
+    Optional<String> optionalUsername = request.getValueForField("Username", String.class);
+    Optional<String> optionalPassword = request.getValueForField("Password", String.class);
+    Optional<Boolean> optionalPermanent = request.getValueForField("Permanent", Boolean.class);
+    assertTrue(optionalUsername.isPresent());
+    assertTrue(optionalUserPoolId.isPresent());
+    assertTrue(optionalPassword.isPresent());
+    assertTrue(optionalPermanent.isPresent());
+    assertEquals(USER_POOL_ID, optionalUserPoolId.get());
+    assertEquals(USERNAME, optionalUsername.get());
+    assertEquals(PASSWORD, optionalPassword.get());
+    assertFalse(optionalPermanent.get());
+  }
+
+  @Test
+  void shouldThrowExceptionWhenUpdatePasswordFails() {
+    doThrow(InvalidParameterException.class).when(cognitoClient).adminSetUserPassword(any(AdminSetUserPasswordRequest.class));
+
+    assertThrows(InvalidParameterException.class, () -> service.updatePassword(USERNAME, PASSWORD, true));
   }
 
   @Test
