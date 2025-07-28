@@ -16,12 +16,7 @@ class PasswordUtilTest {
 
   @BeforeEach
   public void setup() {
-    passwordUtil = new PasswordUtil();
-    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_UPPERCASE_MINIMUM", 1);
-    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_LOWERCASE_MINIMUM", 1);
-    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_DIGIT_MINIMUM", 1);
-    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_SPECIAL_MINIMUM", 1);
-    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_LENGTH_MINIMUM", 12);
+    passwordUtil = new PasswordUtil(1, 1, 1, 1, 12);
   }
 
   @RepeatedTest(10)

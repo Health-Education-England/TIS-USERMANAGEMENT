@@ -87,15 +87,6 @@ class UserManagementFacadeTest {
   @Spy
   private HeeUserMapper userMapper;
 
-  @BeforeEach
-  public void setup() {
-    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_UPPERCASE_MINIMUM", 1);
-    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_LOWERCASE_MINIMUM", 1);
-    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_DIGIT_MINIMUM", 1);
-    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_SPECIAL_MINIMUM", 1);
-    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_LENGTH_MINIMUM", 12);
-  }
-
   @Test
   void shouldGetAllAssignableRoles() {
     String adminRole = "HEE TIS Admin";
@@ -458,7 +449,7 @@ class UserManagementFacadeTest {
 
     String password = testClass.triggerPasswordReset(USERNAME);
 
-    verify(authenticationAdminService).updatePassword(eq(USERNAME), any(String.class), eq(true));
+    verify(authenticationAdminService).updatePassword(eq(USERNAME), eq("Password1!"), eq(true));
     Assertions.assertNotNull(password);
   }
 

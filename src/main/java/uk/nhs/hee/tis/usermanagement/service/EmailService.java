@@ -13,19 +13,19 @@ import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 @Service
 public class EmailService {
 
-  @Value("${application.tis-sender-email}")
-  private  String TIS_SENDER;
-
+  private final String TIS_SENDER;
   private final SesClient sesClient;
 
-  public EmailService(SesClient sesClient) {
+  public EmailService(@Value("${application.tis-sender-email}") String tisSender,
+      SesClient sesClient) {
+    TIS_SENDER = tisSender;
     this.sesClient = sesClient;
   }
 
   /**
    * Send temporary password to an email address.
    *
-   * @param toEmail the email to be sent to
+   * @param toEmail           the email to be sent to
    * @param temporaryPassword the temporary password
    */
   public void sendTempPasswordEmail(String toEmail, String temporaryPassword) {
