@@ -13,12 +13,8 @@ import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 @Service
 public class EmailService {
 
-  private static String TIS_SENDER;
-
   @Value("${application.tis-sender-email}")
-  private void setTisSender(String value) {
-    EmailService.TIS_SENDER = value;
-  }
+  private  String TIS_SENDER;
 
   private final SesClient sesClient;
 
@@ -45,7 +41,7 @@ public class EmailService {
     SendEmailRequest emailRequest = SendEmailRequest.builder()
         .destination(d -> d.toAddresses(toEmail))
         .message(m -> m.subject(c -> c.data(subject)).body(b -> b.text(c -> c.data(bodyText))))
-        .source(EmailService.TIS_SENDER)
+        .source(TIS_SENDER)
         .build();
 
     try {
