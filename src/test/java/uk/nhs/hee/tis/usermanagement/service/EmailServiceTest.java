@@ -28,7 +28,7 @@ class EmailServiceTest {
 
   @BeforeEach
   void setUp() {
-    emailService = new EmailService("no-reply@tis.nhs.uk",sesClient);
+    emailService = new EmailService("no-reply@tis.nhs.uk", sesClient);
   }
 
   @Test
