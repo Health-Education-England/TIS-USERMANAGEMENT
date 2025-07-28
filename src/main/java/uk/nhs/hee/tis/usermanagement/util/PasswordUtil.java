@@ -24,6 +24,20 @@ public class PasswordUtil {
 
   private final int passwordLengthMinimum;
 
+  /**
+   * Constructor for PasswordUtil
+   *
+   * @param passwordUppercaseMinimum the minimum number of uppercase characters required by the
+   *                                 password
+   * @param passwordLowercaseMinimum the minimum number of lowercase characters required by the
+   *                                 password
+   * @param passwordDigitMinimum     the minimum number of numerical characters required by the
+   *                                 password
+   * @param passwordSpecialMinimum   the minimum number of special characters required by the
+   *                                 password
+   * @param passwordLengthMinimum    the minimum number of characters required by the password in
+   *                                 total
+   */
   public PasswordUtil(
       @Value("${application.password-requirement.uppercaseMinimum}") int passwordUppercaseMinimum,
       @Value("${application.password-requirement.lowercaseMinimum}") int passwordLowercaseMinimum,

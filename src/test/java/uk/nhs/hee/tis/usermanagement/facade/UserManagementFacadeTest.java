@@ -447,7 +447,7 @@ class UserManagementFacadeTest {
 
     String password = testClass.triggerPasswordReset(USERNAME);
 
-    verify(authenticationAdminService).updatePassword(eq(USERNAME), eq("Password1!"), eq(true));
+    verify(authenticationAdminService).updatePassword(USERNAME, "Password1!", true);
     Assertions.assertNotNull(password);
   }
 

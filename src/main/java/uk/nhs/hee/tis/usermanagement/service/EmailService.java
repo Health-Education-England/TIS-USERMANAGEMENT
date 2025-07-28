@@ -16,6 +16,11 @@ public class EmailService {
   private final String tisSender;
   private final SesClient sesClient;
 
+  /**
+   * Constructor for EmailService
+   * @param tisSender the TIS email address from which emails are sent
+   * @param sesClient SES client class
+   */
   public EmailService(@Value("${application.tis-sender-email}") String tisSender,
       SesClient sesClient) {
     this.tisSender = tisSender;
