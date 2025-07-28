@@ -14,7 +14,6 @@ import java.util.Optional;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,23 +42,32 @@ public class UserManagementFacade {
 
   private static final Collection<String> entities = Collections.singleton("HEE");
 
-  @Autowired
   private ProfileService profileService;
 
-  @Autowired
   private TcsService tcsService;
 
-  @Autowired
   private AuthenticationAdminService authenticationAdminService;
 
-  @Autowired
   private HeeUserMapper heeUserMapper;
 
-  @Autowired
   private ReferenceService referenceService;
 
-  @Autowired
   private ApplicationEventPublisher applicationEventPublisher;
+
+  private PasswordUtil passwordUtil;
+
+  public UserManagementFacade(ProfileService profileService, TcsService tcsService,
+      AuthenticationAdminService authenticationAdminService, HeeUserMapper heeUserMapper,
+      ReferenceService referenceService, ApplicationEventPublisher applicationEventPublisher,
+      PasswordUtil passwordUtil) {
+    this.profileService = profileService;
+    this.tcsService = tcsService;
+    this.authenticationAdminService = authenticationAdminService;
+    this.heeUserMapper = heeUserMapper;
+    this.referenceService = referenceService;
+    this.applicationEventPublisher = applicationEventPublisher;
+    this.passwordUtil = passwordUtil;
+  }
 
   public UserDTO getCompleteUser(String username) {
     Optional<HeeUserDTO> optionalHeeUserDTO = profileService.getUserByUsername(username);
@@ -220,7 +228,7 @@ public class UserManagementFacade {
    * @return the updated temporary password
    */
   public String triggerPasswordReset(String username) {
-    String tempPassword = PasswordUtil.generatePassword();
+    String tempPassword = passwordUtil.generatePassword();
     authenticationAdminService.updatePassword(username, tempPassword, true);
     return tempPassword;
   }

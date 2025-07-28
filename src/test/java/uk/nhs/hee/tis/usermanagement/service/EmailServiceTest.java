@@ -7,13 +7,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static uk.nhs.hee.tis.usermanagement.service.EmailService.TIS_SENDER;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 import software.amazon.awssdk.services.ses.model.SesException;
@@ -29,6 +29,7 @@ class EmailServiceTest {
   @BeforeEach
   void setUp() {
     emailService = new EmailService(sesClient);
+    ReflectionTestUtils.setField(emailService, "TIS_SENDER", "no-reply@tis.nhs.uk");
   }
 
   @Test
@@ -47,7 +48,7 @@ class EmailServiceTest {
     SendEmailRequest request = captor.getValue();
     assertEquals(email, request.destination().toAddresses().get(0));
     assertTrue(request.message().body().text().data().contains(password));
-    assertEquals(TIS_SENDER, request.source());
+    assertEquals("no-reply@tis.nhs.uk", request.source());
   }
 
   @Test

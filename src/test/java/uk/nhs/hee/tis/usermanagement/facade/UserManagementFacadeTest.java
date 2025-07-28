@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -40,6 +41,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
@@ -54,6 +56,7 @@ import uk.nhs.hee.tis.usermanagement.service.AuthenticationAdminService;
 import uk.nhs.hee.tis.usermanagement.service.ProfileService;
 import uk.nhs.hee.tis.usermanagement.service.ReferenceService;
 import uk.nhs.hee.tis.usermanagement.service.TcsService;
+import uk.nhs.hee.tis.usermanagement.util.PasswordUtil;
 
 @ExtendWith(MockitoExtension.class)
 class UserManagementFacadeTest {
@@ -78,8 +81,20 @@ class UserManagementFacadeTest {
   @Mock
   ApplicationEventPublisher applicationEventPublisher;
 
+  @Mock
+  PasswordUtil passwordUtil;
+
   @Spy
   private HeeUserMapper userMapper;
+
+  @BeforeEach
+  public void setup() {
+    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_UPPERCASE_MINIMUM", 1);
+    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_LOWERCASE_MINIMUM", 1);
+    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_DIGIT_MINIMUM", 1);
+    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_SPECIAL_MINIMUM", 1);
+    ReflectionTestUtils.setField(passwordUtil, "PASSWORD_LENGTH_MINIMUM", 12);
+  }
 
   @Test
   void shouldGetAllAssignableRoles() {
@@ -439,7 +454,10 @@ class UserManagementFacadeTest {
 
   @Test
   void shouldTriggerPasswordReset() {
+    when(passwordUtil.generatePassword()).thenReturn("Password1!");
+
     String password = testClass.triggerPasswordReset(USERNAME);
+
     verify(authenticationAdminService).updatePassword(eq(USERNAME), any(String.class), eq(true));
     Assertions.assertNotNull(password);
   }

@@ -1,6 +1,7 @@
 package uk.nhs.hee.tis.usermanagement.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.SendEmailRequest;
@@ -12,7 +13,12 @@ import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 @Service
 public class EmailService {
 
-  protected static final String TIS_SENDER = "no-reply@tis.nhs.uk";
+  private static String TIS_SENDER;
+
+  @Value("${application.tis-sender-email}")
+  private void setTisSender(String value) {
+    EmailService.TIS_SENDER = value;
+  }
 
   private final SesClient sesClient;
 
@@ -39,7 +45,7 @@ public class EmailService {
     SendEmailRequest emailRequest = SendEmailRequest.builder()
         .destination(d -> d.toAddresses(toEmail))
         .message(m -> m.subject(c -> c.data(subject)).body(b -> b.text(c -> c.data(bodyText))))
-        .source(TIS_SENDER)
+        .source(EmailService.TIS_SENDER)
         .build();
 
     try {
