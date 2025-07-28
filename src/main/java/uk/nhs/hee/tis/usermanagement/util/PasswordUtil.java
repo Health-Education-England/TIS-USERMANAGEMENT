@@ -14,15 +14,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class PasswordUtil {
 
-  private final int PASSWORD_UPPERCASE_MINIMUM;
+  private final int passwordUppercaseMinimum;
 
-  private final int PASSWORD_LOWERCASE_MINIMUM;
+  private final int passwordLowercaseMinimum;
 
-  private final int PASSWORD_DIGIT_MINIMUM;
+  private final int passwordDigitMinimum;
 
-  private final int PASSWORD_SPECIAL_MINIMUM;
+  private final int passwordSpecialMinimum;
 
-  private final int PASSWORD_LENGTH_MINIMUM;
+  private final int passwordLengthMinimum;
 
   public PasswordUtil(
       @Value("${application.password-requirement.uppercaseMinimum}") int passwordUppercaseMinimum,
@@ -30,11 +30,11 @@ public class PasswordUtil {
       @Value("${application.password-requirement.digitMinimum}") int passwordDigitMinimum,
       @Value("${application.password-requirement.specialMinimum}") int passwordSpecialMinimum,
       @Value("${application.password-requirement.lengthMinimum}") int passwordLengthMinimum) {
-    PASSWORD_UPPERCASE_MINIMUM = passwordUppercaseMinimum;
-    PASSWORD_LOWERCASE_MINIMUM = passwordLowercaseMinimum;
-    PASSWORD_DIGIT_MINIMUM = passwordDigitMinimum;
-    PASSWORD_SPECIAL_MINIMUM = passwordSpecialMinimum;
-    PASSWORD_LENGTH_MINIMUM = passwordLengthMinimum;
+    this.passwordUppercaseMinimum = passwordUppercaseMinimum;
+    this.passwordLowercaseMinimum = passwordLowercaseMinimum;
+    this.passwordDigitMinimum = passwordDigitMinimum;
+    this.passwordSpecialMinimum = passwordSpecialMinimum;
+    this.passwordLengthMinimum = passwordLengthMinimum;
   }
 
   /**
@@ -45,14 +45,14 @@ public class PasswordUtil {
   public String generatePassword() {
     PasswordGenerator generator = new PasswordGenerator();
     CharacterRule upper = new CharacterRule(EnglishCharacterData.UpperCase,
-        PASSWORD_UPPERCASE_MINIMUM);
+        passwordUppercaseMinimum);
     CharacterRule lower = new CharacterRule(EnglishCharacterData.LowerCase,
-        PASSWORD_LOWERCASE_MINIMUM);
-    CharacterRule digit = new CharacterRule(EnglishCharacterData.Digit, PASSWORD_SPECIAL_MINIMUM);
+        passwordLowercaseMinimum);
+    CharacterRule digit = new CharacterRule(EnglishCharacterData.Digit, passwordSpecialMinimum);
     CharacterRule special = new CharacterRule(EnglishCharacterData.SpecialAscii,
-        PASSWORD_DIGIT_MINIMUM);
+        passwordDigitMinimum);
 
-    return generator.generatePassword(PASSWORD_LENGTH_MINIMUM,
+    return generator.generatePassword(passwordLengthMinimum,
         Arrays.asList(upper, lower, digit, special));
   }
 }
