@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDisabl
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminEnableUserRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminSetUserPasswordRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.CognitoIdentityProviderException;
@@ -159,7 +160,19 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
 
   @Override
   public boolean updatePassword(String userId, String password, boolean tempPassword) {
-    throw new UnsupportedOperationException("Users must reset their own password.");
+    AdminSetUserPasswordRequest request = AdminSetUserPasswordRequest.builder()
+        .userPoolId(userPoolId)
+        .username(userId)
+        .password(password)
+        .permanent(!tempPassword)
+        .build();
+    try {
+      cognitoClient.adminSetUserPassword(request);
+      return true;
+    } catch (Exception e) {
+      log.error("Setting temp password for {} failed.", userId, e);
+      throw e;
+    }
   }
 
   @Override

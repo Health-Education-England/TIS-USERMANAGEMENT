@@ -14,7 +14,6 @@ import java.util.Optional;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +33,7 @@ import uk.nhs.hee.tis.usermanagement.service.AuthenticationAdminService;
 import uk.nhs.hee.tis.usermanagement.service.ProfileService;
 import uk.nhs.hee.tis.usermanagement.service.ReferenceService;
 import uk.nhs.hee.tis.usermanagement.service.TcsService;
+import uk.nhs.hee.tis.usermanagement.util.PasswordUtil;
 
 @Component
 public class UserManagementFacade {
@@ -42,23 +42,42 @@ public class UserManagementFacade {
 
   private static final Collection<String> entities = Collections.singleton("HEE");
 
-  @Autowired
   private ProfileService profileService;
 
-  @Autowired
   private TcsService tcsService;
 
-  @Autowired
   private AuthenticationAdminService authenticationAdminService;
 
-  @Autowired
   private HeeUserMapper heeUserMapper;
 
-  @Autowired
   private ReferenceService referenceService;
 
-  @Autowired
   private ApplicationEventPublisher applicationEventPublisher;
+
+  private PasswordUtil passwordUtil;
+
+  /**
+   * Constructor for UserManagementFacade.
+   *
+   * @param profileService             the ProfileService class
+   * @param tcsService                 the TcsService class
+   * @param authenticationAdminService the AuthenticationAdminService class
+   * @param heeUserMapper              the HeeUserMapper class
+   * @param referenceService           the ReferenceService class
+   * @param applicationEventPublisher  the ApplicationEventPublisher class
+   */
+  public UserManagementFacade(ProfileService profileService, TcsService tcsService,
+      AuthenticationAdminService authenticationAdminService, HeeUserMapper heeUserMapper,
+      ReferenceService referenceService, ApplicationEventPublisher applicationEventPublisher,
+      PasswordUtil passwordUtil) {
+    this.profileService = profileService;
+    this.tcsService = tcsService;
+    this.authenticationAdminService = authenticationAdminService;
+    this.heeUserMapper = heeUserMapper;
+    this.referenceService = referenceService;
+    this.applicationEventPublisher = applicationEventPublisher;
+    this.passwordUtil = passwordUtil;
+  }
 
   public UserDTO getCompleteUser(String username) {
     Optional<HeeUserDTO> optionalHeeUserDTO = profileService.getUserByUsername(username);
@@ -210,5 +229,17 @@ public class UserManagementFacade {
     } catch (Exception e) {
       throw new IdentityProviderException(e.getMessage(), e);
     }
+  }
+
+  /**
+   * Trigger password reset for a user.
+   *
+   * @param username the username to be password reset triggered
+   * @return the updated temporary password
+   */
+  public String triggerPasswordReset(String username) {
+    String tempPassword = passwordUtil.generatePassword();
+    authenticationAdminService.updatePassword(username, tempPassword, true);
+    return tempPassword;
   }
 }
