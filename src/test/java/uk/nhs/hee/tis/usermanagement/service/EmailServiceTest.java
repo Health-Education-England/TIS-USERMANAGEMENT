@@ -28,8 +28,7 @@ class EmailServiceTest {
 
   @BeforeEach
   void setUp() {
-    emailService = new EmailService(sesClient);
-    ReflectionTestUtils.setField(emailService, "TIS_SENDER", "no-reply@tis.nhs.uk");
+    emailService = new EmailService("no-reply@tis.nhs.uk",sesClient);
   }
 
   @Test
