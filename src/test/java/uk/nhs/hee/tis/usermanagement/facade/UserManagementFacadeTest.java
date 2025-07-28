@@ -54,6 +54,7 @@ import uk.nhs.hee.tis.usermanagement.service.AuthenticationAdminService;
 import uk.nhs.hee.tis.usermanagement.service.ProfileService;
 import uk.nhs.hee.tis.usermanagement.service.ReferenceService;
 import uk.nhs.hee.tis.usermanagement.service.TcsService;
+import uk.nhs.hee.tis.usermanagement.util.PasswordUtil;
 
 @ExtendWith(MockitoExtension.class)
 class UserManagementFacadeTest {
@@ -77,6 +78,9 @@ class UserManagementFacadeTest {
 
   @Mock
   ApplicationEventPublisher applicationEventPublisher;
+
+  @Mock
+  PasswordUtil passwordUtil;
 
   @Spy
   private HeeUserMapper userMapper;
@@ -439,8 +443,11 @@ class UserManagementFacadeTest {
 
   @Test
   void shouldTriggerPasswordReset() {
+    when(passwordUtil.generatePassword()).thenReturn("Password1!");
+
     String password = testClass.triggerPasswordReset(USERNAME);
-    verify(authenticationAdminService).updatePassword(eq(USERNAME), any(String.class), eq(true));
+
+    verify(authenticationAdminService).updatePassword(eq(USERNAME), eq("Password1!"), eq(true));
     Assertions.assertNotNull(password);
   }
 

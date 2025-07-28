@@ -1,6 +1,7 @@
 package uk.nhs.hee.tis.usermanagement.service;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.SendEmailRequest;
@@ -12,18 +13,19 @@ import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 @Service
 public class EmailService {
 
-  protected static final String TIS_SENDER = "no-reply@tis.nhs.uk";
-
+  private final String tisSender;
   private final SesClient sesClient;
 
-  public EmailService(SesClient sesClient) {
+  public EmailService(@Value("${application.tis-sender-email}") String tisSender,
+      SesClient sesClient) {
+    this.tisSender = tisSender;
     this.sesClient = sesClient;
   }
 
   /**
    * Send temporary password to an email address.
    *
-   * @param toEmail the email to be sent to
+   * @param toEmail           the email to be sent to
    * @param temporaryPassword the temporary password
    */
   public void sendTempPasswordEmail(String toEmail, String temporaryPassword) {
@@ -39,7 +41,7 @@ public class EmailService {
     SendEmailRequest emailRequest = SendEmailRequest.builder()
         .destination(d -> d.toAddresses(toEmail))
         .message(m -> m.subject(c -> c.data(subject)).body(b -> b.text(c -> c.data(bodyText))))
-        .source(TIS_SENDER)
+        .source(tisSender)
         .build();
 
     try {

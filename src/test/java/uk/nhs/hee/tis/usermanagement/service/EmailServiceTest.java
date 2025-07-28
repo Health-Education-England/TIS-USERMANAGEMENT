@@ -7,7 +7,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static uk.nhs.hee.tis.usermanagement.service.EmailService.TIS_SENDER;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +27,7 @@ class EmailServiceTest {
 
   @BeforeEach
   void setUp() {
-    emailService = new EmailService(sesClient);
+    emailService = new EmailService("no-reply@tis.nhs.uk", sesClient);
   }
 
   @Test
@@ -47,7 +46,7 @@ class EmailServiceTest {
     SendEmailRequest request = captor.getValue();
     assertEquals(email, request.destination().toAddresses().get(0));
     assertTrue(request.message().body().text().data().contains(password));
-    assertEquals(TIS_SENDER, request.source());
+    assertEquals("no-reply@tis.nhs.uk", request.source());
   }
 
   @Test
