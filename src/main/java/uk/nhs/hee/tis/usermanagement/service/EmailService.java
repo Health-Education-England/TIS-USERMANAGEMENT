@@ -17,7 +17,8 @@ public class EmailService {
   private final SesClient sesClient;
 
   /**
-   * Constructor for EmailService
+   * Constructor for EmailService.
+   *
    * @param tisSender the TIS email address from which emails are sent
    * @param sesClient SES client class
    */

@@ -25,7 +25,7 @@ public class PasswordUtil {
   private final int passwordLengthMinimum;
 
   /**
-   * Constructor for PasswordUtil
+   * Constructor for PasswordUtil.
    *
    * @param passwordUppercaseMinimum the minimum number of uppercase characters required by the
    *                                 password
