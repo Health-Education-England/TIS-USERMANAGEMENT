@@ -56,6 +56,16 @@ public class UserManagementFacade {
 
   private PasswordUtil passwordUtil;
 
+  /**
+   * Constructor for UserManagementFacade.
+   *
+   * @param profileService             the ProfileService class
+   * @param tcsService                 the TcsService class
+   * @param authenticationAdminService the AuthenticationAdminService class
+   * @param heeUserMapper              the HeeUserMapper class
+   * @param referenceService           the ReferenceService class
+   * @param applicationEventPublisher  the ApplicationEventPublisher class
+   */
   public UserManagementFacade(ProfileService profileService, TcsService tcsService,
       AuthenticationAdminService authenticationAdminService, HeeUserMapper heeUserMapper,
       ReferenceService referenceService, ApplicationEventPublisher applicationEventPublisher,
