@@ -14,7 +14,7 @@ class PasswordUtilTest {
   private PasswordUtil passwordUtil;
 
   @BeforeEach
-  public void setup() {
+  void setup() {
     passwordUtil = new PasswordUtil(1, 1, 1, 1, 12);
   }
 
