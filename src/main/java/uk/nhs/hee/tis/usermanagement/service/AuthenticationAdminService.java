@@ -27,6 +27,20 @@ public interface AuthenticationAdminService {
   Optional<AuthenticationUserDto> getUser(String username);
 
   /**
+   * Get the user from the authentication provider for the given username, including MFA info.
+   *
+   * @param username The username to get the user for.
+   * @return An optional user, empty if not found.
+   */
+  Optional<AuthenticationUserDto> getUserWithMfaInfo(String username);
+
+  /**
+   * Reset the user's MFA settings in the authentication provider.
+   *
+   * @param username The username to reset the MFA settings for.
+   */
+  void resetUserMfaSettings(String username);
+  /**
    * Update the user in the authentication provider.
    *
    * @param authenticationUser The user details to update.

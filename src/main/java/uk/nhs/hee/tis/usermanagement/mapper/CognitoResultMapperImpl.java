@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserResponse;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AuthEventType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.EventContextDataType;
@@ -94,6 +95,29 @@ public class CognitoResultMapperImpl extends CognitoResultMapper {
     authenticationUserDto.setAttributes(convertAttributes(user.attributes()));
 
     extractAttributes(authenticationUserDto);
+
+    return authenticationUserDto;
+  }
+
+  @Override
+  public AuthenticationUserDto toAuthenticationUser(AdminGetUserResponse cognitoResult) {
+    if (cognitoResult == null) {
+      return null;
+    }
+
+    AuthenticationUserDto authenticationUserDto = new AuthenticationUserDto();
+    authenticationUserDto.setUsername(cognitoResult.username());
+    if (cognitoResult.enabled() != null) {
+      authenticationUserDto.setEnabled(cognitoResult.enabled());
+    }
+    authenticationUserDto.setAttributes(convertAttributes(cognitoResult.userAttributes()));
+
+    extractAttributes(authenticationUserDto);
+
+    if (cognitoResult.hasUserMFASettingList()) {
+      authenticationUserDto.setUserMfaSettingList(cognitoResult.userMFASettingList());
+    }
+    authenticationUserDto.setPreferredMfaSetting(cognitoResult.preferredMfaSetting());
 
     return authenticationUserDto;
   }

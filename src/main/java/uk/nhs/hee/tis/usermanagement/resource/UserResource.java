@@ -86,6 +86,18 @@ public class UserResource {
   }
 
   /**
+   * Resets a user's MFA settings, removing any configured settings so they can be reconfigured on
+   * next login.
+   *
+   * @param username The name of the user to reset MFA settings for
+   */
+  @PreAuthorize("hasAuthority('heeuser:add:modify')")
+  @PostMapping("/{username}/mfa/reset")
+  public void resetUserMfaSettings(@PathVariable String username) {
+    userFacade.resetUserMfaSettings(username);
+  }
+
+  /**
    * Gets a list of users, matching a search term if one is provided.
    *
    * @param pageable Definition of the page to return

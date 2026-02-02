@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -361,5 +362,23 @@ class UserResourceTest {
         .andExpect(jsonPath("$.errorCode").value("Internal Server Error"))
         .andExpect(jsonPath("$.errorType").value("Internal Server Error"))
         .andExpect(jsonPath("$.message").value(message));
+  }
+
+  @Test
+  void shouldResetUserMfaSettings() throws Exception {
+    doNothing().when(mockFacade).resetUserMfaSettings("foo");
+
+    mockMvc.perform(post("/api/users/foo/mfa/reset"))
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  void shouldReturnErrorWhenResetUserMfaSettingsFails() throws Exception {
+    UserNotFoundException exception = new UserNotFoundException("foo", "Cognito");
+    doThrow(exception).when(mockFacade).resetUserMfaSettings("foo");
+
+    mockMvc.perform(post("/api/users/foo/mfa/reset"))
+        .andExpect(status().isInternalServerError())
+        .andExpect(jsonPath("$").value(exception.getMessage()));
   }
 }

@@ -42,7 +42,7 @@ public class HeeUserMapper {
     Preconditions.checkNotNull(userDto, "stop being stooopid");
     return mapUserAttributes(userDto.getName(), userDto.getFirstName(), userDto.getLastName(),
         userDto.getGmcId(),
-        userDto.getPhoneNumber(), userDto.getEmailAddress(), userDto.getActive(),
+        userDto.getPhoneNumber(), userDto.getEmailAddress(), userDto.isActive(),
         userDto.getLocalOffices(),
         userDto.getRoles(), userDto.getAssociatedTrusts(), userDto.getAssociatedProgrammes(),
         knownTrusts, knownProgrammes);
@@ -179,6 +179,8 @@ public class HeeUserMapper {
     if (authenticationUserDto != null) {
       userDto.setAuthId(authenticationUserDto.getId());
       userDto.setActive(authenticationUserDto.isEnabled());
+      userDto.setPreferredMfaSetting(authenticationUserDto.getPreferredMfaSetting());
+      userDto.setUserMfaSettingList(authenticationUserDto.getUserMfaSettingList());
     }
     return userDto;
   }

@@ -155,7 +155,7 @@ public class KeyCloakAdminClientService extends AbstractAuthenticationAdminServi
     attributes.put("DBC", dbcs);
     return User.create(userDTO.getAuthId(), userDTO.getFirstName(), userDTO.getLastName(),
         userDTO.getName(),
-        userDTO.getEmailAddress(), null, null, attributes, userDTO.getActive());
+        userDTO.getEmailAddress(), null, null, attributes, userDTO.isActive());
   }
 
   private User heeUserToKeycloakUser(CreateUserDTO createUserDTO) {
@@ -176,6 +176,16 @@ public class KeyCloakAdminClientService extends AbstractAuthenticationAdminServi
 
   @Override
   public List<UserAuthEventDto> getUserAuthEvents(String username) {
+    throw new NotImplementedException();
+  }
+
+  @Override
+  public Optional<AuthenticationUserDto> getUserWithMfaInfo(String username) {
+    throw new NotImplementedException();
+  }
+
+  @Override
+  public void resetUserMfaSettings(String username) {
     throw new NotImplementedException();
   }
 }

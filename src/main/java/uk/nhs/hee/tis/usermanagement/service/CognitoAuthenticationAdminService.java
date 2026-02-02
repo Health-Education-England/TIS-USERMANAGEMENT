@@ -14,8 +14,11 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreate
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDeleteUserRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDisableUserRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminEnableUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserResponse;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminSetUserMfaPreferenceRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminSetUserPasswordRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
@@ -23,6 +26,7 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.CognitoIden
 import software.amazon.awssdk.services.cognitoidentityprovider.model.InvalidParameterException;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ListUsersResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.UserNotFoundException;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.UserType;
 import uk.nhs.hee.tis.usermanagement.DTOs.AuthenticationUserDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
@@ -119,6 +123,31 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
       log.warn("Invalid parameter when querying user with email {}: {}", username, e.getMessage(),
           e);
       return Optional.empty();
+    }
+  }
+
+  @Override
+  public Optional<AuthenticationUserDto> getUserWithMfaInfo(String username) {
+    AdminGetUserRequest request = AdminGetUserRequest.builder()
+        .userPoolId(userPoolId)
+        .username(username)
+        .build();
+    AdminGetUserResponse response = cognitoClient.adminGetUser(request);
+    return Optional.of(resultMapper.toAuthenticationUser(response));
+  }
+
+  @Override
+  public void resetUserMfaSettings(String username) {
+    AdminSetUserMfaPreferenceRequest request = AdminSetUserMfaPreferenceRequest.builder()
+        .userPoolId(userPoolId)
+        .username(username)
+        .softwareTokenMfaSettings(builder -> builder.enabled(false).build())
+        .build();
+    try {
+      cognitoClient.adminSetUserMFAPreference(request);
+    } catch (UserNotFoundException e) {
+      throw new uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException(username,
+          SERVICE_NAME);
     }
   }
 

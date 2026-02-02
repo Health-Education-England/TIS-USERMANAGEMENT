@@ -327,4 +327,14 @@ public class KeyCloakAdminClientServiceTest {
   public void getUserAuthEventsNotImplemented() {
     assertThrows(NotImplementedException.class, () -> testObj.getUserAuthEvents("user"));
   }
+
+  @Test
+  public void getUserWithMfaInfoNotImplemented() {
+    assertThrows(NotImplementedException.class, () -> testObj.getUserWithMfaInfo("user"));
+  }
+
+  @Test
+  public void resetUserMfaSettingsNotImplemented() {
+    assertThrows(NotImplementedException.class, () -> testObj.resetUserMfaSettings("user"));
+  }
 }
