@@ -6,6 +6,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -36,9 +37,12 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserRequest;
@@ -46,8 +50,11 @@ import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreate
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDeleteUserRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminDisableUserRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminEnableUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserRequest;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserResponse;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminListUserAuthEventsResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminSetUserMfaPreferenceRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminSetUserPasswordRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminUpdateUserAttributesRequest;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
@@ -72,6 +79,7 @@ import uk.nhs.hee.tis.usermanagement.mapper.AuthenticationUserMapperImpl;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoRequestMapperImpl;
 import uk.nhs.hee.tis.usermanagement.mapper.CognitoResultMapperImpl;
 
+@ExtendWith(MockitoExtension.class)
 class CognitoAuthenticationAdminServiceTest {
 
   private static final String USER_POOL_ID = "region-1_userPool123";
@@ -87,6 +95,10 @@ class CognitoAuthenticationAdminServiceTest {
   private static final String FAMILY_NAME_VALUE = "Gilliam";
   private static final String SUB_FIELD = "sub";
   private static final String SUB_VALUE = UUID.randomUUID().toString();
+  private static final List<String> MFA_SETTINGS = Arrays.asList("EMAIL_OTP", "SOFTWARE_TOKEN_MFA");
+
+  @Captor
+  ArgumentCaptor<AdminSetUserMfaPreferenceRequest> mfaRequestCaptor;
 
   private CognitoAuthenticationAdminService service;
 
@@ -315,6 +327,63 @@ class CognitoAuthenticationAdminServiceTest {
     Optional<AuthenticationUserDto> optionalAuthenticationUser = service.getUser(USERNAME);
 
     assertThat("Unexpected user found.", optionalAuthenticationUser.isPresent(), is(false));
+  }
+
+  @Test
+  void shouldGetUserWithMfaInfo() {
+    AdminGetUserResponse cognitoResponse = AdminGetUserResponse.builder()
+        .username(USERNAME)
+        .userMFASettingList(MFA_SETTINGS)
+        .build();
+    when(cognitoClient.adminGetUser(any(AdminGetUserRequest.class)))
+        .thenReturn(cognitoResponse);
+
+    Optional<AuthenticationUserDto> result = service.getUserWithMfaInfo(USERNAME);
+    assertTrue(result.isPresent());
+    AuthenticationUserDto authenticationUserDto = result.get();
+    assertEquals(MFA_SETTINGS, authenticationUserDto.getUserMFASettingList());
+  }
+
+  @Test
+  void shouldThrowExceptionWhenGetUserWithMfaInfoGetsException() {
+    String errorMessage = "Cognito error";
+    when(cognitoClient.adminGetUser(any(AdminGetUserRequest.class)))
+        .thenThrow(new RuntimeException(errorMessage));
+
+    // Expect exception
+    RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+      service.getUserWithMfaInfo(USERNAME);
+    });
+
+    assertEquals(errorMessage, exception.getMessage());
+    verify(cognitoClient).adminGetUser(any(AdminGetUserRequest.class));
+  }
+
+  @Test
+  void shouldResetUserMfaSettings() {
+    when(cognitoClient.adminSetUserMFAPreference(any(AdminSetUserMfaPreferenceRequest.class)))
+        .thenReturn(null);
+
+    assertDoesNotThrow(() -> service.resetUserMfaSettings(USERNAME));
+
+    verify(cognitoClient).adminSetUserMFAPreference(mfaRequestCaptor.capture());
+    AdminSetUserMfaPreferenceRequest request = mfaRequestCaptor.getValue();
+    assertEquals(USER_POOL_ID, request.userPoolId());
+    assertEquals(USERNAME, request.username());
+    assertFalse(request.softwareTokenMfaSettings().enabled());
+  }
+
+  @Test
+  void shouldThrowExceptionWhenUserNotFound() {
+    when(cognitoClient.adminSetUserMFAPreference(any(AdminSetUserMfaPreferenceRequest.class)))
+        .thenThrow(UserNotFoundException.builder().message("Not found").build());
+
+    uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException ex =
+        assertThrows(uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException.class, () ->
+            service.resetUserMfaSettings(USERNAME));
+
+    assertTrue(ex.getMessage().contains(USERNAME));
+    verify(cognitoClient).adminSetUserMFAPreference(any(AdminSetUserMfaPreferenceRequest.class));
   }
 
   @Test

@@ -81,7 +81,7 @@ public class UserManagementFacade {
 
   public UserDTO getCompleteUser(String username) {
     Optional<HeeUserDTO> optionalHeeUserDTO = profileService.getUserByUsername(username);
-    Optional<AuthenticationUserDto> optionalAuthenticationUser = authenticationAdminService.getUser(
+    Optional<AuthenticationUserDto> optionalAuthenticationUser = authenticationAdminService.getUserWithMfaInfo(
         username);
 
     HeeUserDTO heeUserDTO = optionalHeeUserDTO.orElseThrow(
@@ -97,6 +97,10 @@ public class UserManagementFacade {
     }
 
     return heeUserMapper.convert(heeUserDTO, authenticationUser);
+  }
+
+  public void resetUserMfaSettings(String username) {
+    authenticationAdminService.resetUserMfaSettings(username);
   }
 
   public UserDTO getUserByNameIgnoreCase(String username) {

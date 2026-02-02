@@ -138,7 +138,7 @@ class UserManagementFacadeTest {
 
   @Test
   void shouldThrowExceptionGettingCompleteUserWhenUserNotFoundInProfile() {
-    when(authenticationAdminService.getUser(USERNAME)).thenReturn(
+    when(authenticationAdminService.getUserWithMfaInfo(USERNAME)).thenReturn(
         Optional.of(new AuthenticationUserDto()));
 
     UserNotFoundException actual = assertThrows(UserNotFoundException.class,
@@ -174,17 +174,21 @@ class UserManagementFacadeTest {
     AuthenticationUserDto authenticationUser = new AuthenticationUserDto();
     authenticationUser.setId("userId1");
     authenticationUser.setEnabled(true);
+    List<String> mfaSettings = Arrays.asList("EMAIL_OTP", "SOFTWARE_TOKEN_MFA");
+    authenticationUser.setUserMFASettingList(mfaSettings);
 
     when(profileService.getUserByUsername(USERNAME)).thenReturn(Optional.of(heeUser));
-    when(authenticationAdminService.getUser(USERNAME)).thenReturn(Optional.of(authenticationUser));
+    when(authenticationAdminService.getUserWithMfaInfo(USERNAME)).thenReturn(
+        Optional.of(authenticationUser));
     when(profileService.getRestrictedRoles()).thenReturn(Set.of(restrictedRole));
 
     UserDTO user = testClass.getCompleteUser(USERNAME);
     assertThat("Unexpected user id.", user.getAuthId(), is("userId1"));
     assertThat("Unexpected user name.", user.getName(), is(USERNAME));
-    assertThat("Unexpected user enabled flag.", user.getActive(), is(true));
+    assertThat("Unexpected user enabled flag.", user.isActive(), is(true));
     assertThat("Unexpected size of roles.", user.getRoles().size(), is(1));
-    assertThat("", user.getRoles().iterator().next(), is(assignableRole));
+    assertThat("Unexpected roles.", user.getRoles().iterator().next(), is(assignableRole));
+    assertThat("Unexpected mfa settings", user.getUserMFASettingList(), is(mfaSettings));
   }
 
   @ParameterizedTest
@@ -199,13 +203,14 @@ class UserManagementFacadeTest {
     authenticationUser.setEnabled(authNStatus);
 
     when(profileService.getUserByUsername(USERNAME)).thenReturn(Optional.of(heeUser));
-    when(authenticationAdminService.getUser(USERNAME)).thenReturn(Optional.of(authenticationUser));
+    when(authenticationAdminService.getUserWithMfaInfo(USERNAME)).thenReturn(
+        Optional.of(authenticationUser));
     when(profileService.getRestrictedRoles()).thenReturn(Set.of());
 
     UserDTO user = testClass.getCompleteUser(USERNAME);
     assertThat("Unexpected user id.", user.getAuthId(), is("userId1"));
     assertThat("Unexpected user name.", user.getName(), is(USERNAME));
-    assertThat("Unexpected user enabled flag.", user.getActive(), is(authNStatus));
+    assertThat("Unexpected user enabled flag.", user.isActive(), is(authNStatus));
   }
 
   @Test
@@ -237,7 +242,7 @@ class UserManagementFacadeTest {
         .collect(Collectors.toSet());
     assertThat("Unexpected user names.", allUserNames, hasItems(USERNAME, "user2"));
     List<Boolean> userActiveFlags = allUsersPage.stream()
-        .map(UserDTO::getActive)
+        .map(UserDTO::isActive)
         .collect(Collectors.toList());
     assertThat("Unexpected Active Flags", userActiveFlags, containsInAnyOrder(true, false));
 

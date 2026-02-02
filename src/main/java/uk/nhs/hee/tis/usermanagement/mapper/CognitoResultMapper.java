@@ -8,6 +8,7 @@ import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminCreateUserResponse;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.AdminGetUserResponse;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AttributeType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.AuthEventType;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.ChallengeResponseType;
@@ -65,6 +66,15 @@ public abstract class CognitoResultMapper {
    * @return the converted authentication user.
    */
   public abstract AuthenticationUserDto toAuthenticationUser(UserType user);
+
+  /**
+   * Convert a cognito admin-get-user result to an authentication user.
+   *
+   * @param cognitoResult the Cognito result to convert.
+   * @return The converted authentication user.
+   */
+  @Mapping(target = "attributes", source = "userAttributes")
+  public abstract AuthenticationUserDto toAuthenticationUser(AdminGetUserResponse cognitoResult);
 
   /**
    * Convert a list of Cognito {@link AttributeType} to a generic map.
