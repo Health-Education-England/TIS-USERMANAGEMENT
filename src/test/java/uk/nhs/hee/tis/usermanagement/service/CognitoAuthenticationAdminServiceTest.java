@@ -341,7 +341,7 @@ class CognitoAuthenticationAdminServiceTest {
     Optional<AuthenticationUserDto> result = service.getUserWithMfaInfo(USERNAME);
     assertTrue(result.isPresent());
     AuthenticationUserDto authenticationUserDto = result.get();
-    assertEquals(MFA_SETTINGS, authenticationUserDto.getUserMFASettingList());
+    assertEquals(MFA_SETTINGS, authenticationUserDto.getUserMfaSettingList());
   }
 
   @Test
@@ -350,7 +350,6 @@ class CognitoAuthenticationAdminServiceTest {
     when(cognitoClient.adminGetUser(any(AdminGetUserRequest.class)))
         .thenThrow(new RuntimeException(errorMessage));
 
-    // Expect exception
     RuntimeException exception = assertThrows(RuntimeException.class, () -> {
       service.getUserWithMfaInfo(USERNAME);
     });

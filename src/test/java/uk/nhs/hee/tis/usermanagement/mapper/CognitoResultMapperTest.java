@@ -123,6 +123,6 @@ class CognitoResultMapperTest {
     assertEquals(FAMILY_NAME, userDto.getAttributes().get(ATTR_NAME_FAMILY_NAME).get(0));
     assertEquals(EMAIL, userDto.getAttributes().get(ATTR_NAME_EMAIL).get(0));
     assertEquals(PREFERRED_MFA, userDto.getPreferredMfaSetting());
-    assertEquals(MFA_SETTINGS, userDto.getUserMFASettingList());
+    assertEquals(MFA_SETTINGS, userDto.getUserMfaSettingList());
   }
 }

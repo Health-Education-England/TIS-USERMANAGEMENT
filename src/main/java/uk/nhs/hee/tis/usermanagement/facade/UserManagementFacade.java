@@ -81,8 +81,8 @@ public class UserManagementFacade {
 
   public UserDTO getCompleteUser(String username) {
     Optional<HeeUserDTO> optionalHeeUserDTO = profileService.getUserByUsername(username);
-    Optional<AuthenticationUserDto> optionalAuthenticationUser = authenticationAdminService.getUserWithMfaInfo(
-        username);
+    Optional<AuthenticationUserDto> optionalAuthenticationUser =
+        authenticationAdminService.getUserWithMfaInfo(username);
 
     HeeUserDTO heeUserDTO = optionalHeeUserDTO.orElseThrow(
         () -> new UserNotFoundException(username, ProfileService.NAME));
@@ -99,6 +99,11 @@ public class UserManagementFacade {
     return heeUserMapper.convert(heeUserDTO, authenticationUser);
   }
 
+  /**
+   * Reset the MFA settings for a user.
+   *
+   * @param username the username to reset MFA settings for
+   */
   public void resetUserMfaSettings(String username) {
     authenticationAdminService.resetUserMfaSettings(username);
   }

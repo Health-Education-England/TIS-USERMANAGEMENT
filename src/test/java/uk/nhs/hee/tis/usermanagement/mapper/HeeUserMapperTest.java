@@ -70,7 +70,7 @@ class HeeUserMapperTest {
     authUser.setId(SUB);
     authUser.setEnabled(true);
     authUser.setPreferredMfaSetting(PREFERRED_MFA);
-    authUser.setUserMFASettingList(MFA_SETTINGS);
+    authUser.setUserMfaSettingList(MFA_SETTINGS);
 
     // when
     UserDTO result = heeUserMapper.convert(heeUser, authUser);
@@ -91,7 +91,7 @@ class HeeUserMapperTest {
     assertEquals(SUB, result.getAuthId());
     assertTrue(result.isActive());
     assertEquals(PREFERRED_MFA, result.getPreferredMfaSetting());
-    assertEquals(MFA_SETTINGS, result.getUserMFASettingList());
+    assertEquals(MFA_SETTINGS, result.getUserMfaSettingList());
   }
 
   @Test

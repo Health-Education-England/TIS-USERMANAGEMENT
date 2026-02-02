@@ -175,7 +175,7 @@ class UserManagementFacadeTest {
     authenticationUser.setId("userId1");
     authenticationUser.setEnabled(true);
     List<String> mfaSettings = Arrays.asList("EMAIL_OTP", "SOFTWARE_TOKEN_MFA");
-    authenticationUser.setUserMFASettingList(mfaSettings);
+    authenticationUser.setUserMfaSettingList(mfaSettings);
 
     when(profileService.getUserByUsername(USERNAME)).thenReturn(Optional.of(heeUser));
     when(authenticationAdminService.getUserWithMfaInfo(USERNAME)).thenReturn(
@@ -188,7 +188,7 @@ class UserManagementFacadeTest {
     assertThat("Unexpected user enabled flag.", user.isActive(), is(true));
     assertThat("Unexpected size of roles.", user.getRoles().size(), is(1));
     assertThat("Unexpected roles.", user.getRoles().iterator().next(), is(assignableRole));
-    assertThat("Unexpected mfa settings", user.getUserMFASettingList(), is(mfaSettings));
+    assertThat("Unexpected mfa settings", user.getUserMfaSettingList(), is(mfaSettings));
   }
 
   @ParameterizedTest

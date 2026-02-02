@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Set;
 import lombok.Data;
 
+/**
+ * Data Transfer Object for User details.
+ */
 @Data
 public class UserDTO {
 
@@ -20,6 +23,6 @@ public class UserDTO {
   private Set<String> localOffices = new HashSet<>();
   private Set<String> associatedTrusts = new HashSet<>();
   private Set<String> associatedProgrammes = new HashSet<>();
-  private List<String> userMFASettingList;
+  private List<String> userMfaSettingList;
   private String preferredMfaSetting;
 }

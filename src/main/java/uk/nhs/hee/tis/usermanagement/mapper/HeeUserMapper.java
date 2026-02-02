@@ -180,7 +180,7 @@ public class HeeUserMapper {
       userDto.setAuthId(authenticationUserDto.getId());
       userDto.setActive(authenticationUserDto.isEnabled());
       userDto.setPreferredMfaSetting(authenticationUserDto.getPreferredMfaSetting());
-      userDto.setUserMFASettingList(authenticationUserDto.getUserMFASettingList());
+      userDto.setUserMfaSettingList(authenticationUserDto.getUserMfaSettingList());
     }
     return userDto;
   }

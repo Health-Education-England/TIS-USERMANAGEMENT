@@ -20,6 +20,6 @@ public class AuthenticationUserDto {
   private Map<String, List<String>> attributes = new HashMap<>();
   private String password;
   private Boolean temporaryPassword;
-  private List<String> userMFASettingList;
+  private List<String> userMfaSettingList;
   private String preferredMfaSetting;
 }

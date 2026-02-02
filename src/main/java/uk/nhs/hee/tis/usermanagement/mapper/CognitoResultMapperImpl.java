@@ -115,7 +115,7 @@ public class CognitoResultMapperImpl extends CognitoResultMapper {
     extractAttributes(authenticationUserDto);
 
     if (cognitoResult.hasUserMFASettingList()) {
-      authenticationUserDto.setUserMFASettingList(cognitoResult.userMFASettingList());
+      authenticationUserDto.setUserMfaSettingList(cognitoResult.userMFASettingList());
     }
     authenticationUserDto.setPreferredMfaSetting(cognitoResult.preferredMfaSetting());
 
