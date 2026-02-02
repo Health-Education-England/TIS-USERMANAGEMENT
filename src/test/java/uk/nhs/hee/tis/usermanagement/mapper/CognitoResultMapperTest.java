@@ -1,6 +1,7 @@
 package uk.nhs.hee.tis.usermanagement.mapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.Arrays;
 import java.util.List;
@@ -89,7 +90,7 @@ class CognitoResultMapperTest {
   }
 
   @Test
-  void shouldMapAdminGetUserResponseToAuthenticationUser() {
+  void shouldMapAdminGetUserResponseToAuthenticationUserWithMfaSettings() {
     AdminGetUserResponse adminGetUserResponse = AdminGetUserResponse.builder()
         .username(EMAIL)
         .userAttributes(
@@ -124,5 +125,41 @@ class CognitoResultMapperTest {
     assertEquals(EMAIL, userDto.getAttributes().get(ATTR_NAME_EMAIL).get(0));
     assertEquals(PREFERRED_MFA, userDto.getPreferredMfaSetting());
     assertEquals(MFA_SETTINGS, userDto.getUserMfaSettingList());
+  }
+
+  @Test
+  void shouldMapAdminGetUserResponseToAuthenticationUserWithoutMfaSettings() {
+    AdminGetUserResponse adminGetUserResponse = AdminGetUserResponse.builder()
+        .username(EMAIL)
+        .userAttributes(
+            AttributeType.builder().name(ATTR_NAME_SUB).value(SUB).build(),
+            AttributeType.builder().name(ATTR_NAME_GIVEN_NAME).value(GIVEN_NAME).build(),
+            AttributeType.builder().name(ATTR_NAME_FAMILY_NAME).value(FAMILY_NAME).build(),
+            AttributeType.builder().name(ATTR_NAME_EMAIL).value(EMAIL).build(),
+            AttributeType.builder().name(ATTR_EMAIL_VERIFIED).value(EMAIL_VERIFIED).build(),
+            AttributeType.builder().name(ATTR_NAME_PREFERRED_USERNAME)
+                .value(PREFERRED_USERNAME).build()
+        )
+        .enabled(ENABLED)
+        .build();
+
+    AuthenticationUserDto userDto = mapper.toAuthenticationUser(adminGetUserResponse);
+
+    assertEquals(SUB, userDto.getId());
+    assertEquals(EMAIL, userDto.getUsername());
+    assertEquals(GIVEN_NAME, userDto.getGivenName());
+    assertEquals(FAMILY_NAME, userDto.getFamilyName());
+    assertEquals(EMAIL, userDto.getEmail());
+    assertEquals(ENABLED, userDto.isEnabled());
+    assertEquals(6, userDto.getAttributes().size());
+    assertEquals(SUB, userDto.getAttributes().get(ATTR_NAME_SUB).get(0));
+    assertEquals(EMAIL_VERIFIED, userDto.getAttributes().get(ATTR_EMAIL_VERIFIED).get(0));
+    assertEquals(PREFERRED_USERNAME,
+        userDto.getAttributes().get(ATTR_NAME_PREFERRED_USERNAME).get(0));
+    assertEquals(GIVEN_NAME, userDto.getAttributes().get(ATTR_NAME_GIVEN_NAME).get(0));
+    assertEquals(FAMILY_NAME, userDto.getAttributes().get(ATTR_NAME_FAMILY_NAME).get(0));
+    assertEquals(EMAIL, userDto.getAttributes().get(ATTR_NAME_EMAIL).get(0));
+    assertNull(userDto.getPreferredMfaSetting());
+    assertNull(userDto.getUserMfaSettingList());
   }
 }

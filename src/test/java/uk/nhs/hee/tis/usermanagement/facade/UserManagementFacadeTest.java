@@ -455,6 +455,13 @@ class UserManagementFacadeTest {
     Assertions.assertNotNull(password);
   }
 
+  @Test
+  void shouldResetUserMfaSettings() {
+    testClass.resetUserMfaSettings(USERNAME);
+
+    verify(authenticationAdminService).resetUserMfaSettings(USERNAME);
+  }
+
   /**
    * Create a set of roles with the given names.
    *
