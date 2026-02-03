@@ -142,6 +142,7 @@ public class CognitoAuthenticationAdminService extends AbstractAuthenticationAdm
         .userPoolId(userPoolId)
         .username(username)
         .softwareTokenMfaSettings(builder -> builder.enabled(false).build())
+        .emailMfaSettings(builder -> builder.enabled(true).preferredMfa(true).build())
         .build();
     try {
       cognitoClient.adminSetUserMFAPreference(request);
