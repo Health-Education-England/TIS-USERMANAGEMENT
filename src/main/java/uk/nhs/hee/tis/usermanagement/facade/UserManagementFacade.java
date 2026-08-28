@@ -122,7 +122,7 @@ public class UserManagementFacade {
   public Page<UserDTO> getAllUsers(Pageable pageable, String search) {
     Page<HeeUserDTO> heeUserDTOS = profileService.getAllUsers(pageable, search);
     List<UserDTO> userDTOS = new ArrayList<>();
-    heeUserDTOS.getContent().stream().forEach(profileUser ->
+    heeUserDTOS.getContent().forEach(profileUser ->
         authenticationAdminService.getUser(profileUser.getName())
             .ifPresentOrElse(authUser -> userDTOS.add(heeUserMapper.convert(profileUser, authUser)),
                 () -> userDTOS.add(heeUserMapper.convert(profileUser))));
