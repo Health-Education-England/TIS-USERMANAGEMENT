@@ -56,6 +56,7 @@ import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.exception.IdentityProviderException;
+import uk.nhs.hee.tis.usermanagement.exception.UpdateUserException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 import uk.nhs.hee.tis.usermanagement.service.EmailService;
@@ -221,6 +222,32 @@ class UserResourceTest {
     UserDTO actual = userCaptor.getValue();
     assertThat(actual.getName(), is("foo"));
     assertThat(actual.getFirstName(), is("bar"));
+  }
+
+  @Test
+  void shouldRespondBadRequestWhenUpdatingWithDifferentUsername() throws Exception {
+    String updatedUserJson = "{ \"name\": \"bar\", \"firstName\": \"updated\" }";
+
+    mockMvc.perform(put("/api/users/foo")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(updatedUserJson))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string("\"Username in request body must match username in path.\""));
+
+    verify(mockFacade, never()).updateSingleUser(any(UserDTO.class));
+  }
+
+  @Test
+  void shouldRespondBadRequestWhenUpdatingWithDifferentEmail() throws Exception {
+    doThrow(new UpdateUserException("Email address in request body must match existing email."))
+        .when(mockFacade).updateSingleUser(any(UserDTO.class));
+
+    String updatedUserJson = "{ \"name\": \"foo\", \"emailAddress\": \"other@nhs.net\" }";
+    mockMvc.perform(put("/api/users/foo")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(updatedUserJson))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string("\"Email address in request body must match existing email.\""));
   }
 
   @Test

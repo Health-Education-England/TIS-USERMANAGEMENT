@@ -43,6 +43,7 @@ import software.amazon.awssdk.services.ses.model.SesException;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
+import uk.nhs.hee.tis.usermanagement.exception.UpdateUserException;
 import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 import uk.nhs.hee.tis.usermanagement.service.EmailService;
@@ -67,6 +68,7 @@ public class UserResource {
   private final EmailService emailService;
 
   private final CreateUserValidator createUserValidator = new CreateUserValidator();
+  private final UpdateUserValidator updateUserValidator = new UpdateUserValidator();
 
   public UserResource(UserManagementFacade userFacade, EmailService emailService) {
     this.userFacade = userFacade;
@@ -139,6 +141,7 @@ public class UserResource {
   @PutMapping("/{username}")
   public ResponseEntity<UserDTO> updateUser(@RequestBody UserDTO user,
       @PathVariable String username) {
+    updateUserValidator.validate(user, username);
     userFacade.updateSingleUser(user);
     return ResponseEntity.accepted().build();
   }
@@ -234,6 +237,14 @@ public class UserResource {
       UserDTO userDto = userFacade.getUserByNameIgnoreCase(user.getName());
       if (userDto != null) {
         throw new UserCreationException("Cannot create user because the username already exists.");
+      }
+    }
+  }
+
+  private static class UpdateUserValidator {
+    public void validate(UserDTO user, String username) {
+      if (!StringUtils.equals(user.getName(), username)) {
+        throw new UpdateUserException("Username in request body must match username in path.");
       }
     }
   }
