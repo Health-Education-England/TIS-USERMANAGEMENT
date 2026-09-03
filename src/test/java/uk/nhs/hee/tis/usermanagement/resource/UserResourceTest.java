@@ -31,7 +31,6 @@ import java.util.stream.IntStream;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -45,7 +44,6 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -56,11 +54,11 @@ import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserAuthEventDto;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.exception.IdentityProviderException;
+import uk.nhs.hee.tis.usermanagement.exception.UpdateUserException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 import uk.nhs.hee.tis.usermanagement.service.EmailService;
 
-@ExtendWith(SpringExtension.class)
 @SpringBootTest
 class UserResourceTest {
 
@@ -221,6 +219,32 @@ class UserResourceTest {
     UserDTO actual = userCaptor.getValue();
     assertThat(actual.getName(), is("foo"));
     assertThat(actual.getFirstName(), is("bar"));
+  }
+
+  @Test
+  void shouldRespondBadRequestWhenUpdatingWithDifferentUsername() throws Exception {
+    String updatedUserJson = "{ \"name\": \"bar\", \"firstName\": \"updated\" }";
+
+    mockMvc.perform(put("/api/users/foo")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(updatedUserJson))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string("\"Username in request body must match username in path.\""));
+
+    verify(mockFacade, never()).updateSingleUser(any(UserDTO.class));
+  }
+
+  @Test
+  void shouldRespondBadRequestWhenUpdatingWithDifferentEmail() throws Exception {
+    doThrow(new UpdateUserException("Email address in request body must match existing email."))
+        .when(mockFacade).updateSingleUser(any(UserDTO.class));
+
+    String updatedUserJson = "{ \"name\": \"foo\", \"emailAddress\": \"other@nhs.net\" }";
+    mockMvc.perform(put("/api/users/foo")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(updatedUserJson))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string("\"Email address in request body must match existing email.\""));
   }
 
   @Test

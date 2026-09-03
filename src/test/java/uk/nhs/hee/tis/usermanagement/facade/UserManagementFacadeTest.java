@@ -6,7 +6,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -59,6 +59,8 @@ import uk.nhs.hee.tis.usermanagement.util.PasswordUtil;
 class UserManagementFacadeTest {
 
   private static final String USERNAME = "user1";
+  private static final String EXISTING_EMAIL = "existing@nhs.net";
+  private static final String NEW_EMAIL = "new@nhs.net";
 
   @InjectMocks
   UserManagementFacade testClass;
@@ -274,6 +276,26 @@ class UserManagementFacadeTest {
         () -> testClass.updateSingleUser(user));
     assertThat(actual.getMessage(), containsString(USERNAME));
     assertThat(actual.getMessage(), containsString(authenticationAdminService.getServiceName()));
+  }
+
+  @Test
+  void shouldThrowExceptionUpdatingSingleUserWhenEmailDiffersFromExistingUser() {
+    UserDTO user = new UserDTO();
+    user.setName(USERNAME);
+    user.setEmailAddress(NEW_EMAIL);
+
+    AuthenticationUserDto existingUser = new AuthenticationUserDto();
+    existingUser.setEmail(EXISTING_EMAIL);
+
+    when(authenticationAdminService.getUser(USERNAME)).thenReturn(Optional.of(existingUser));
+
+    UpdateUserException actual = assertThrows(UpdateUserException.class,
+        () -> testClass.updateSingleUser(user));
+
+    assertThat(actual.getMessage(),
+        containsString("Email address does not match the existing user's email address."));
+    verify(authenticationAdminService, never()).updateUser(user);
+    verify(profileService, never()).updateUser(any());
   }
 
   @Test

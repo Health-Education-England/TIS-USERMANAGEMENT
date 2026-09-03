@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -121,7 +122,7 @@ public class UserManagementFacade {
   public Page<UserDTO> getAllUsers(Pageable pageable, String search) {
     Page<HeeUserDTO> heeUserDTOS = profileService.getAllUsers(pageable, search);
     List<UserDTO> userDTOS = new ArrayList<>();
-    heeUserDTOS.getContent().stream().forEach(profileUser ->
+    heeUserDTOS.getContent().forEach(profileUser ->
         authenticationAdminService.getUser(profileUser.getName())
             .ifPresentOrElse(authUser -> userDTOS.add(heeUserMapper.convert(profileUser, authUser)),
                 () -> userDTOS.add(heeUserMapper.convert(profileUser))));
@@ -142,6 +143,11 @@ public class UserManagementFacade {
     AuthenticationUserDto originalUser = optionalOriginalUser.orElseThrow(
         () -> new UserNotFoundException(userDto.getName(),
             authenticationAdminService.getServiceName()));
+
+    if (!StringUtils.equals(originalUser.getEmail(), userDto.getEmailAddress())) {
+      throw new UpdateUserException(
+          "Email address does not match the existing user's email address.");
+    }
 
     Optional<HeeUserDTO> optionalOriginalHeeUser = profileService.getUserByUsername(
         userDto.getName());
