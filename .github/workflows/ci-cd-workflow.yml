@@ -64,7 +64,7 @@ jobs:
         with:
           cache: maven
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       - name: maven-settings-xml-action
         uses: whelk-io/maven-settings-xml-action@v22
