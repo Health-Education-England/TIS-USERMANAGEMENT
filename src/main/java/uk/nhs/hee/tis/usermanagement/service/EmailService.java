@@ -14,17 +14,21 @@ import software.amazon.awssdk.services.ses.model.SendEmailRequest;
 public class EmailService {
 
   private final String tisSender;
+  private final int tempPasswordValidityDays;
   private final SesClient sesClient;
 
   /**
    * Constructor for EmailService.
    *
    * @param tisSender the TIS email address from which emails are sent
+   * @param tempPasswordValidityDays the temporary password validity period in days
    * @param sesClient SES client class
    */
   public EmailService(@Value("${application.tis-sender-email}") String tisSender,
+      @Value("${application.temp-password-validity-days}") int tempPasswordValidityDays,
       SesClient sesClient) {
     this.tisSender = tisSender;
+    this.tempPasswordValidityDays = tempPasswordValidityDays;
     this.sesClient = sesClient;
   }
 
@@ -36,12 +40,15 @@ public class EmailService {
    */
   public void sendTempPasswordEmail(String toEmail, String temporaryPassword) {
     String subject = "Your temporary password for Trainee Information System (TIS)";
+    String dayText = tempPasswordValidityDays == 1 ? "day" : "days";
     String bodyText = String.format(
         "Dear User,\n\n"
             + "Your temporary password is: %s\n\n"
-            + "Please note, this temporary password is only valid for 7 days. "
+            + "Please note, this temporary password is only valid for %d %s. "
             + "Please login before then to reset your password.",
-        temporaryPassword
+        temporaryPassword,
+        tempPasswordValidityDays,
+        dayText
     );
 
     SendEmailRequest emailRequest = SendEmailRequest.builder()
