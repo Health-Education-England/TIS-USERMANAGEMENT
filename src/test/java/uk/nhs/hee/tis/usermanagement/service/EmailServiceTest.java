@@ -20,6 +20,8 @@ import software.amazon.awssdk.services.ses.model.SesException;
 @ExtendWith(MockitoExtension.class)
 class EmailServiceTest {
 
+  private static final int TEMP_PASSWORD_VALIDITY_DAYS = 1;
+
   @Mock
   private SesClient sesClient;
 
@@ -27,7 +29,8 @@ class EmailServiceTest {
 
   @BeforeEach
   void setUp() {
-    emailService = new EmailService("no-reply@tis.nhs.uk", sesClient);
+    emailService = new EmailService("no-reply@tis.nhs.uk", TEMP_PASSWORD_VALIDITY_DAYS,
+        sesClient);
   }
 
   @Test
@@ -46,6 +49,8 @@ class EmailServiceTest {
     SendEmailRequest request = captor.getValue();
     assertEquals(email, request.destination().toAddresses().get(0));
     assertTrue(request.message().body().text().data().contains(password));
+    assertTrue(request.message().body().text().data()
+        .contains(TEMP_PASSWORD_VALIDITY_DAYS + " day"));
     assertEquals("no-reply@tis.nhs.uk", request.source());
   }
 
@@ -58,9 +63,8 @@ class EmailServiceTest {
         .when(sesClient).sendEmail(any(SendEmailRequest.class));
 
     // Then
-    SesException ex = assertThrows(SesException.class, () -> {
-      emailService.sendTempPasswordEmail(email, password);
-    });
+    SesException ex = assertThrows(SesException.class,
+        () -> emailService.sendTempPasswordEmail(email, password));
 
     assertEquals("SES failed", ex.getMessage());
     verify(sesClient, times(1)).sendEmail(any(SendEmailRequest.class));
