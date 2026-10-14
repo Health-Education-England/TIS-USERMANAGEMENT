@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -428,19 +429,17 @@ class UserResourceTest {
   void shouldRejectCreateWhenRoleHasNoRequiredAssociation(
       String role, String expectedMessage) throws Exception {
 
-    String newUserJson = String.format(
-        "{"
-            + "\"name\":\"newuser\","
-            + "\"emailAddress\":\"newuser@nhs.net\","
-            + "\"roles\":[\"%s\"],"
-            + "\"associatedTrusts\":[],"
-            + "\"associatedProgrammes\":[]"
-            + "}",
-        role);
+    CreateUserDTO user = new CreateUserDTO();
+    user.setName("newuser");
+    user.setEmailAddress("newuser@nhs.net");
+    user.setRoles(Set.of(role));
+
+    String requestBody = jacksonMessageConverter.getObjectMapper()
+        .writeValueAsString(user);
 
     mockMvc.perform(post("/api/users")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(newUserJson))
+            .content(requestBody))
         .andExpect(status().isInternalServerError())
         .andExpect(content().string(
             "\"" + expectedMessage + "\""));
@@ -454,19 +453,16 @@ class UserResourceTest {
   void shouldRejectUpdateWhenRoleHasNoRequiredAssociation(
       String role, String expectedMessage) throws Exception {
 
-    String updatedUserJson = String.format(
-        "{"
-            + "\"authId\":\"123\","
-            + "\"name\":\"foo\","
-            + "\"roles\":[\"%s\"],"
-            + "\"associatedTrusts\":[],"
-            + "\"associatedProgrammes\":[]"
-            + "}",
-        role);
+    UserDTO user = new UserDTO();
+    user.setName("foo");
+    user.setRoles(Set.of(role));
+
+    String requestBody = jacksonMessageConverter.getObjectMapper()
+        .writeValueAsString(user);
 
     mockMvc.perform(put("/api/users/foo")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(updatedUserJson))
+            .content(requestBody))
         .andExpect(status().isInternalServerError())
         .andExpect(content().string(
             "\"" + expectedMessage + "\""));
@@ -478,25 +474,29 @@ class UserResourceTest {
   @ParameterizedTest
   @MethodSource("validRoleAssociations")
   void shouldCreateUserWhenRoleHasRequiredAssociation(
-      String role, String trust,
+      String role,
+      String trust,
       String programme) throws Exception {
 
-    String trusts = trust == null ? "[]" : "[\"" + trust + "\"]";
-    String programmes = programme == null ? "[]" : "[\"" + programme + "\"]";
+    CreateUserDTO user = new CreateUserDTO();
+    user.setName("newuser");
+    user.setEmailAddress("newuser@nhs.net");
+    user.setRoles(Set.of(role));
 
-    String newUserJson = String.format(
-        "{"
-            + "\"name\":\"newuser\","
-            + "\"emailAddress\":\"newuser@nhs.net\","
-            + "\"roles\":[\"%s\"],"
-            + "\"associatedTrusts\":%s,"
-            + "\"associatedProgrammes\":%s"
-            + "}",
-        role, trusts, programmes);
+    if (trust != null) {
+      user.setAssociatedTrusts(Set.of(trust));
+    }
+
+    if (programme != null) {
+      user.setAssociatedProgrammes(Set.of(programme));
+    }
+
+    String requestBody = jacksonMessageConverter.getObjectMapper()
+        .writeValueAsString(user);
 
     mockMvc.perform(post("/api/users")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(newUserJson))
+            .content(requestBody))
         .andExpect(status().isAccepted());
 
     verify(mockFacade)
@@ -504,7 +504,7 @@ class UserResourceTest {
 
     CreateUserDTO actual = createCaptor.getValue();
 
-    assertThat(actual.getRoles(), hasItem(role));
+    assertThat(actual.getRoles().contains(role), is(true));
 
     if (trust != null) {
       assertThat(actual.getAssociatedTrusts(), hasItem(trust));
@@ -521,22 +521,25 @@ class UserResourceTest {
       String role, String trust,
       String programme) throws Exception {
 
-    String trusts = trust == null ? "[]" : "[\"" + trust + "\"]";
-    String programmes = programme == null ? "[]" : "[\"" + programme + "\"]";
+    UserDTO user = new UserDTO();
+    user.setAuthId("123");
+    user.setName("foo");
+    user.setRoles(Set.of(role));
 
-    String updatedUserJson = String.format(
-        "{"
-            + "\"authId\":\"123\","
-            + "\"name\":\"foo\","
-            + "\"roles\":[\"%s\"],"
-            + "\"associatedTrusts\":%s,"
-            + "\"associatedProgrammes\":%s"
-            + "}",
-        role, trusts, programmes);
+    if (trust != null) {
+      user.setAssociatedTrusts(Set.of(trust));
+    }
+
+    if (programme != null) {
+      user.setAssociatedProgrammes(Set.of(programme));
+    }
+
+    String requestBody = jacksonMessageConverter.getObjectMapper()
+        .writeValueAsString(user);
 
     mockMvc.perform(put("/api/users/foo")
             .contentType(MediaType.APPLICATION_JSON)
-            .content(updatedUserJson))
+            .content(requestBody))
         .andExpect(status().isAccepted());
 
     verify(mockFacade).updateSingleUser(userCaptor.capture());

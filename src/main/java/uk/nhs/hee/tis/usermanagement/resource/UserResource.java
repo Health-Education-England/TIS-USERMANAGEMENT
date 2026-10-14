@@ -21,10 +21,15 @@
 
 package uk.nhs.hee.tis.usermanagement.resource;
 
+import static uk.nhs.hee.tis.usermanagement.constants.UserRoleConstants.ROLES_REQUIRING_PROGRAMME;
+import static uk.nhs.hee.tis.usermanagement.constants.UserRoleConstants.ROLES_REQUIRING_TRUST;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -130,7 +135,7 @@ public class UserResource {
    *
    * @param user Complete information needed to create a user across backend services
    * @return The response entity indicates if the request was accepted but does not guarantee that
-   *     the user was successfully created in all backends
+   * the user was successfully created in all backends
    */
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PostMapping
@@ -146,7 +151,7 @@ public class UserResource {
    * @param user     The full user details with the changes to save
    * @param username The username, which is expected to be the same as {@code  user.getName()}
    * @return The {@link ResponseEntity} indicating the request has been accepted and should be
-   *     updated
+   * updated
    */
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PutMapping("/{username}")
@@ -162,7 +167,7 @@ public class UserResource {
    *
    * @param username The username of the user to delete
    * @return The {@link ResponseEntity} indicating the request has been accepted and should be
-   *     deleted
+   * deleted
    */
   @PreAuthorize("hasAuthority('heeuser:delete') and hasAuthority('profile:delete:entities') ")
   @DeleteMapping("/{username}")
@@ -184,8 +189,8 @@ public class UserResource {
   }
 
   /**
-   * Trigger password reset.
-   * The service will generate a random a password and send to the user's email.
+   * Trigger password reset. The service will generate a random a password and send to the user's
+   * email.
    *
    * @param username the name of the user to reset password for
    * @return a map containing successful/failing messages
@@ -231,53 +236,6 @@ public class UserResource {
     }
   }
 
-  private static String validateRoleAssociations(
-      Set<String> roles,
-      Set<String> associatedTrusts,
-      Set<String> associatedProgrammes) {
-
-    if (roles == null || roles.isEmpty()) {
-      return null;
-    }
-
-    boolean trustRoleAssigned =
-        roles.contains(TRUST_OBSERVER) || roles.contains(TRUST_ADMIN);
-
-    if (trustRoleAssigned
-        && (associatedTrusts == null || associatedTrusts.isEmpty())) {
-      return TRUST_REQUIRED_MESSAGE;
-    }
-
-    boolean programmeRoleAssigned =
-        roles.contains(PROGRAMME_OBSERVER) || roles.contains(PROGRAMME_ADMIN);
-
-    if (programmeRoleAssigned
-        && (associatedProgrammes == null || associatedProgrammes.isEmpty())) {
-      return PROGRAMME_REQUIRED_MESSAGE;
-    }
-
-    return null;
-  }
-
-  /**
-   * This validator has been created to encapsulate validation done in the
-   * {@link UserManagementController}. A larger refactoring would involve modifying both to use a
-   * validation service/bean.
-   */
-  private static class UpdateUserValidator {
-    public void validate(UserDTO user, String username) {
-      if (!StringUtils.equals(user.getName(), username)) {
-        throw new UpdateUserException("Username in request body must match username in path.");
-      }
-
-      String roleValidationError = validateRoleAssociations(user.getRoles(),
-          user.getAssociatedTrusts(), user.getAssociatedProgrammes());
-      if (roleValidationError != null) {
-        throw new UpdateUserException(roleValidationError);
-      }
-    }
-  }
-
   /**
    * This validator has been created to encapsulate validation done in the
    * {@link UserManagementController}. A larger refactoring would involve modifying both to use a
@@ -293,10 +251,10 @@ public class UserResource {
         throw new UserCreationException("Email Address must not contain whitespace.");
       }
 
-      String roleValidationError = validateRoleAssociations(user.getRoles(),
+      List<String> roleValidationErrors = validateRoleAssociations(user.getRoles(),
           user.getAssociatedTrusts(), user.getAssociatedProgrammes());
-      if (roleValidationError != null) {
-        throw new UserCreationException(roleValidationError);
+      if (!roleValidationErrors.isEmpty()) {
+        throw new UserCreationException(String.join("; ", roleValidationErrors));
       }
 
       UserDTO userDto = userFacade.getUserByNameIgnoreCase(user.getName());
@@ -304,5 +262,44 @@ public class UserResource {
         throw new UserCreationException("Cannot create user because the username already exists.");
       }
     }
+  }
+
+  /**
+   * This validator has been created to encapsulate validation done in the
+   * {@link UserManagementController}. A larger refactoring would involve modifying both to use a
+   * validation service/bean.
+   */
+  private static class UpdateUserValidator {
+
+    public void validate(UserDTO user, String username) {
+      if (!StringUtils.equals(user.getName(), username)) {
+        throw new UpdateUserException("Username in request body must match username in path.");
+      }
+
+      List<String> roleValidationErrors = validateRoleAssociations(user.getRoles(),
+          user.getAssociatedTrusts(), user.getAssociatedProgrammes());
+      if (!roleValidationErrors.isEmpty()) {
+        throw new UpdateUserException(String.join("; ", roleValidationErrors));
+      }
+    }
+  }
+
+  private static List<String> validateRoleAssociations(
+      Set<String> roles,
+      Set<String> associatedTrusts,
+      Set<String> associatedProgrammes) {
+
+    List<String> errors = new ArrayList<>();
+
+    if (CollectionUtils.containsAny(roles, ROLES_REQUIRING_TRUST)
+        && CollectionUtils.isEmpty(associatedTrusts)) {
+      errors.add(TRUST_REQUIRED_MESSAGE);
+    }
+
+    if (CollectionUtils.containsAny(roles, ROLES_REQUIRING_PROGRAMME)
+        && CollectionUtils.isEmpty(associatedProgrammes)) {
+      errors.add(PROGRAMME_REQUIRED_MESSAGE);
+    }
+    return errors;
   }
 }
