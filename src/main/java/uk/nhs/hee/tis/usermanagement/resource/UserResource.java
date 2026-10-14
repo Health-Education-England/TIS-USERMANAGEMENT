@@ -129,7 +129,7 @@ public class UserResource {
    *
    * @param user Complete information needed to create a user across backend services
    * @return The response entity indicates if the request was accepted but does not guarantee that
-   *    the user was successfully created in all backends
+   *     the user was successfully created in all backends
    */
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PostMapping
@@ -145,7 +145,7 @@ public class UserResource {
    * @param user     The full user details with the changes to save
    * @param username The username, which is expected to be the same as {@code  user.getName()}
    * @return The {@link ResponseEntity} indicating the request has been accepted and should be
-   *    updated
+   *     updated
    */
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PutMapping("/{username}")
@@ -161,7 +161,7 @@ public class UserResource {
    *
    * @param username The username of the user to delete
    * @return The {@link ResponseEntity} indicating the request has been accepted and should be
-   *    deleted
+   *     deleted
    */
   @PreAuthorize("hasAuthority('heeuser:delete') and hasAuthority('profile:delete:entities') ")
   @DeleteMapping("/{username}")
