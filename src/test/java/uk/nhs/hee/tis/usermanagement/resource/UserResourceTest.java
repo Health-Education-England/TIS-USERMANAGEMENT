@@ -1,6 +1,7 @@
 package uk.nhs.hee.tis.usermanagement.resource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,11 +27,16 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -61,6 +67,18 @@ import uk.nhs.hee.tis.usermanagement.service.EmailService;
 
 @SpringBootTest
 class UserResourceTest {
+
+  private static final String TRUST_OBSERVER = "HEE Trust Observer";
+  private static final String TRUST_ADMIN = "HEE Trust Admin";
+  private static final String PROGRAMME_OBSERVER = "HEE Programme Observer";
+  private static final String PROGRAMME_ADMIN = "HEE Programme Admin";
+  private static final String TRUST_A = "Trust A";
+  private static final String PROGRAMME_A = "Programme A";
+
+  private static final String TRUST_REQUIRED_MESSAGE =
+      "At least one Trust must be selected for the role";
+  private static final String PROGRAMME_REQUIRED_MESSAGE =
+      "At least one programme must be selected for the role";
 
   private MockMvc mockMvc;
 
@@ -404,5 +422,156 @@ class UserResourceTest {
     mockMvc.perform(post("/api/users/foo/mfa/reset"))
         .andExpect(status().isInternalServerError())
         .andExpect(jsonPath("$").value(exception.getMessage()));
+  }
+
+  @ParameterizedTest
+  @MethodSource("invalidRoleAssociations")
+  void shouldRejectCreateWhenRoleHasNoRequiredAssociation(
+      String role, String expectedMessage) throws Exception {
+
+    CreateUserDTO user = new CreateUserDTO();
+    user.setName("newuser");
+    user.setEmailAddress("newuser@nhs.net");
+    user.setRoles(Set.of(role));
+
+    String requestBody = jacksonMessageConverter.getObjectMapper()
+        .writeValueAsString(user);
+
+    mockMvc.perform(post("/api/users")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestBody))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string(
+            "\"" + expectedMessage + "\""));
+
+    verify(mockFacade, never())
+        .publishUserCreationRequestedEvent(any(CreateUserDTO.class));
+  }
+
+  @ParameterizedTest
+  @MethodSource("invalidRoleAssociations")
+  void shouldRejectUpdateWhenRoleHasNoRequiredAssociation(
+      String role, String expectedMessage) throws Exception {
+
+    UserDTO user = new UserDTO();
+    user.setName("foo");
+    user.setRoles(Set.of(role));
+
+    String requestBody = jacksonMessageConverter.getObjectMapper()
+        .writeValueAsString(user);
+
+    mockMvc.perform(put("/api/users/foo")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestBody))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string(
+            "\"" + expectedMessage + "\""));
+
+    verify(mockFacade, never())
+        .updateSingleUser(any(UserDTO.class));
+  }
+
+  @ParameterizedTest
+  @MethodSource("validRoleAssociations")
+  void shouldCreateUserWhenRoleHasRequiredAssociation(
+      String role,
+      String trust,
+      String programme) throws Exception {
+
+    CreateUserDTO user = new CreateUserDTO();
+    user.setName("newuser");
+    user.setEmailAddress("newuser@nhs.net");
+    user.setRoles(Set.of(role));
+
+    if (trust != null) {
+      user.setAssociatedTrusts(Set.of(trust));
+    }
+
+    if (programme != null) {
+      user.setAssociatedProgrammes(Set.of(programme));
+    }
+
+    String requestBody = jacksonMessageConverter.getObjectMapper()
+        .writeValueAsString(user);
+
+    mockMvc.perform(post("/api/users")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestBody))
+        .andExpect(status().isAccepted());
+
+    verify(mockFacade)
+        .publishUserCreationRequestedEvent(createCaptor.capture());
+
+    CreateUserDTO actual = createCaptor.getValue();
+
+    assertThat(actual.getRoles().contains(role), is(true));
+
+    if (trust != null) {
+      assertThat(actual.getAssociatedTrusts(), hasItem(trust));
+    }
+
+    if (programme != null) {
+      assertThat(actual.getAssociatedProgrammes(), hasItem(programme));
+    }
+  }
+
+  @ParameterizedTest
+  @MethodSource("validRoleAssociations")
+  void shouldUpdateUserWhenRoleHasRequiredAssociation(
+      String role, String trust,
+      String programme) throws Exception {
+
+    UserDTO user = new UserDTO();
+    user.setAuthId("123");
+    user.setName("foo");
+    user.setRoles(Set.of(role));
+
+    if (trust != null) {
+      user.setAssociatedTrusts(Set.of(trust));
+    }
+
+    if (programme != null) {
+      user.setAssociatedProgrammes(Set.of(programme));
+    }
+
+    String requestBody = jacksonMessageConverter.getObjectMapper()
+        .writeValueAsString(user);
+
+    mockMvc.perform(put("/api/users/foo")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(requestBody))
+        .andExpect(status().isAccepted());
+
+    verify(mockFacade).updateSingleUser(userCaptor.capture());
+
+    UserDTO actual = userCaptor.getValue();
+
+    assertThat(actual.getRoles(), hasItem(role));
+
+    if (trust != null) {
+      assertThat(actual.getAssociatedTrusts(), hasItem(trust));
+    }
+
+    if (programme != null) {
+      assertThat(actual.getAssociatedProgrammes(), hasItem(programme));
+    }
+  }
+
+  private static Stream<Arguments> invalidRoleAssociations() {
+    return Stream.of(
+        Arguments.of(TRUST_OBSERVER, TRUST_REQUIRED_MESSAGE),
+        Arguments.of(TRUST_ADMIN, TRUST_REQUIRED_MESSAGE),
+        Arguments.of(PROGRAMME_OBSERVER, PROGRAMME_REQUIRED_MESSAGE),
+        Arguments.of(PROGRAMME_ADMIN, PROGRAMME_REQUIRED_MESSAGE)
+    );
+  }
+
+  private static Stream<Arguments> validRoleAssociations() {
+    return Stream.of(
+        Arguments.of(TRUST_OBSERVER, TRUST_A, null),
+        Arguments.of(TRUST_ADMIN, TRUST_A, null),
+        Arguments.of(PROGRAMME_OBSERVER, null, PROGRAMME_A),
+        Arguments.of(PROGRAMME_ADMIN, null, PROGRAMME_A)
+    );
   }
 }

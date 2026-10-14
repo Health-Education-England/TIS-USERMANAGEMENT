@@ -21,9 +21,15 @@
 
 package uk.nhs.hee.tis.usermanagement.resource;
 
+import static uk.nhs.hee.tis.usermanagement.constants.UserRoleConstants.ROLES_REQUIRING_PROGRAMME;
+import static uk.nhs.hee.tis.usermanagement.constants.UserRoleConstants.ROLES_REQUIRING_TRUST;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -63,6 +69,10 @@ public class UserResource {
   private static final String ERROR_TYPE = "errorType";
   private static final String ERROR_CODE = "errorCode";
   private static final String MESSAGE = "message";
+  private static final String TRUST_REQUIRED_MESSAGE =
+      "At least one Trust must be selected for the role";
+  private static final String PROGRAMME_REQUIRED_MESSAGE =
+      "At least one programme must be selected for the role";
 
   private final UserManagementFacade userFacade;
   private final EmailService emailService;
@@ -173,8 +183,8 @@ public class UserResource {
   }
 
   /**
-   * Trigger password reset.
-   * The service will generate a random a password and send to the user's email.
+   * Trigger password reset. The service will generate a random a password and send to the user's
+   * email.
    *
    * @param username the name of the user to reset password for
    * @return a map containing successful/failing messages
@@ -234,6 +244,13 @@ public class UserResource {
       if (StringUtils.containsWhitespace(user.getEmailAddress())) {
         throw new UserCreationException("Email Address must not contain whitespace.");
       }
+
+      List<String> roleValidationErrors = validateRoleAssociations(user.getRoles(),
+          user.getAssociatedTrusts(), user.getAssociatedProgrammes());
+      if (!roleValidationErrors.isEmpty()) {
+        throw new UserCreationException(String.join("; ", roleValidationErrors));
+      }
+
       UserDTO userDto = userFacade.getUserByNameIgnoreCase(user.getName());
       if (userDto != null) {
         throw new UserCreationException("Cannot create user because the username already exists.");
@@ -241,11 +258,42 @@ public class UserResource {
     }
   }
 
+  /**
+   * This validator has been created to encapsulate validation done in the
+   * {@link UserManagementController}. A larger refactoring would involve modifying both to use a
+   * validation service/bean.
+   */
   private static class UpdateUserValidator {
+
     public void validate(UserDTO user, String username) {
       if (!StringUtils.equals(user.getName(), username)) {
         throw new UpdateUserException("Username in request body must match username in path.");
       }
+
+      List<String> roleValidationErrors = validateRoleAssociations(user.getRoles(),
+          user.getAssociatedTrusts(), user.getAssociatedProgrammes());
+      if (!roleValidationErrors.isEmpty()) {
+        throw new UpdateUserException(String.join("; ", roleValidationErrors));
+      }
     }
+  }
+
+  private static List<String> validateRoleAssociations(
+      Set<String> roles,
+      Set<String> associatedTrusts,
+      Set<String> associatedProgrammes) {
+
+    List<String> errors = new ArrayList<>();
+
+    if (CollectionUtils.containsAny(roles, ROLES_REQUIRING_TRUST)
+        && CollectionUtils.isEmpty(associatedTrusts)) {
+      errors.add(TRUST_REQUIRED_MESSAGE);
+    }
+
+    if (CollectionUtils.containsAny(roles, ROLES_REQUIRING_PROGRAMME)
+        && CollectionUtils.isEmpty(associatedProgrammes)) {
+      errors.add(PROGRAMME_REQUIRED_MESSAGE);
+    }
+    return errors;
   }
 }
