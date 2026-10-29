@@ -144,7 +144,7 @@ public class UserManagementFacade {
         () -> new UserNotFoundException(userDto.getName(),
             authenticationAdminService.getServiceName()));
 
-    if (!StringUtils.equals(originalUser.getEmail(), userDto.getEmailAddress())) {
+    if (!StringUtils.equalsIgnoreCase(originalUser.getEmail(), userDto.getEmailAddress())) {
       throw new UpdateUserException(
           "Email address does not match the existing user's email address.");
     }

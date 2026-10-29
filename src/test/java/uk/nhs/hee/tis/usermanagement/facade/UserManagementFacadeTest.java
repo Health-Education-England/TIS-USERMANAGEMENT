@@ -484,6 +484,41 @@ class UserManagementFacadeTest {
     verify(authenticationAdminService).resetUserMfaSettings(USERNAME);
   }
 
+  @Test
+  public void updateSingleUserShouldAcceptEmailWithDifferentCase() {
+
+    UserDTO userDto = new UserDTO();
+    userDto.setName("Asa.Baba23@nhs.net");
+    userDto.setEmailAddress("Asa.Baba23@nhs.net");
+    userDto.setRoles(new HashSet<>());
+
+    AuthenticationUserDto originalUser = new AuthenticationUserDto();
+    originalUser.setUsername("asa.baba23@nhs.net");
+    originalUser.setEmail("asa.baba23@nhs.net");
+
+    HeeUserDTO originalHeeUser = new HeeUserDTO();
+    originalHeeUser.setRoles(new HashSet<>());
+
+    when(authenticationAdminService.getUser(userDto.getName()))
+        .thenReturn(Optional.of(originalUser));
+
+    when(profileService.getUserByUsername(userDto.getName()))
+        .thenReturn(Optional.of(originalHeeUser));
+
+    when(profileService.getRestrictedRoles())
+        .thenReturn(Collections.emptySet());
+
+    when(authenticationAdminService.updateUser(userDto))
+        .thenReturn(true);
+
+    when(profileService.updateUser(any(HeeUserDTO.class)))
+        .thenReturn(Optional.of(new HeeUserDTO()));
+
+    testClass.updateSingleUser(userDto);
+
+    verify(authenticationAdminService).updateUser(userDto);
+  }
+
   /**
    * Create a set of roles with the given names.
    *
