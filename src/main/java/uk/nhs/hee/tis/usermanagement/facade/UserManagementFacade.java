@@ -15,6 +15,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,19 +44,19 @@ public class UserManagementFacade {
 
   private static final Collection<String> entities = Collections.singleton("HEE");
 
-  private ProfileService profileService;
+  private final ProfileService profileService;
 
-  private TcsService tcsService;
+  private final TcsService tcsService;
 
-  private AuthenticationAdminService authenticationAdminService;
+  private final AuthenticationAdminService authenticationAdminService;
 
-  private HeeUserMapper heeUserMapper;
+  private final HeeUserMapper heeUserMapper;
 
-  private ReferenceService referenceService;
+  private final ReferenceService referenceService;
 
-  private ApplicationEventPublisher applicationEventPublisher;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
-  private PasswordUtil passwordUtil;
+  private final PasswordUtil passwordUtil;
 
   /**
    * Constructor for UserManagementFacade.
@@ -68,7 +69,8 @@ public class UserManagementFacade {
    * @param applicationEventPublisher  the ApplicationEventPublisher class
    */
   public UserManagementFacade(ProfileService profileService, TcsService tcsService,
-      AuthenticationAdminService authenticationAdminService, HeeUserMapper heeUserMapper,
+      @Qualifier("cognitoAuthenticationAdminService") AuthenticationAdminService authenticationAdminService,
+      HeeUserMapper heeUserMapper,
       ReferenceService referenceService, ApplicationEventPublisher applicationEventPublisher,
       PasswordUtil passwordUtil) {
     this.profileService = profileService;

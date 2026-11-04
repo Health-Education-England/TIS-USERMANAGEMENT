@@ -485,16 +485,16 @@ class UserManagementFacadeTest {
   }
 
   @Test
-  public void updateSingleUserShouldAcceptEmailWithDifferentCase() {
+  void updateSingleUserShouldAcceptEmailWithDifferentCase() {
 
     UserDTO userDto = new UserDTO();
-    userDto.setName("Asa.Baba23@nhs.net");
-    userDto.setEmailAddress("Asa.Baba23@nhs.net");
+    userDto.setName("Auser.Bname23@nhs.net");
+    userDto.setEmailAddress("Auser.Bname23@nhs.net");
     userDto.setRoles(new HashSet<>());
 
     AuthenticationUserDto originalUser = new AuthenticationUserDto();
-    originalUser.setUsername("asa.baba23@nhs.net");
-    originalUser.setEmail("asa.baba23@nhs.net");
+    originalUser.setUsername("auser.bname23@nhs.net");
+    originalUser.setEmail("auser.bname23@nhs.net");
 
     HeeUserDTO originalHeeUser = new HeeUserDTO();
     originalHeeUser.setRoles(new HashSet<>());
