@@ -15,7 +15,6 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -69,7 +68,7 @@ public class UserManagementFacade {
    * @param applicationEventPublisher  the ApplicationEventPublisher class
    */
   public UserManagementFacade(ProfileService profileService, TcsService tcsService,
-      @Qualifier("cognitoAuthenticationAdminService") AuthenticationAdminService authenticationAdminService,
+      AuthenticationAdminService authenticationAdminService,
       HeeUserMapper heeUserMapper,
       ReferenceService referenceService, ApplicationEventPublisher applicationEventPublisher,
       PasswordUtil passwordUtil) {
