@@ -43,19 +43,19 @@ public class UserManagementFacade {
 
   private static final Collection<String> entities = Collections.singleton("HEE");
 
-  private ProfileService profileService;
+  private final ProfileService profileService;
 
-  private TcsService tcsService;
+  private final TcsService tcsService;
 
-  private AuthenticationAdminService authenticationAdminService;
+  private final AuthenticationAdminService authenticationAdminService;
 
-  private HeeUserMapper heeUserMapper;
+  private final HeeUserMapper heeUserMapper;
 
-  private ReferenceService referenceService;
+  private final ReferenceService referenceService;
 
-  private ApplicationEventPublisher applicationEventPublisher;
+  private final ApplicationEventPublisher applicationEventPublisher;
 
-  private PasswordUtil passwordUtil;
+  private final PasswordUtil passwordUtil;
 
   /**
    * Constructor for UserManagementFacade.
@@ -68,7 +68,8 @@ public class UserManagementFacade {
    * @param applicationEventPublisher  the ApplicationEventPublisher class
    */
   public UserManagementFacade(ProfileService profileService, TcsService tcsService,
-      AuthenticationAdminService authenticationAdminService, HeeUserMapper heeUserMapper,
+      AuthenticationAdminService authenticationAdminService,
+      HeeUserMapper heeUserMapper,
       ReferenceService referenceService, ApplicationEventPublisher applicationEventPublisher,
       PasswordUtil passwordUtil) {
     this.profileService = profileService;
@@ -144,7 +145,7 @@ public class UserManagementFacade {
         () -> new UserNotFoundException(userDto.getName(),
             authenticationAdminService.getServiceName()));
 
-    if (!StringUtils.equals(originalUser.getEmail(), userDto.getEmailAddress())) {
+    if (!StringUtils.equalsIgnoreCase(originalUser.getEmail(), userDto.getEmailAddress())) {
       throw new UpdateUserException(
           "Email address does not match the existing user's email address.");
     }
