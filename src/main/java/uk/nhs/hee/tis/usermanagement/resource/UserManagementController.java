@@ -40,6 +40,12 @@ public class UserManagementController {
   private final CreateUserValidator createUserValidator;
   private final PasswordValidator passwordValidator;
 
+  /**
+   * Create a controller instance with default validator implementations.
+   *
+   * @param userManagementFacade Facade providing user management operations
+   * @param authProvider The configured authentication provider name
+   */
   public UserManagementController(UserManagementFacade userManagementFacade,
       @Value("${application.authentication-provider}") String authProvider) {
     this(userManagementFacade, authProvider,
@@ -48,6 +54,14 @@ public class UserManagementController {
         new PasswordValidator());
   }
 
+  /**
+   * Create a controller instance with explicit validator dependencies.
+   *
+   * @param userManagementFacade Facade providing user management operations
+   * @param authProvider The configured authentication provider name
+   * @param createUserValidator Validator for create-user request fields
+   * @param passwordValidator Validator for password rules
+   */
   @Autowired
   public UserManagementController(UserManagementFacade userManagementFacade,
       @Value("${application.authentication-provider}") String authProvider,
