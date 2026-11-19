@@ -7,6 +7,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -240,8 +241,8 @@ class UserManagementControllerTest {
 
   @Test
   void shouldNotValidatePasswordWhenCreateUserAuthProviderIsCognito() throws Exception {
-    CreateUserValidator createUserValidator = org.mockito.Mockito.mock(CreateUserValidator.class);
-    PasswordValidator passwordValidator = org.mockito.Mockito.mock(PasswordValidator.class);
+    CreateUserValidator createUserValidator = mock(CreateUserValidator.class);
+    PasswordValidator passwordValidator = mock(PasswordValidator.class);
     MockMvc cognitoMockMvc = MockMvcBuilders
         .standaloneSetup(new UserManagementController(mockFacade, "cognito", createUserValidator,
             passwordValidator))
