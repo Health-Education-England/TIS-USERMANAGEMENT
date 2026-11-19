@@ -26,7 +26,6 @@ import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 import uk.nhs.hee.tis.usermanagement.validation.CreateUserValidator;
 import uk.nhs.hee.tis.usermanagement.validation.PasswordValidator;
-import uk.nhs.hee.tis.usermanagement.validation.UserManagementUsernameAvailabilityChecker;
 
 @Slf4j
 @Controller
@@ -48,9 +47,7 @@ public class UserManagementController {
    */
   public UserManagementController(UserManagementFacade userManagementFacade,
       @Value("${application.authentication-provider}") String authProvider) {
-    this(userManagementFacade, authProvider,
-        new CreateUserValidator(
-            new UserManagementUsernameAvailabilityChecker(userManagementFacade)),
+    this(userManagementFacade, authProvider, new CreateUserValidator(userManagementFacade),
         new PasswordValidator());
   }
 

@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
+import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
 
 /**
@@ -12,11 +13,11 @@ import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
 @Component
 public class CreateUserValidator {
 
-  private final UsernameAvailabilityChecker usernameAvailabilityChecker;
+  private final UserManagementFacade userManagementFacade;
 
   @Autowired
-  public CreateUserValidator(UsernameAvailabilityChecker usernameAvailabilityChecker) {
-    this.usernameAvailabilityChecker = usernameAvailabilityChecker;
+  public CreateUserValidator(UserManagementFacade userManagementFacade) {
+    this.userManagementFacade = userManagementFacade;
   }
 
   /**
@@ -43,8 +44,7 @@ public class CreateUserValidator {
    * @throws UserCreationException If the username already exists
    */
   public void validateUsernameAvailable(String username) {
-    if (usernameAvailabilityChecker != null && !usernameAvailabilityChecker.isUsernameAvailable(
-        username)) {
+    if (userManagementFacade.getUserByNameIgnoreCase(username) != null) {
       throw new UserCreationException("Cannot create user, the username already exists");
     }
   }

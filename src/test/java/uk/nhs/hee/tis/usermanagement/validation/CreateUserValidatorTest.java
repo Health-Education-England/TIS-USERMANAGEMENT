@@ -15,19 +15,21 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
+import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
+import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 
 @ExtendWith(MockitoExtension.class)
 class CreateUserValidatorTest {
 
   @Mock
-  private UsernameAvailabilityChecker usernameAvailabilityChecker;
+  private UserManagementFacade userManagementFacade;
 
   private CreateUserValidator createUserValidator;
 
   @BeforeEach
   void setUp() {
-    createUserValidator = new CreateUserValidator(usernameAvailabilityChecker);
+    createUserValidator = new CreateUserValidator(userManagementFacade);
   }
 
   @ParameterizedTest
@@ -47,7 +49,7 @@ class CreateUserValidatorTest {
   @Test
   void shouldThrowWhenUsernameAlreadyExists() {
     String username = "existing.user";
-    when(usernameAvailabilityChecker.isUsernameAvailable(username)).thenReturn(false);
+    when(userManagementFacade.getUserByNameIgnoreCase(username)).thenReturn(new UserDTO());
 
     UserCreationException exception = assertThrows(UserCreationException.class,
         () -> createUserValidator.validateUsernameAvailable(username));
@@ -58,7 +60,7 @@ class CreateUserValidatorTest {
   @Test
   void shouldNotThrowWhenUsernameIsAvailable() {
     String username = "new.user";
-    when(usernameAvailabilityChecker.isUsernameAvailable(username)).thenReturn(true);
+    when(userManagementFacade.getUserByNameIgnoreCase(username)).thenReturn(null);
 
     assertDoesNotThrow(() -> createUserValidator.validateUsernameAvailable(username));
   }
