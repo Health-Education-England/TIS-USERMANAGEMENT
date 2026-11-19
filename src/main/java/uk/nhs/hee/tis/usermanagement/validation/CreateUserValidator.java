@@ -4,8 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
-import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
+import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 
 /**
  * Validates create-user request fields before creating a user.
