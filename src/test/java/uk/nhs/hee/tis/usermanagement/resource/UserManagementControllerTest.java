@@ -199,6 +199,62 @@ class UserManagementControllerTest {
   }
 
   @Test
+  void shouldRejectCreateUserWhenUsernameOrEmailContainsWhitespaceForCognito() {
+    MockMvc cognitoMockMvc = MockMvcBuilders
+        .standaloneSetup(new UserManagementController(mockFacade, "cognito"))
+        .setSingleView(new InternalResourceView("emptyView"))
+        .build();
+
+    Exception exception = assertThrows(Exception.class, () -> cognitoMockMvc.perform(
+        post("/createUser")
+            .param("name", "bad user")
+            .param("emailAddress", "name@tis.nhs.uk")
+            .param("password", "short")
+            .param("confirmPassword", "different")));
+
+    assertNestedCauseMessage(exception, "username shouldn't contain white spaces");
+    verify(mockFacade, never()).publishUserCreationRequestedEvent(any());
+  }
+
+  @Test
+  void shouldRejectCreateUserWhenUsernameAlreadyExistsForCognito() {
+    when(mockFacade.getUserByNameIgnoreCase("foo")).thenReturn(new UserDTO());
+    MockMvc cognitoMockMvc = MockMvcBuilders
+        .standaloneSetup(new UserManagementController(mockFacade, "cognito"))
+        .setSingleView(new InternalResourceView("emptyView"))
+        .build();
+
+    Exception exception = assertThrows(Exception.class, () -> cognitoMockMvc.perform(
+        post("/createUser")
+            .param("name", "foo")
+            .param("emailAddress", "name@tis.nhs.uk")
+            .param("password", "short")
+            .param("confirmPassword", "different")));
+
+    assertNestedCauseMessage(exception, "the username already exists");
+    verify(mockFacade, never()).publishUserCreationRequestedEvent(any());
+  }
+
+  @Test
+  void shouldAllowCreateUserWhenPasswordsInvalidForCognito() throws Exception {
+    when(mockFacade.getUserByNameIgnoreCase("foo")).thenReturn(null);
+    MockMvc cognitoMockMvc = MockMvcBuilders
+        .standaloneSetup(new UserManagementController(mockFacade, "cognito"))
+        .setSingleView(new InternalResourceView("emptyView"))
+        .build();
+
+    cognitoMockMvc.perform(
+            post("/createUser")
+                .param("name", "foo")
+                .param("emailAddress", "name@tis.nhs.uk")
+                .param("password", "short")
+                .param("confirmPassword", "different"))
+        .andExpect(status().is2xxSuccessful());
+
+    verify(mockFacade).publishUserCreationRequestedEvent(any());
+  }
+
+  @Test
   void shouldPublishEventForUpdateUser() throws Exception {
     when(mockFacade.getUserByNameIgnoreCase("foo")).thenReturn(null);
     mockMvc.perform(

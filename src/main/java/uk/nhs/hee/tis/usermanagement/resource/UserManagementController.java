@@ -159,11 +159,12 @@ public class UserManagementController {
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PostMapping("/createUser")
   public String createUser(@ModelAttribute CreateUserDTO user, Model model) {
+    createUserValidator.validateNameAndEmail(user);
+    createUserValidator.validateUsernameAvailable(user.getName());
+
     if (!"cognito".equalsIgnoreCase(authProvider)) {
-      createUserValidator.validateNameAndEmail(user);
       passwordValidator.validatePasswordsMatch(user.getPassword(), user.getConfirmPassword());
       passwordValidator.validatePasswordLength(user.getPassword());
-      createUserValidator.validateUsernameAvailable(user.getName());
     }
 
     // add entity role to the newly created user
