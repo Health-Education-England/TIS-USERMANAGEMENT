@@ -221,7 +221,7 @@ class UserManagementControllerTest {
   }
 
   @Test
-  void shouldAllowCreateUserWhenPasswordsInvalidForCognito() throws Exception {
+  void shouldSkipPasswordValidationConstraintsForCreateUserWithCognito() throws Exception {
     when(mockFacade.getUserByNameIgnoreCase("foo")).thenReturn(null);
     MockMvc cognitoMockMvc = MockMvcBuilders
         .standaloneSetup(new UserManagementController(mockFacade, "cognito"))
