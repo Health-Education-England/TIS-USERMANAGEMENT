@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,26 +23,51 @@ import org.springframework.web.bind.annotation.RequestParam;
 import uk.nhs.hee.tis.usermanagement.DTOs.CreateUserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
-import uk.nhs.hee.tis.usermanagement.exception.PasswordException;
-import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
+import uk.nhs.hee.tis.usermanagement.validation.CreateUserValidator;
+import uk.nhs.hee.tis.usermanagement.validation.PasswordValidator;
 
 @Slf4j
 @Controller
 public class UserManagementController {
 
   private static final String ATTRIBUTE_MESSAGE = "message";
-
-  public static final int REQUIRED_PASSWORD_LENGTH = 8;
   public static final String SUCCESS = "success";
 
   private final UserManagementFacade userManagementFacade;
   private final String authProvider;
+  private final CreateUserValidator createUserValidator;
+  private final PasswordValidator passwordValidator;
 
+  /**
+   * Create a controller instance with default validator implementations.
+   *
+   * @param userManagementFacade Facade providing user management operations
+   * @param authProvider The configured authentication provider name
+   */
   public UserManagementController(UserManagementFacade userManagementFacade,
       @Value("${application.authentication-provider}") String authProvider) {
+    this(userManagementFacade, authProvider, new CreateUserValidator(userManagementFacade),
+        new PasswordValidator());
+  }
+
+  /**
+   * Create a controller instance with explicit validator dependencies.
+   *
+   * @param userManagementFacade Facade providing user management operations
+   * @param authProvider The configured authentication provider name
+   * @param createUserValidator Validator for create-user request fields
+   * @param passwordValidator Validator for password rules
+   */
+  @Autowired
+  public UserManagementController(UserManagementFacade userManagementFacade,
+      @Value("${application.authentication-provider}") String authProvider,
+      CreateUserValidator createUserValidator,
+      PasswordValidator passwordValidator) {
     this.userManagementFacade = userManagementFacade;
     this.authProvider = authProvider;
+    this.createUserValidator = createUserValidator;
+    this.passwordValidator = passwordValidator;
   }
 
   @PreAuthorize("hasAuthority('heeuser:view')")
@@ -131,29 +156,12 @@ public class UserManagementController {
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PostMapping("/createUser")
   public String createUser(@ModelAttribute CreateUserDTO user, Model model) {
-    if ("cognito".equalsIgnoreCase(authProvider)) {
-      log.debug("Ignoring provided password for Cognito.");
-    } else if (!StringUtils.equals(user.getPassword(), user.getConfirmPassword())) {
-      throw new UserCreationException("Cannot create user, passwords do not match");
-    } else if (StringUtils.isEmpty(user.getPassword())
-        || user.getPassword().length() < REQUIRED_PASSWORD_LENGTH) {
-      throw new UserCreationException(
-          "Cannot create user, password needs to be at least 8 chars long");
-    }
-    // validate if whitespace exists
-    if (StringUtils.containsWhitespace(user.getName())) {
-      throw new UserCreationException(
-          "Cannot create user, username shouldn't contain white spaces");
-    }
-    if (StringUtils.containsWhitespace(user.getEmailAddress())) {
-      throw new UserCreationException(
-          "Cannot create user, email address shouldn't contain white spaces");
-    }
+    createUserValidator.validateNameAndEmail(user);
+    createUserValidator.validateUsernameAvailable(user.getName());
 
-    // validate if username exists in Profile/Auth database ignore case
-    UserDTO userDTO = userManagementFacade.getUserByNameIgnoreCase(user.getName());
-    if (userDTO != null) {
-      throw new UserCreationException("Cannot create user, the username has already existed");
+    if (!"cognito".equalsIgnoreCase(authProvider)) {
+      passwordValidator.validatePasswordsMatch(user.getPassword(), user.getConfirmPassword());
+      passwordValidator.validatePasswordLength(user.getPassword());
     }
 
     // add entity role to the newly created user
@@ -179,10 +187,9 @@ public class UserManagementController {
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PostMapping("/updatePassword")
   public String updatePassword(@ModelAttribute UserPasswordDTO passwordDTO, Model model) {
-
-    if (!StringUtils.equals(passwordDTO.getPassword(), passwordDTO.getConfirmPassword())) {
-      throw new PasswordException("Passwords do not match");
-    }
+    passwordValidator.validatePasswordsMatch(passwordDTO.getPassword(),
+        passwordDTO.getConfirmPassword());
+    passwordValidator.validatePasswordLength(passwordDTO.getPassword());
 
     userManagementFacade.updatePassword(passwordDTO);
     model.addAttribute(ATTRIBUTE_MESSAGE, "Password has been updated for the user");

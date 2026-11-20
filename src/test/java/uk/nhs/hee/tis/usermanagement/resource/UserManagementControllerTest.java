@@ -4,7 +4,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -18,8 +22,13 @@ import com.transformuk.hee.tis.reference.api.dto.TrustDTO;
 import com.transformuk.hee.tis.tcs.api.dto.ProgrammeDTO;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,6 +39,8 @@ import org.springframework.web.servlet.view.InternalResourceView;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserDTO;
 import uk.nhs.hee.tis.usermanagement.DTOs.UserPasswordDTO;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
+import uk.nhs.hee.tis.usermanagement.validation.CreateUserValidator;
+import uk.nhs.hee.tis.usermanagement.validation.PasswordValidator;
 
 @SpringBootTest
 class UserManagementControllerTest {
@@ -132,6 +143,126 @@ class UserManagementControllerTest {
     verify(mockFacade).publishUserCreationRequestedEvent(any());
   }
 
+  @ParameterizedTest
+  @MethodSource("mismatchedPasswordInputs")
+  void shouldRejectCreateUserWhenPasswordsDoNotMatch(String password, String confirmPassword) {
+    Exception exception = assertThrows(Exception.class, () -> mockMvc.perform(
+        post("/createUser")
+            .param("name", "foo")
+            .param("emailAddress", "name@tis.nhs.uk")
+            .param("password", password)
+            .param("confirmPassword", confirmPassword)));
+
+    assertNestedCauseMessage(exception, "Passwords do not match");
+    verify(mockFacade, never()).publishUserCreationRequestedEvent(any());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"", "short", "1234567"})
+  void shouldRejectCreateUserWhenPasswordTooShort(String password) {
+    Exception exception = assertThrows(Exception.class, () -> mockMvc.perform(
+        post("/createUser")
+            .param("name", "foo")
+            .param("emailAddress", "name@tis.nhs.uk")
+            .param("password", password)
+            .param("confirmPassword", password)));
+
+    assertNestedCauseMessage(exception, "Password needs to be at least 8 chars long");
+    verify(mockFacade, never()).publishUserCreationRequestedEvent(any());
+  }
+
+  @ParameterizedTest
+  @MethodSource("whitespaceCreateUserInputs")
+  void shouldRejectCreateUserWhenUsernameOrEmailContainsWhitespace(String username,
+      String emailAddress, String messagePart) {
+    Exception exception = assertThrows(Exception.class, () -> mockMvc.perform(
+        post("/createUser")
+            .param("name", username)
+            .param("emailAddress", emailAddress)
+            .param("password", "huntER2!")
+            .param("confirmPassword", "huntER2!")));
+
+    assertNestedCauseMessage(exception, messagePart);
+    verify(mockFacade, never()).publishUserCreationRequestedEvent(any());
+  }
+
+  @Test
+  void shouldRejectCreateUserWhenUsernameAlreadyExists() {
+    when(mockFacade.getUserByNameIgnoreCase("foo")).thenReturn(new UserDTO());
+
+    Exception exception = assertThrows(Exception.class, () -> mockMvc.perform(
+        post("/createUser")
+            .param("name", "foo")
+            .param("emailAddress", "name@tis.nhs.uk")
+            .param("password", "huntER2!")
+            .param("confirmPassword", "huntER2!")));
+
+    assertNestedCauseMessage(exception, "the username already exists");
+    verify(mockFacade, never()).publishUserCreationRequestedEvent(any());
+  }
+
+  @Test
+  void shouldRejectCreateUserWhenUsernameAlreadyExistsForCognito() {
+    when(mockFacade.getUserByNameIgnoreCase("foo")).thenReturn(new UserDTO());
+    MockMvc cognitoMockMvc = MockMvcBuilders
+        .standaloneSetup(new UserManagementController(mockFacade, "cognito"))
+        .setSingleView(new InternalResourceView("emptyView"))
+        .build();
+
+    Exception exception = assertThrows(Exception.class, () -> cognitoMockMvc.perform(
+        post("/createUser")
+            .param("name", "foo")
+            .param("emailAddress", "name@tis.nhs.uk")
+            .param("password", "short")
+            .param("confirmPassword", "different")));
+
+    assertNestedCauseMessage(exception, "the username already exists");
+    verify(mockFacade, never()).publishUserCreationRequestedEvent(any());
+  }
+
+  @Test
+  void shouldSkipPasswordValidationConstraintsForCreateUserWithCognito() throws Exception {
+    when(mockFacade.getUserByNameIgnoreCase("foo")).thenReturn(null);
+    MockMvc cognitoMockMvc = MockMvcBuilders
+        .standaloneSetup(new UserManagementController(mockFacade, "cognito"))
+        .setSingleView(new InternalResourceView("emptyView"))
+        .build();
+
+    cognitoMockMvc.perform(
+            post("/createUser")
+                .param("name", "foo")
+                .param("emailAddress", "name@tis.nhs.uk")
+                .param("password", "short")
+                .param("confirmPassword", "different"))
+        .andExpect(status().is2xxSuccessful());
+
+    verify(mockFacade).publishUserCreationRequestedEvent(any());
+  }
+
+  @Test
+  void shouldNotValidatePasswordWhenCreateUserAuthProviderIsCognito() throws Exception {
+    CreateUserValidator createUserValidator = mock(CreateUserValidator.class);
+    PasswordValidator passwordValidator = mock(PasswordValidator.class);
+    MockMvc cognitoMockMvc = MockMvcBuilders
+        .standaloneSetup(new UserManagementController(mockFacade, "cognito", createUserValidator,
+            passwordValidator))
+        .setSingleView(new InternalResourceView("emptyView"))
+        .build();
+
+    cognitoMockMvc.perform(
+            post("/createUser")
+                .param("name", "foo")
+                .param("emailAddress", "name@tis.nhs.uk")
+                .param("password", "short")
+                .param("confirmPassword", "different"))
+        .andExpect(status().is2xxSuccessful());
+
+    verify(createUserValidator).validateNameAndEmail(any());
+    verify(createUserValidator).validateUsernameAvailable("foo");
+    verify(passwordValidator, never()).validatePasswordsMatch(any(), any());
+    verify(passwordValidator, never()).validatePasswordLength(any());
+  }
+
   @Test
   void shouldPublishEventForUpdateUser() throws Exception {
     when(mockFacade.getUserByNameIgnoreCase("foo")).thenReturn(null);
@@ -158,6 +289,32 @@ class UserManagementControllerTest {
     assertThat(actual.getKcId(), is("foo"));
   }
 
+  @ParameterizedTest
+  @MethodSource("mismatchedPasswordInputs")
+  void shouldRejectUpdatePasswordWhenPasswordsDoNotMatch(String password, String confirmPassword) {
+    Exception exception = assertThrows(Exception.class, () -> mockMvc.perform(
+        post("/updatePassword")
+            .param("kcId", "foo")
+            .param("password", password)
+            .param("confirmPassword", confirmPassword)));
+
+    assertNestedCauseMessage(exception, "Passwords do not match");
+    verify(mockFacade, never()).updatePassword(any());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"", "short", "1234567"})
+  void shouldRejectUpdatePasswordWhenPasswordTooShort(String password) {
+    Exception exception = assertThrows(Exception.class, () -> mockMvc.perform(
+        post("/updatePassword")
+            .param("kcId", "foo")
+            .param("password", password)
+            .param("confirmPassword", password)));
+
+    assertNestedCauseMessage(exception, "Password needs to be at least 8 chars long");
+    verify(mockFacade, never()).updatePassword(any());
+  }
+
   @Test
   void shouldPublishEventForDelete() throws Exception {
     when(mockFacade.getUserByNameIgnoreCase("foo")).thenReturn(null);
@@ -176,5 +333,25 @@ class UserManagementControllerTest {
         .andExpectAll(
             status().isOk(),
             view().name("userNotification"));
+  }
+
+  private void assertNestedCauseMessage(Exception exception, String expectedMessagePart) {
+    Throwable cause = exception.getCause();
+    assertNotNull(cause);
+    assertThat(cause.getMessage(), containsString(expectedMessagePart));
+  }
+
+  private static Stream<Arguments> mismatchedPasswordInputs() {
+    return Stream.of(
+        Arguments.of("huntER2!", "wrongPwd2!"),
+        Arguments.of("password1", "password2")
+    );
+  }
+
+  private static Stream<Arguments> whitespaceCreateUserInputs() {
+    return Stream.of(
+        Arguments.of("bad user", "name@tis.nhs.uk", "username shouldn't contain white spaces"),
+        Arguments.of("foo", "name @tis.nhs.uk", "email address shouldn't contain white spaces")
+    );
   }
 }
