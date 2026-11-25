@@ -135,6 +135,18 @@ public class UserResource {
   }
 
   /**
+   * Returns maintenance notification content in JSON format.
+   *
+   * @return A message describing the maintenance state
+   */
+  @GetMapping("/userNotification")
+  public Map<String, String> getMaintenanceNotification() {
+    return Map.of(
+        "message", "User Management is currently under maintenance. Please try again later."
+    );
+  }
+
+  /**
    * Creates a new user.
    *
    * @param user Complete information needed to create a user across backend services
