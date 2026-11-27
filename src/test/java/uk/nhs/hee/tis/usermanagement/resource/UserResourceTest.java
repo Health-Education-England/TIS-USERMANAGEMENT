@@ -64,6 +64,8 @@ import uk.nhs.hee.tis.usermanagement.exception.UpdateUserException;
 import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 import uk.nhs.hee.tis.usermanagement.service.EmailService;
+import uk.nhs.hee.tis.usermanagement.validation.CreateUserValidator;
+import uk.nhs.hee.tis.usermanagement.validation.PasswordValidator;
 
 @SpringBootTest
 class UserResourceTest {
@@ -108,7 +110,11 @@ class UserResourceTest {
 
   @BeforeEach
   void setUp() {
-    mockMvc = MockMvcBuilders.standaloneSetup(new UserResource(mockFacade, emailServiceMock))
+    CreateUserValidator createUserValidator = new CreateUserValidator(mockFacade);
+    PasswordValidator passwordValidator = new PasswordValidator();
+    mockMvc = MockMvcBuilders.standaloneSetup(
+            new UserResource(mockFacade, emailServiceMock, "keycloak", createUserValidator,
+                passwordValidator))
         .setCustomArgumentResolvers(pageableArgumentResolver)
         .setControllerAdvice(advice)
         .setMessageConverters(jacksonMessageConverter).build();
@@ -151,6 +157,14 @@ class UserResourceTest {
   }
 
   @Test
+  void shouldGetMaintenanceNotification() throws Exception {
+    mockMvc.perform(get("/api/users/maintenance/userNotification"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.message")
+            .value("User Management is currently under maintenance. Please try again later."));
+  }
+
+  @Test
   void shouldGetUserByName() throws Exception {
     when(mockFacade.getCompleteUser("foo")).thenReturn(defaultUser);
 
@@ -172,7 +186,8 @@ class UserResourceTest {
 
   @Test
   void shouldCreateUser() throws Exception {
-    String newUserJson = "{ \"name\": \"newUser\", \"password\": \"hunter1\" }";
+    String newUserJson = "{ \"name\": \"newUser\", \"password\": \"hunter12\","
+        + " \"confirmPassword\": \"hunter12\" }";
     mockMvc.perform(post("/api/users")
             .contentType(MediaType.APPLICATION_JSON)
             .content(newUserJson))
@@ -181,7 +196,37 @@ class UserResourceTest {
     verify(mockFacade).publishUserCreationRequestedEvent(createCaptor.capture());
     CreateUserDTO actual = createCaptor.getValue();
     assertThat(actual.getName(), is("newUser"));
-    assertThat(actual.getPassword(), is("hunter1"));
+    assertThat(actual.getPassword(), is("hunter12"));
+  }
+
+  @Test
+  void shouldRejectCreateUserWhenPasswordsDoNotMatchForNonCognito() throws Exception {
+    String newUserJson = "{ \"name\": \"newUser\", \"password\": \"hunter12\","
+        + " \"confirmPassword\": \"hunter13\" }";
+
+    mockMvc.perform(post("/api/users")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(newUserJson))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string("\"Passwords do not match\""));
+
+    verify(mockFacade, never()).publishUserCreationRequestedEvent(any(CreateUserDTO.class));
+  }
+
+  @Test
+  void shouldRejectCreateUserWhenPasswordTooShortForNonCognito() throws Exception {
+    String newUserJson = "{ \"name\": \"newUser\", \"password\": \"hunter1\","
+        + " \"confirmPassword\": \"hunter1\" }";
+
+    mockMvc.perform(post("/api/users")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(newUserJson))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string(
+            "\"Password needs to be at least " + PasswordValidator.REQUIRED_PASSWORD_LENGTH
+                + " chars long\""));
+
+    verify(mockFacade, never()).publishUserCreationRequestedEvent(any(CreateUserDTO.class));
   }
 
   @Test
@@ -194,7 +239,7 @@ class UserResourceTest {
             .content(newUserJson))
         .andExpect(status().isInternalServerError())
         .andExpect(
-            content().string(is("\"Cannot create user because the username already exists.\"")));
+            content().string(is("\"Cannot create user, the username already exists\"")));
 
     verify(mockFacade, never()).publishUserCreationRequestedEvent(any(CreateUserDTO.class));
   }
@@ -207,7 +252,7 @@ class UserResourceTest {
             .content(newUserJson))
         .andExpect(status().isInternalServerError())
         .andExpect(
-            content().string(stringContainsInOrder("name", "whitespace")));
+            content().string("\"Cannot create user, username shouldn't contain white spaces\""));
 
     verifyNoInteractions(mockFacade);
   }
@@ -220,7 +265,7 @@ class UserResourceTest {
             .content(newUserJson))
         .andExpect(status().isInternalServerError())
         .andExpect(
-            content().string(stringContainsInOrder("Email", "whitespace")));
+            content().string("\"Cannot create user, email address shouldn't contain white spaces\""));
 
     verifyNoInteractions(mockFacade);
   }

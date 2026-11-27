@@ -1,11 +1,10 @@
 #TIS-USERMANAGEMENT
 
-A webapp for managing users of TIS Admin products.
+A service for managing users of TIS Admin products.
 
 ## Tech
 
-It is a classic WebMVC app, using Hibernate Object Mapping, Controller and server [decorated][1] UI.
-This has meant it doesn't expose a REST API like most other services.
+It is a Spring Boot API service exposing REST endpoints for user management operations.
 
 It is built using:
 
@@ -13,7 +12,7 @@ It is built using:
 - Spring Boot 
 - Maven
 - Junit
-- Thymeleaf
+- Spring Security
 
 # Running locally
 
@@ -26,5 +25,3 @@ It is built using:
     docker pull ${DOCKER_REPO}:latest
     docker run 
     ```
-    
-[1]: https://en.wikipedia.org/wiki/Decorator_pattern

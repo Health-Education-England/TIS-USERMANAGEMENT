@@ -31,6 +31,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -53,10 +54,11 @@ import uk.nhs.hee.tis.usermanagement.exception.UpdateUserException;
 import uk.nhs.hee.tis.usermanagement.exception.UserCreationException;
 import uk.nhs.hee.tis.usermanagement.facade.UserManagementFacade;
 import uk.nhs.hee.tis.usermanagement.service.EmailService;
+import uk.nhs.hee.tis.usermanagement.validation.CreateUserValidator;
+import uk.nhs.hee.tis.usermanagement.validation.PasswordValidator;
 
 /**
- * Resource that exposes user functionality which is expected to be supported. It operates slightly
- * differently from the {@link UserManagementController} it will replace.
+ * Resource that exposes user functionality which is expected to be supported.
  *
  * <p>Exceptions are not handled explicitly so
  * {@link org.springframework.web.bind.annotation.ControllerAdvice} can map to a Response.
@@ -76,13 +78,30 @@ public class UserResource {
 
   private final UserManagementFacade userFacade;
   private final EmailService emailService;
+  private final String authProvider;
+  private final CreateUserValidator createUserValidator;
+  private final PasswordValidator passwordValidator;
 
-  private final CreateUserValidator createUserValidator = new CreateUserValidator();
   private final UpdateUserValidator updateUserValidator = new UpdateUserValidator();
 
-  public UserResource(UserManagementFacade userFacade, EmailService emailService) {
+  /**
+   * Constructor for the UserResource class.
+   *
+   * @param userFacade          the user management facade
+   * @param emailService        the email service
+   * @param authProvider        the authentication provider
+   * @param createUserValidator the create user validator
+   * @param passwordValidator   the password validator
+   */
+  public UserResource(UserManagementFacade userFacade, EmailService emailService,
+      @Value("${application.authentication-provider}") String authProvider,
+      CreateUserValidator createUserValidator,
+      PasswordValidator passwordValidator) {
     this.userFacade = userFacade;
     this.emailService = emailService;
+    this.authProvider = authProvider;
+    this.createUserValidator = createUserValidator;
+    this.passwordValidator = passwordValidator;
   }
 
   /**
@@ -125,6 +144,19 @@ public class UserResource {
   }
 
   /**
+   * Returns maintenance notification content in JSON format.
+   *
+   * @return A message describing the maintenance state
+   */
+  @GetMapping("/maintenance/userNotification")
+  public Map<String, String> getMaintenanceNotification() {
+    return Map.of(
+        MESSAGE, "User Management is currently under maintenance. "
+            + "Please try again later."
+    );
+  }
+
+  /**
    * Creates a new user.
    *
    * @param user Complete information needed to create a user across backend services
@@ -134,7 +166,23 @@ public class UserResource {
   @PreAuthorize("hasAuthority('heeuser:add:modify')")
   @PostMapping
   public ResponseEntity<CreateUserDTO> createUser(@RequestBody CreateUserDTO user) {
-    createUserValidator.validate(user);
+    createUserValidator.validateNameAndEmail(user);
+
+    List<String> roleValidationErrors = validateRoleAssociations(user.getRoles(),
+        user.getAssociatedTrusts(), user.getAssociatedProgrammes());
+    if (!roleValidationErrors.isEmpty()) {
+      throw new UserCreationException(String.join("; ", roleValidationErrors));
+    }
+
+    createUserValidator.validateUsernameAvailable(user.getName());
+
+    if (!"cognito".equalsIgnoreCase(authProvider)
+        && (StringUtils.isNotEmpty(user.getPassword())
+        || StringUtils.isNotEmpty(user.getConfirmPassword()))) {
+      passwordValidator.validatePasswordsMatch(user.getPassword(), user.getConfirmPassword());
+      passwordValidator.validatePasswordLength(user.getPassword());
+    }
+
     userFacade.publishUserCreationRequestedEvent(user);
     return ResponseEntity.accepted().build();
   }
@@ -231,37 +279,7 @@ public class UserResource {
   }
 
   /**
-   * This validator has been created to encapsulate validation done in the
-   * {@link UserManagementController}. A larger refactoring would involve modifying both to use a
-   * validation service/bean.
-   */
-  private class CreateUserValidator {
-
-    public void validate(CreateUserDTO user) {
-      if (StringUtils.containsWhitespace(user.getName())) {
-        throw new UserCreationException("Username must not contain whitespace.");
-      }
-      if (StringUtils.containsWhitespace(user.getEmailAddress())) {
-        throw new UserCreationException("Email Address must not contain whitespace.");
-      }
-
-      List<String> roleValidationErrors = validateRoleAssociations(user.getRoles(),
-          user.getAssociatedTrusts(), user.getAssociatedProgrammes());
-      if (!roleValidationErrors.isEmpty()) {
-        throw new UserCreationException(String.join("; ", roleValidationErrors));
-      }
-
-      UserDTO userDto = userFacade.getUserByNameIgnoreCase(user.getName());
-      if (userDto != null) {
-        throw new UserCreationException("Cannot create user because the username already exists.");
-      }
-    }
-  }
-
-  /**
-   * This validator has been created to encapsulate validation done in the
-   * {@link UserManagementController}. A larger refactoring would involve modifying both to use a
-   * validation service/bean.
+   * Validates update-user requests.
    */
   private static class UpdateUserValidator {
 
