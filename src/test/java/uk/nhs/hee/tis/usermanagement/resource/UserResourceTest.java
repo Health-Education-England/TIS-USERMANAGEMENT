@@ -192,6 +192,36 @@ class UserResourceTest {
   }
 
   @Test
+  void shouldRejectCreateUserWhenPasswordsDoNotMatchForNonCognito() throws Exception {
+    String newUserJson = "{ \"name\": \"newUser\", \"password\": \"hunter12\","
+        + " \"confirmPassword\": \"hunter13\" }";
+
+    mockMvc.perform(post("/api/users")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(newUserJson))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string("\"Passwords do not match\""));
+
+    verify(mockFacade, never()).publishUserCreationRequestedEvent(any(CreateUserDTO.class));
+  }
+
+  @Test
+  void shouldRejectCreateUserWhenPasswordTooShortForNonCognito() throws Exception {
+    String newUserJson = "{ \"name\": \"newUser\", \"password\": \"hunter1\","
+        + " \"confirmPassword\": \"hunter1\" }";
+
+    mockMvc.perform(post("/api/users")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(newUserJson))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().string(
+            "\"Password needs to be at least " + PasswordValidator.REQUIRED_PASSWORD_LENGTH
+                + " chars long\""));
+
+    verify(mockFacade, never()).publishUserCreationRequestedEvent(any(CreateUserDTO.class));
+  }
+
+  @Test
   void shouldRespondBadRequestWhenCreatingExistingUser() throws Exception {
     when(mockFacade.getUserByNameIgnoreCase("newuser")).thenReturn(defaultUser);
 

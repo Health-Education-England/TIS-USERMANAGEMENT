@@ -139,7 +139,7 @@ public class UserResource {
    *
    * @return A message describing the maintenance state
    */
-  @GetMapping("/userNotification")
+  @GetMapping("/maintenance/userNotification")
   public Map<String, String> getMaintenanceNotification() {
     return Map.of(
         "message", "User Management is currently under maintenance. Please try again later."
