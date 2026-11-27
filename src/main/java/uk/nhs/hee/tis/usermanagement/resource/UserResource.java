@@ -84,6 +84,15 @@ public class UserResource {
 
   private final UpdateUserValidator updateUserValidator = new UpdateUserValidator();
 
+  /**
+   * Constructor for the UserResource class.
+   *
+   * @param userFacade          the user management facade
+   * @param emailService        the email service
+   * @param authProvider        the authentication provider
+   * @param createUserValidator the create user validator
+   * @param passwordValidator   the password validator
+   */
   public UserResource(UserManagementFacade userFacade, EmailService emailService,
       @Value("${application.authentication-provider}") String authProvider,
       CreateUserValidator createUserValidator,
@@ -142,7 +151,8 @@ public class UserResource {
   @GetMapping("/maintenance/userNotification")
   public Map<String, String> getMaintenanceNotification() {
     return Map.of(
-        "message", "User Management is currently under maintenance. Please try again later."
+        MESSAGE, "User management is currently undergoing maintenance. "
+            + "Please try again later."
     );
   }
 

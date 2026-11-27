@@ -34,7 +34,8 @@ import uk.nhs.hee.tis.usermanagement.exception.UserNotFoundException;
 @RestControllerAdvice(assignableTypes = UserResource.class)
 class UserResourceAdvice {
 
-  @ExceptionHandler({UpdateUserException.class, UserCreationException.class, PasswordException.class,
+  @ExceptionHandler({UpdateUserException.class, UserCreationException.class,
+      PasswordException.class,
       UserNotFoundException.class, IdentityProviderException.class})
   @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
   String handleCustomException(RuntimeException e) {
