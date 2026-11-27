@@ -157,6 +157,14 @@ class UserResourceTest {
   }
 
   @Test
+  void shouldGetMaintenanceNotification() throws Exception {
+    mockMvc.perform(get("/api/users/maintenance/userNotification"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.message")
+            .value("User Management is currently under maintenance. Please try again later."));
+  }
+
+  @Test
   void shouldGetUserByName() throws Exception {
     when(mockFacade.getCompleteUser("foo")).thenReturn(defaultUser);
 
